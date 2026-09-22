@@ -16,6 +16,10 @@
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Corely.Billing.UnitTests" />
+    <InternalsVisibleTo Include="Corely.Billing.IntegrationTests" />
+    <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.Cli" />
+    <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.MsSql" />
+    <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.MySql" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
   </ItemGroup>
   <ItemGroup>
@@ -29,10 +33,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Using Include="System.Diagnostics.CodeAnalysis" />
-  </ItemGroup>
-  <ItemGroup>
+    <PackageReference Include="Corely.Common" Version="2.0.0" />
     <PackageReference Include="Corely.DataAccess" Version="3.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
     <PackageReference
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
       Version="10.0.11"

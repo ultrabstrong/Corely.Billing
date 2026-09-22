@@ -1,4 +1,4 @@
-using Corely.Billing;
+using Corely.Billing.Usage;
 
 namespace Corely.Billing.Consumption.Models;
 

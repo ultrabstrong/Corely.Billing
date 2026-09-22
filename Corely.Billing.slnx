@@ -8,5 +8,6 @@
     <File Path="RebuildAndTest.ps1" />
   </Folder>
   <Project Path="Corely.Billing/Corely.Billing.csproj" />
+  <Project Path="Corely.Billing.IntegrationTests/Corely.Billing.IntegrationTests.csproj" />
   <Project Path="Corely.Billing.UnitTests/Corely.Billing.UnitTests.csproj" />
 </Solution>

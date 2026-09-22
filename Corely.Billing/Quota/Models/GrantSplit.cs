@@ -9,4 +9,4 @@ namespace Corely.Billing.Quota.Models;
 /// insufficient quota and the work is refused; afterwards, the provider has already been paid and
 /// the overdraft lands on the last grant instead.
 /// </param>
-public sealed record GrantSplit(IReadOnlyList<GrantShare> Shares, long Shortfall);
+internal record GrantSplit(IReadOnlyList<GrantShare> Shares, long Shortfall);

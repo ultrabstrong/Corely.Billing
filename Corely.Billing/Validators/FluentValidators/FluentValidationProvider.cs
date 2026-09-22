@@ -1,0 +1,54 @@
+using Corely.Billing.Validators.Mappers;
+using Microsoft.Extensions.Logging;
+
+namespace Corely.Billing.Validators.FluentValidators;
+
+internal sealed class FluentValidationProvider(
+    IFluentValidatorFactory fluentValidatorFactory,
+    ILogger<FluentValidationProvider> logger
+) : IValidationProvider
+{
+    private readonly IFluentValidatorFactory _fluentValidatorFactory = fluentValidatorFactory;
+    private readonly ILogger<FluentValidationProvider> _logger = logger;
+
+    public ValidationResult Validate<T>(T model)
+    {
+        ValidationResult corelyResult;
+        if (model == null)
+        {
+            corelyResult = new()
+            {
+                Errors = [new() { Message = "Model is null", PropertyName = typeof(T).Name }],
+            };
+        }
+        else
+        {
+            var validator = _fluentValidatorFactory.GetValidator<T>();
+            var fluentResult = validator.Validate(model);
+            corelyResult = fluentResult.ToValidationResult();
+        }
+
+        // Processors pass this message straight to the caller, so it has to say what to fix.
+        corelyResult.Message = corelyResult.IsValid
+            ? $"Validation for {typeof(T).Name} succeeded"
+            : string.Join(" ", corelyResult.Errors!.Select(e => e.Message));
+
+        return corelyResult;
+    }
+
+    public ValidationResult ValidateAndLog<T>(T model)
+    {
+        var result = Validate(model);
+        if (!result.IsValid)
+        {
+            var state = new Dictionary<string, object?> { { "@ValidationResult", result } };
+            using var scope = _logger.BeginScope(state);
+            _logger.LogWarning(
+                "Validation failed for {ModelType}: {Message}",
+                typeof(T).Name,
+                result.Message
+            );
+        }
+        return result;
+    }
+}

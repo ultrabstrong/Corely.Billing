@@ -11,12 +11,12 @@ namespace Corely.Billing.Consumption.Models;
 public enum ConsumptionOutcome
 {
     /// <summary>The work happened and the quantity was corrected to what it actually cost.</summary>
-    Settled = 0,
+    Settled,
 
     /// <summary>
     /// The work failed terminally and the hold was given back. The row keeps its original quantity,
     /// so what was held and for how long stays visible during a billing dispute. Encoding a release
     /// as <c>Quantity = 0</c> would destroy exactly that.
     /// </summary>
-    Released = 1,
+    Released,
 }

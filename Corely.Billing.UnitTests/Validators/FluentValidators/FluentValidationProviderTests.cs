@@ -1,0 +1,86 @@
+using Corely.Billing.Validators.FluentValidators;
+using FluentValidation;
+using Microsoft.Extensions.Logging;
+using FluentValidationFailure = FluentValidation.Results.ValidationFailure;
+using FluentValidationResult = FluentValidation.Results.ValidationResult;
+
+namespace Corely.Billing.UnitTests.Validators.FluentValidators;
+
+public class FluentValidationProviderTests
+{
+    private const string INVALID_STRING = "invalid string";
+
+    private readonly FluentValidationProvider _provider;
+
+    public FluentValidationProviderTests()
+    {
+        var serviceProviderMock = GetMockServiceProvider();
+        var fluentValidatorFactory = new FluentValidatorFactory(serviceProviderMock);
+        var loggerMock = new Mock<ILogger<FluentValidationProvider>>();
+
+        _provider = new FluentValidationProvider(fluentValidatorFactory, loggerMock.Object);
+    }
+
+    private static IServiceProvider GetMockServiceProvider()
+    {
+        var validatorMock = new Mock<IValidator<string>>();
+
+        validatorMock
+            .Setup(v => v.Validate(It.Is<string>(s => s == INVALID_STRING)))
+            .Returns(
+                new FluentValidationResult([
+                    new FluentValidationFailure("Username", "Username is too short."),
+                    new FluentValidationFailure("Email", "Email is not valid."),
+                ])
+            );
+
+        validatorMock
+            .Setup(v => v.Validate(It.Is<string>(s => s != INVALID_STRING)))
+            .Returns(new FluentValidationResult());
+
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        serviceProviderMock
+            .Setup(p => p.GetService(typeof(IValidator<string>)))
+            .Returns(validatorMock.Object);
+
+        return serviceProviderMock.Object;
+    }
+
+    [Fact]
+    public void Validate_ReturnsValidationResult()
+    {
+        var toValidate = "value";
+        var result = _provider.Validate(toValidate);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Validate_Throws_WhenValidatorIsNotRegistered()
+    {
+        var toValidate = new object();
+
+        var ex = Record.Exception(() => _provider.Validate(toValidate));
+        Assert.NotNull(ex);
+        Assert.IsType<InvalidOperationException>(ex);
+    }
+
+    [Fact]
+    public void Validate_MessageSaysWhichRulesFailed()
+    {
+        // The message is what reaches the person filling in the form. "Validation failed" gives
+        // them nothing to correct, and the rules themselves are not secret.
+        var result = _provider.Validate(INVALID_STRING);
+
+        Assert.Contains("Username is too short.", result.Message);
+        Assert.Contains("Email is not valid.", result.Message);
+    }
+
+    [Theory]
+    [InlineData(INVALID_STRING)]
+    [InlineData(null)]
+    public void ValidateAndLog_ReturnsInvalid_WhenValidationFails(string? value)
+    {
+        var result = _provider.ValidateAndLog(value);
+        Assert.False(result.IsValid);
+    }
+}

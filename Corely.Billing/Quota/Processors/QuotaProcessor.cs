@@ -1,0 +1,357 @@
+using Corely.Billing.Consumption.Models;
+using Corely.Billing.Consumption.Processors;
+using Corely.Billing.Grants.Models;
+using Corely.Billing.Grants.Processors;
+using Corely.Billing.Quota.Models;
+using Corely.Billing.Usage;
+using Corely.Billing.Validators;
+using Corely.Common.Extensions;
+using Microsoft.Extensions.Logging;
+
+namespace Corely.Billing.Quota.Processors;
+
+/// <summary>
+/// Quota in terms of grants: which ones a piece of work draws on, and what it finally cost them.
+/// </summary>
+/// <remarks>
+/// The split against the ledger is by what each layer understands. This one knows grants, their order
+/// and their capacity; the consumption processor knows rows. So settlement is worked out here and
+/// handed down as a per-grant split, rather than the ledger inferring anything about grants.
+/// </remarks>
+internal class QuotaProcessor(
+    IGrantProcessor grantProcessor,
+    IConsumptionProcessor consumptionProcessor,
+    IConsumptionReportProcessor consumptionReportProcessor,
+    IGrantSelectionPolicy grantSelectionPolicy,
+    IValidationProvider validationProvider,
+    TimeProvider timeProvider,
+    ILogger<QuotaProcessor> logger
+) : IQuotaProcessor
+{
+    private readonly IGrantProcessor _grantProcessor = grantProcessor.ThrowIfNull(
+        nameof(grantProcessor)
+    );
+    private readonly IConsumptionProcessor _consumptionProcessor = consumptionProcessor.ThrowIfNull(
+        nameof(consumptionProcessor)
+    );
+    private readonly IConsumptionReportProcessor _consumptionReportProcessor =
+        consumptionReportProcessor.ThrowIfNull(nameof(consumptionReportProcessor));
+    private readonly IGrantSelectionPolicy _grantSelectionPolicy = grantSelectionPolicy.ThrowIfNull(
+        nameof(grantSelectionPolicy)
+    );
+    private readonly IValidationProvider _validationProvider = validationProvider.ThrowIfNull(
+        nameof(validationProvider)
+    );
+    private readonly TimeProvider _timeProvider = timeProvider.ThrowIfNull(nameof(timeProvider));
+    private readonly ILogger<QuotaProcessor> _logger = logger.ThrowIfNull(nameof(logger));
+
+    public async Task<QuotaAvailability> GetAvailabilityAsync(
+        Guid accountId,
+        UsageOperation operation,
+        UsageUnit unit,
+        CancellationToken ct = default
+    )
+    {
+        try
+        {
+            var context = await LoadAsync(accountId, operation, unit, ct);
+            if (context.Grants.Count == 0)
+                return QuotaAvailability.Exhausted;
+
+            // One unit is the smallest question worth asking. Anything larger would be guessing at a
+            // size nothing knows yet, and this check exists to catch the obvious no.
+            var split = _grantSelectionPolicy.Split(context.Grants, context.Totals, quantity: 1);
+
+            return split.Shortfall > 0 ? QuotaAvailability.Exhausted : QuotaAvailability.Available;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // Swallowed on purpose, and the only place that does it. This check sits at the front
+            // door of a pipeline: a database blip here must not stop every piece of work from
+            // starting, when the accurate check at reservation would have caught it.
+            _logger.LogWarning(
+                ex,
+                "Could not determine {Operation}/{Unit} quota availability for AccountId {AccountId}. "
+                    + "Letting the work start.",
+                operation,
+                unit,
+                accountId
+            );
+            return QuotaAvailability.Unknown;
+        }
+    }
+
+    public async Task<ReserveQuotaResult> ReserveAsync(
+        ReserveQuotaRequest request,
+        CancellationToken ct = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        var validation = _validationProvider.ValidateAndLog(request);
+        if (!validation.IsValid)
+            return new ReserveQuotaResult(
+                ReserveQuotaResultCode.ValidationError,
+                validation.Message
+            );
+
+        var context = await LoadAsync(request.AccountId, request.Operation, request.Unit, ct);
+        if (context.Grants.Count == 0)
+        {
+            return new ReserveQuotaResult(
+                ReserveQuotaResultCode.NoGrantAvailableError,
+                "No live grant covers this operation and unit"
+            );
+        }
+
+        var split = _grantSelectionPolicy.Split(context.Grants, context.Totals, request.Quantity);
+
+        if (split.Shortfall > 0)
+        {
+            // Refused on the total across every valid grant, which is the honest meaning of
+            // "insufficient quota" -- not "the one grant I picked was too small".
+            _logger.LogInformation(
+                "Insufficient {Operation}/{Unit} quota for AccountId {AccountId}: {Requested} requested, "
+                    + "{Short} short across {GrantCount} grants.",
+                request.Operation,
+                request.Unit,
+                request.AccountId,
+                request.Quantity,
+                split.Shortfall,
+                context.Grants.Count
+            );
+            return new ReserveQuotaResult(
+                ReserveQuotaResultCode.InsufficientQuotaError,
+                "Insufficient quota across the account's live grants"
+            );
+        }
+
+        foreach (var share in split.Shares)
+        {
+            var reservation = new ConsumptionEvent
+            {
+                AccountId = request.AccountId,
+                GrantId = share.GrantId,
+                Operation = request.Operation,
+                Unit = request.Unit,
+                Quantity = share.Quantity,
+                Provider = request.Provider,
+                UtcTimestamp = _timeProvider.GetUtcNow().UtcDateTime,
+                UserId = request.UserId,
+                Tags = request.Tags,
+            };
+
+            var reserved = await _consumptionProcessor.ReserveAsync(reservation, ct);
+            if (reserved.ResultCode != ReserveConsumptionResultCode.Success)
+            {
+                // Partially reserved. The rows already written stay outstanding and are released
+                // when the caller gives up, or expire if it dies -- either way the caller is told
+                // the reservation failed, so the work does not start.
+                _logger.LogError(
+                    "Could not reserve {Quantity} on grant {GrantId} for AccountId {AccountId}: "
+                        + "{ResultCode} {Message}",
+                    share.Quantity,
+                    share.GrantId,
+                    request.AccountId,
+                    reserved.ResultCode,
+                    reserved.Message
+                );
+                return new ReserveQuotaResult(
+                    ReserveQuotaResultCode.NotRecordedError,
+                    reserved.Message
+                );
+            }
+        }
+
+        return new ReserveQuotaResult(ReserveQuotaResultCode.Success, string.Empty, split.Shares);
+    }
+
+    public async Task<SettleQuotaResult> SettleAsync(
+        SettleQuotaRequest request,
+        CancellationToken ct = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        var outstanding = await _consumptionProcessor.ListOutstandingReservationsAsync(
+            request.AccountId,
+            request.Operation,
+            request.Unit,
+            ct
+        );
+        if (outstanding is null)
+        {
+            return new SettleQuotaResult(
+                SettleQuotaResultCode.NotRecordedError,
+                "No ambient operation context."
+            );
+        }
+
+        if (outstanding.Count == 0)
+        {
+            // A replay whose reservations were already settled. The ledger treats that as a no-op,
+            // and re-deriving a split for rows that no longer exist would only invent charges.
+            return await ApplyAsync(request, new Dictionary<Guid, long>(), overdrawn: false, ct);
+        }
+
+        var context = await LoadAsync(request.AccountId, request.Operation, request.Unit, ct);
+        var totalsWithoutOwnHolds = SubtractOwnReservations(context.Totals, outstanding);
+        var split = _grantSelectionPolicy.Split(
+            context.Grants,
+            totalsWithoutOwnHolds,
+            request.ActualQuantity
+        );
+        var remainingRatio = RemainingRatio(
+            context.Grants,
+            totalsWithoutOwnHolds,
+            request.ActualQuantity
+        );
+
+        var quantityByGrant = split.Shares.ToDictionary(s => s.GrantId, s => s.Quantity);
+        var overdrawn = split.Shortfall > 0;
+
+        if (overdrawn)
+        {
+            // Overdraft-once. The work has already been paid for, so refusing now means eating the
+            // cost, giving the customer nothing, and nothing stopping it recurring. The last grant
+            // absorbs it and goes negative, which is what makes the overrun visible rather than
+            // silently absent.
+            var lastGrantId = split.Shares.LastOrDefault()?.GrantId ?? outstanding[^1].GrantId;
+
+            quantityByGrant[lastGrantId] =
+                quantityByGrant.GetValueOrDefault(lastGrantId) + split.Shortfall;
+
+            _logger.LogWarning(
+                "Overdrawing grant {GrantId} by {Overdraft} settling {Operation}/{Unit} for "
+                    + "AccountId {AccountId}. The work was already done and is being delivered.",
+                lastGrantId,
+                split.Shortfall,
+                request.Operation,
+                request.Unit,
+                request.AccountId
+            );
+        }
+
+        var result = await ApplyAsync(request, quantityByGrant, overdrawn, ct);
+        return result.ResultCode == SettleQuotaResultCode.Success
+            ? result with
+            {
+                RemainingRatio = remainingRatio,
+            }
+            : result;
+    }
+
+    public async Task<SettleQuotaResult> ReleaseAsync(
+        ReleaseQuotaRequest request,
+        CancellationToken ct = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        var result = await _consumptionProcessor.ReleaseAsync(
+            request.AccountId,
+            request.Operation,
+            request.Unit,
+            ct
+        );
+
+        return ToSettleResult(result, overdrawn: false);
+    }
+
+    private async Task<SettleQuotaResult> ApplyAsync(
+        SettleQuotaRequest request,
+        IReadOnlyDictionary<Guid, long> quantityByGrant,
+        bool overdrawn,
+        CancellationToken ct
+    )
+    {
+        var result = await _consumptionProcessor.SettleAsync(
+            request.AccountId,
+            request.Operation,
+            request.Unit,
+            quantityByGrant,
+            ct
+        );
+
+        return ToSettleResult(result, overdrawn);
+    }
+
+    private static SettleQuotaResult ToSettleResult(
+        ResolveConsumptionResult result,
+        bool overdrawn
+    ) =>
+        new(
+            result.ResultCode == ResolveConsumptionResultCode.Success
+                ? SettleQuotaResultCode.Success
+                : SettleQuotaResultCode.NotRecordedError,
+            result.Message,
+            result.SettledQuantity,
+            overdrawn
+        );
+
+    private static double RemainingRatio(
+        List<Grant> grants,
+        List<GrantTotalConsumptions> totals,
+        long charged
+    )
+    {
+        var total = grants.Sum(g => g.Quantity);
+        if (total <= 0)
+            return 0;
+
+        var consumed = totals.Sum(t => t.TotalConsumedQuantity) + charged;
+        return Math.Clamp((double)(total - consumed) / total, 0, 1);
+    }
+
+    /// <summary>
+    /// Removes this operation's own holds from the per-grant totals.
+    /// </summary>
+    /// <remarks>
+    /// Without this, settling a hundred-unit piece of work against a hold of one would see that unit
+    /// as consumed and allocate the hundred around it -- the work would be competing with the
+    /// reservation it took out for itself.
+    /// </remarks>
+    private static List<GrantTotalConsumptions> SubtractOwnReservations(
+        List<GrantTotalConsumptions> totals,
+        List<ConsumptionEvent> outstanding
+    ) =>
+        [
+            .. totals.Select(t =>
+                t with
+                {
+                    TotalConsumedQuantity =
+                        t.TotalConsumedQuantity
+                        - outstanding.Where(o => o.GrantId == t.GrantId).Sum(o => o.Quantity),
+                }
+            ),
+        ];
+
+    private sealed record QuotaContext(List<Grant> Grants, List<GrantTotalConsumptions> Totals);
+
+    /// <summary>The account's live grants and what has been drawn from each.</summary>
+    private async Task<QuotaContext> LoadAsync(
+        Guid accountId,
+        UsageOperation operation,
+        UsageUnit unit,
+        CancellationToken ct
+    )
+    {
+        var grants = await _grantProcessor.ListActiveGrantsAsync(
+            accountId,
+            operation,
+            unit,
+            _timeProvider.GetUtcNow().UtcDateTime,
+            ct
+        );
+        if (grants.Count == 0)
+            return new QuotaContext(grants, []);
+
+        var totals = await _consumptionReportProcessor.GetGrantConsumptionTotalsAsync(
+            accountId,
+            [.. grants.Select(g => g.GrantId)],
+            ct
+        );
+
+        return new QuotaContext(grants, totals);
+    }
+}
