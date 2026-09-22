@@ -1,0 +1,42 @@
+name: CI
+
+# Build and test on every push and pull request. release.yml runs the same build and test, but only
+# on a version tag - so without this, a commit that breaks the build sits on master undetected
+# until someone cuts a release.
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # version check compares against the last release tag
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore Corely.Billing.slnx
+
+      - name: Build
+        run: dotnet build Corely.Billing.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --solution Corely.Billing.slnx --configuration Release --no-build
+
+      # Reports only. A bump is required at release time, not on every push.
+      - name: Package versions
+        run: bash scripts/check-package-versions.sh

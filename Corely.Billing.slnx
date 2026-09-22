@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CLAUDE.md" />
+    <File Path="README.md" />
+    <File Path="RebuildAndTest.ps1" />
+  </Folder>
+  <Project Path="Corely.Billing/Corely.Billing.csproj" />
+  <Project Path="Corely.Billing.UnitTests/Corely.Billing.UnitTests.csproj" />
+</Solution>
