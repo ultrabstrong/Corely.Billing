@@ -68,9 +68,9 @@ Consumes the new surface: `BillingOptions`, the three services, authorization vi
 telemetry via `UseTelemetry`. Its billing migrations retire; schema comes from `corely-billing-db`.
 Existing databases adopt the baseline without losing rows.
 
-## Progress
+## Outcome
 
-Done, committed locally:
+Done:
 - Library reshaped to the target above; unit tests on mock repos; SQLite integration tests including
   the grant/ledger balance invariants moved from DocsToData.
 - `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` with baseline `InitialMigration`s, the
@@ -80,11 +80,11 @@ Done, committed locally:
   CI/release packing both packages, and the zero-setup `Corely.Billing.ConsoleTest` demo.
 - DocsToData consumes the new surface (its own repository).
 
-Open for the owner:
-- Create `ultrabstrong/Corely.Billing` on GitHub and push `master`.
-- nuget.org trusted-publisher policy bound to `release.yml`, package scope `Corely.Billing*`.
-- Tag `v1.0.0-preview.1`.
-- Known rough edges, each a decision rather than a bug:
+- Published: `ultrabstrong/Corely.Billing` on GitHub with IAM's `master` ruleset, a nuget.org
+  trusted-publisher policy for `Corely.Billing*` bound to `release.yml`, and `v1.0.0-preview.1` of
+  both packages released from it.
+
+Known rough edges, each a decision rather than a bug:
   - IAM and Billing both define `Models.RetrieveResultCode` (and `ModifyResult`, `PagedResult`);
     a file importing both namespaces needs an alias. The fix is to move them into Corely.Common.
   - IAM and Billing each register `IEFConfiguration`; in one container the last one wins for both
