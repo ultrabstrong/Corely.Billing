@@ -1,3 +1,4 @@
+using Corely.Billing.Consumption.Entities;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.DataAccess;
 using Corely.Billing.Grants.Models;
@@ -130,6 +131,56 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
         Assert.IsType<DbUpdateException>(exception);
         Assert.Equal(1, await _ledger.BalanceAsync(grant));
     }
+
+    [RequiresDockerFact]
+    public async Task UniqueIndexAllowsTheSameKey_ForDifferentAccounts()
+    {
+        // Scoped per account on purpose: two tenants can produce identical scopes and must not
+        // block each other.
+        var inserted = await Host.QueryAsync(db =>
+        {
+            db.ConsumptionEvents.AddRange(
+                NewConsumption(Guid.CreateVersion7(), "job:a/step:1|extraction|page|g"),
+                NewConsumption(Guid.CreateVersion7(), "job:a/step:1|extraction|page|g")
+            );
+            return db.SaveChangesAsync();
+        });
+
+        Assert.Equal(2, inserted);
+    }
+
+    [RequiresDockerFact]
+    public async Task CorrelationIndexAllowsRepeats_ForOneUnitOfWorkSpanningGrants()
+    {
+        var correlationId = Guid.CreateVersion7();
+        var first = NewConsumption(AccountId, "job:a/step:1|extraction|page|g1");
+        var second = NewConsumption(AccountId, "job:a/step:1|extraction|page|g2");
+        first.CorrelationId = correlationId;
+        second.CorrelationId = correlationId;
+
+        var inserted = await Host.QueryAsync(db =>
+        {
+            db.ConsumptionEvents.AddRange(first, second);
+            return db.SaveChangesAsync();
+        });
+
+        Assert.Equal(2, inserted);
+    }
+
+    private static ConsumptionEventEntity NewConsumption(Guid accountId, string idempotencyKey) =>
+        new()
+        {
+            ConsumptionId = Guid.CreateVersion7(),
+            AccountId = accountId,
+            GrantId = Guid.CreateVersion7(),
+            CorrelationId = Guid.CreateVersion7(),
+            IdempotencyKey = idempotencyKey,
+            Operation = TestUsage.Extraction,
+            Unit = TestUsage.Page,
+            Quantity = 1,
+            Provider = "prov",
+            UtcTimestamp = new DateTime(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc),
+        };
 
     [RequiresDockerFact]
     public async Task TimeSeriesBucketsTranslate_ForDailyBuckets()
