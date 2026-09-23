@@ -19,10 +19,8 @@ internal class ConsumptionEventEntity : IHasCreatedUtc
     public string IdempotencyKey { get; set; } = default!;
     public Guid GrantId { get; set; }
 
-    /// <summary>When the reservation resolved. Null while it is still outstanding.</summary>
     public DateTime? FinalizedUtc { get; set; }
 
-    /// <summary>How it resolved. Null while it is still outstanding.</summary>
     public ConsumptionOutcome? Outcome { get; set; }
 
     public Guid? UserId { get; set; }

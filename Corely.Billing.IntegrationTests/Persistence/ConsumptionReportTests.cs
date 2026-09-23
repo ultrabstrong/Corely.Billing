@@ -8,21 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.IntegrationTests.Persistence;
 
-/// <summary>
-/// Reading and aggregating the consumption ledger.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Every seeded row carries a distinct <c>IdempotencyKey</c> even though nothing here reads it.
-/// <c>(AccountId, IdempotencyKey)</c> is unique and most of these fixtures put several rows under one
-/// account, so a shared or blank key is rejected by the provider before any assertion runs.
-/// </para>
-/// <para>
-/// They are also seeded as settled, which is what they are: charges that already happened. An
-/// unresolved row is a reservation, and reporting stops counting one once it is past its TTL --
-/// so leaving these unresolved would quietly drop every fixture out of every total.
-/// </para>
-/// </remarks>
 public sealed class ConsumptionReportTests : IDisposable
 {
     private readonly BillingTestHost _host = new();
@@ -407,11 +392,11 @@ public sealed class ConsumptionReportTests : IDisposable
         );
 
         Assert.Equal(5, result.Count);
-        Assert.Equal(4, result[0].TotalQuantity); // Mar 1
-        Assert.Equal(0, result[1].TotalQuantity); // Mar 2
-        Assert.Equal(0, result[2].TotalQuantity); // Mar 3
-        Assert.Equal(0, result[3].TotalQuantity); // Mar 4
-        Assert.Equal(6, result[4].TotalQuantity); // Mar 5
+        Assert.Equal(4, result[0].TotalQuantity);
+        Assert.Equal(0, result[1].TotalQuantity);
+        Assert.Equal(0, result[2].TotalQuantity);
+        Assert.Equal(0, result[3].TotalQuantity);
+        Assert.Equal(6, result[4].TotalQuantity);
     }
 
     [Fact]

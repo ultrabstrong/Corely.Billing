@@ -19,7 +19,6 @@ public class ConsumptionEventEntityConfigurationTests
             nameof(ConsumptionEventEntity.IdempotencyKey)
         );
 
-        // Unique is the point. Without it a retry writes a second row and bills the work twice.
         Assert.NotNull(index);
         Assert.True(index!.IsUnique);
     }
@@ -35,8 +34,6 @@ public class ConsumptionEventEntityConfigurationTests
             nameof(ConsumptionEventEntity.CorrelationId)
         );
 
-        // Was unique, and could not stay that way: one unit of work spanning two grants writes one
-        // row per grant under a single correlation id.
         Assert.NotNull(index);
         Assert.False(index!.IsUnique);
     }
@@ -54,8 +51,6 @@ public class ConsumptionEventEntityConfigurationTests
             .GetIndexes()
             .FirstOrDefault(i => i.Properties.Select(p => p.Name).SequenceEqual(properties));
 
-    // Only the model is inspected here, but the provider still shapes it, so use the same
-    // relational provider the rest of this tier runs on rather than the InMemory one.
     private sealed class DummyConfig() : EFSqliteConfigurationBase("Data Source=:memory:")
     {
         public override void Configure(DbContextOptionsBuilder b) => b.UseSqlite(connectionString);

@@ -3,10 +3,6 @@ using Corely.Billing.Models;
 
 namespace Corely.Billing.Services;
 
-/// <summary>
-/// Reads the consumption ledger. Writes go through <see cref="IQuotaService"/>, which is what keeps
-/// every row tied to a reservation against a grant.
-/// </summary>
 public interface IConsumptionService
 {
     Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
@@ -40,10 +36,6 @@ public interface IConsumptionService
         CancellationToken ct = default
     );
 
-    /// <summary>
-    /// Reservations never resolved and past their TTL. A rising number means work upstream is dying
-    /// between holding quota and settling it.
-    /// </summary>
     Task<RetrieveSingleResult<int>> CountAbandonedReservationsAsync(
         Guid accountId,
         CancellationToken ct = default

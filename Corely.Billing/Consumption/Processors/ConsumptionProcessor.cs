@@ -58,9 +58,6 @@ internal class ConsumptionProcessor(
         var operationContext = _operationContextAccessor.Current;
         if (operationContext is null)
         {
-            // Not recoverable by retrying, and not something to paper over with a generated context:
-            // a made-up identity is what would let every retry charge again. The host that opened
-            // this work has to open a scope for it.
             _logger.LogError(
                 "No operation context while reserving consumption for account {AccountId}. "
                     + "Nothing was recorded.",
@@ -89,8 +86,6 @@ internal class ConsumptionProcessor(
 
         try
         {
-            // A step run again under the same scope finds its own earlier row. What it does with
-            // it depends on how that row ended.
             var existing = await RetryPolicy.ExecuteAsync(
                 token => FindByKeyAsync(reservation, token),
                 _retryOptions,
@@ -99,9 +94,6 @@ internal class ConsumptionProcessor(
 
             if (existing is { Outcome: ConsumptionOutcome.Released })
             {
-                // The earlier attempt gave its hold back, so nothing was charged. This attempt is
-                // real work and holds again, on the same row: the key is unique, and a second row
-                // under it can never be written.
                 existing.Quantity = reservation.Quantity;
                 existing.UtcTimestamp = reservation.UtcTimestamp;
                 existing.CorrelationId = reservation.CorrelationId;
@@ -128,7 +120,6 @@ internal class ConsumptionProcessor(
 
             if (existing is not null)
             {
-                // Still held, or already settled: a replay of work already accounted for.
                 _logger.LogInformation(
                     "Consumption for account {AccountId} was already recorded under idempotency key "
                         + "{IdempotencyKey}. Treating the retry as a no-op.",
@@ -141,9 +132,7 @@ internal class ConsumptionProcessor(
                 );
             }
 
-            // Not retried on a DbUpdateException: the entity stays tracked after a failed insert,
-            // so a second attempt fails on the tracker rather than the database, and the duplicate
-            // it most likely was never gets recognised below.
+            // No retry on DbUpdateException: the failed entity stays tracked, so a retry fails on the tracker.
             await RetryPolicy.ExecuteAsync(
                 token => _consumptionEventRepo.CreateAsync(reservation, token),
                 _retryOptions with
@@ -165,10 +154,7 @@ internal class ConsumptionProcessor(
         }
         catch (Exception ex)
         {
-            // Two attempts writing the same key at once: the loser's insert fails on the unique
-            // index. That's the winner's row, not a failure. Classified by looking for the row
-            // rather than by decoding a provider's error number, which would tie this library to
-            // one database.
+            // Lost an insert race: detected by lookup, not provider error codes.
             if (ex is DbUpdateException && await AlreadyRecordedAsync(reservation, ct))
             {
                 _logger.LogInformation(
@@ -269,14 +255,6 @@ internal class ConsumptionProcessor(
         );
     }
 
-    /// <summary>
-    /// Resolves every outstanding reservation for this operation.
-    /// </summary>
-    /// <param name="quantityByGrant">
-    /// The settled charge per grant, or null to release everything. A grant named here with no
-    /// reservation gets a new settled row -- that is work that outgrew the grant it was reserved
-    /// against drawing the remainder from the next one.
-    /// </param>
     private async Task<ResolveConsumptionResult> ResolveAsync(
         Guid accountId,
         UsageOperation operation,
@@ -311,9 +289,6 @@ internal class ConsumptionProcessor(
 
             if (outstanding.Count == 0)
             {
-                // A replay whose reservations were already resolved, or a resolve for work that was
-                // never reserved. Neither is an error, and neither may invent a row: with nothing
-                // outstanding, writing the split would charge again for work already charged.
                 _logger.LogInformation(
                     "No outstanding reservations to resolve for account {AccountId} under {Operation}/{Unit}.",
                     accountId,
@@ -337,9 +312,6 @@ internal class ConsumptionProcessor(
                         ? (long?)q
                         : null;
 
-                // A reservation whose grant no longer appears in the split is released rather than
-                // settled at zero: it keeps its original quantity, so what was held and for how long
-                // stays readable during a billing dispute.
                 reservation.Quantity = charge ?? reservation.Quantity;
                 reservation.FinalizedUtc = now;
                 reservation.Outcome = charge is null
@@ -405,14 +377,6 @@ internal class ConsumptionProcessor(
             ? []
             : quantityByGrant.Where(kv => !outstanding.Any(r => r.GrantId == kv.Key));
 
-    /// <summary>
-    /// A settled row on a grant this operation never reserved against.
-    /// </summary>
-    /// <remarks>
-    /// Copied from a reservation rather than rebuilt from arguments, so the provider, user and tags
-    /// describe the same piece of work. Its idempotency key is derived the same way every other row's
-    /// is, which is what makes a replay recognise this row rather than write a second one.
-    /// </remarks>
     private static ConsumptionEventEntity SpilloverRow(
         ConsumptionEventEntity template,
         OperationContext operationContext,
@@ -465,8 +429,6 @@ internal class ConsumptionProcessor(
         }
         catch (Exception ex)
         {
-            // If we cannot tell, say we cannot tell. Reporting success here would hide the very
-            // thing this method exists to distinguish.
             _logger.LogWarning(
                 ex,
                 "Could not check whether consumption for account {AccountId} was already recorded.",

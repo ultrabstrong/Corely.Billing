@@ -10,15 +10,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Corely.Billing.UnitTests.Quota.Processors;
 
-/// <summary>
-/// Holding quota, settling it against what the work cost, and giving it back.
-/// </summary>
-/// <remarks>
-/// The real selection policy over substituted grant and consumption processors. What is under test
-/// is the arithmetic between the two -- which grants a quantity draws on, and what settlement does
-/// when the real number turns out larger than the hold -- and a substituted policy would prove none
-/// of it.
-/// </remarks>
 public class QuotaProcessorTests
 {
     private static readonly Guid GrantId1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -126,8 +117,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task ReserveAsync_WritesOneReservationPerGrant_ForWorkThatSpansAGrantEdge()
     {
-        // A grant with one page left used to be selected for a five-hundred-page document and
-        // charged all five hundred. One row per grant is what makes the ledger add up.
         HaveGrants(Grant(GrantId1, 100, expiresInDays: 2), Grant(GrantId2, 1000));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 99));
 
@@ -142,8 +131,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task ReserveAsync_RefusesOnTheTotalAcrossGrants_ForInsufficientQuota()
     {
-        // Not enough across every valid grant together, rather than the one grant picked being too
-        // small.
         HaveGrants(Grant(GrantId1, 10), Grant(GrantId2, 5));
 
         var result = await Processor().ReserveAsync(Reserve(100));
@@ -185,8 +172,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task SettleAsync_SpillsIntoTheNextGrant_ForWorkLargerThanTheOneItWasHeldOn()
     {
-        // Reserve the floor, discover the truth: the real count is often only knowable after the
-        // provider has run.
         HaveGrants(Grant(GrantId1, 100, expiresInDays: 2), Grant(GrantId2, 1000));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 100));
         HaveOutstanding(Outstanding(GrantId1, 1));
@@ -200,8 +185,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task SettleAsync_DoesNotCompeteWithItsOwnHold_ForAGrantItAlreadyReserved()
     {
-        // The hold is already inside the totals. Left there, settlement would see its own reserved
-        // units as consumed and push the charge onto the next grant for no reason.
         HaveGrants(Grant(GrantId1, 10, expiresInDays: 2), Grant(GrantId2, 1000));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
         HaveOutstanding(Outstanding(GrantId1, 10));
@@ -214,8 +197,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task SettleAsync_OverdrawsTheLastGrant_ForWorkNoGrantHadRoomFor()
     {
-        // Overdraft-once. The work has been paid for, so refusing now means eating the cost. The
-        // last grant goes negative, which keeps the overrun visible.
         HaveGrants(Grant(GrantId1, 10));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 1));
         HaveOutstanding(Outstanding(GrantId1, 1));
@@ -229,7 +210,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task SettleAsync_ChargesTheReservedGrant_ForAnAccountWhoseGrantsAllExpired()
     {
-        // Nothing is allocatable any more; the grant the work was held against takes the charge.
         HaveOutstanding(Outstanding(GrantId1, 1));
 
         var result = await Processor().SettleAsync(Settle(7));
@@ -355,7 +335,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task GetAvailabilityAsync_ReportsExhausted_ForGrantsWithNothingLeft()
     {
-        // Grants exist, so a naive "any grants?" check would let through work that could never run.
         HaveGrants(Grant(GrantId1, 10));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
 
@@ -365,7 +344,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task GetAvailabilityAsync_ReportsUnknown_ForAGrantStoreThatThrows()
     {
-        // A database blip must not stop every piece of work from starting.
         _grants
             .Setup(p =>
                 p.ListActiveGrantsAsync(
@@ -384,8 +362,6 @@ public class QuotaProcessorTests
     [Fact]
     public async Task GetAvailabilityAsync_WritesNothing_ForAnyOutcome()
     {
-        // A question, not a hold: reserving here would leave a row for every piece of work merely
-        // considered.
         HaveGrants(Grant(GrantId1, 100));
 
         await Availability();

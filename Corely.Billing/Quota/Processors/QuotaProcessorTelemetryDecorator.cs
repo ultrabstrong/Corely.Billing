@@ -49,9 +49,6 @@ internal class QuotaProcessorTelemetryDecorator(
         {
             _telemetry.Increment(BillingMetricNames.Quota.GRANT_FOUND);
 
-            // A reservation covering more than one grant means work larger than the grant it started
-            // on. Counted because the rate is what says whether grant sizes and work sizes are
-            // mismatched.
             if (result.Shares is { Count: > 1 })
                 _telemetry.Increment(BillingMetricNames.Quota.RESERVATION_SPANNED_GRANTS);
         }
@@ -77,8 +74,6 @@ internal class QuotaProcessorTelemetryDecorator(
         {
             _telemetry.Record(BillingMetricNames.Quota.SETTLED_QUANTITY, result.SettledQuantity);
 
-            // Every overdraft is work delivered that no grant had room for. The count per period is
-            // the evidence for estimating work more accurately before it starts.
             if (result.Overdrawn)
                 _telemetry.Increment(BillingMetricNames.Quota.GRANT_OVERDRAWN);
             if (result.RemainingRatio < RUNNING_LOW_RATIO)

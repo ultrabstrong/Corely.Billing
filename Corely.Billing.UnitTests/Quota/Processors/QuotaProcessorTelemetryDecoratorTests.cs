@@ -64,8 +64,6 @@ public class QuotaProcessorTelemetryDecoratorTests
     [Fact]
     public async Task ReserveAsync_CountsASpan_ForAReservationCoveringTwoGrants()
     {
-        // Spanning succeeds silently, so without a counter a mismatch between grant sizes and work
-        // sizes is invisible.
         ReserveReturns(
             new ReserveQuotaResult(
                 ReserveQuotaResultCode.Success,

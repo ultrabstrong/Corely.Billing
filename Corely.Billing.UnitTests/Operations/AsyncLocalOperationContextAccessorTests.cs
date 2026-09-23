@@ -9,8 +9,6 @@ public class AsyncLocalOperationContextAccessorTests
     [Fact]
     public void Current_ReturnsNull_ForNoOpenScope()
     {
-        // Absence has to be observable. Metering refuses to record anything without a context, and
-        // that refusal is the thing standing between a retry and a second charge.
         var accessor = new AsyncLocalOperationContextAccessor();
 
         Assert.Null(accessor.Current);
@@ -30,9 +28,6 @@ public class AsyncLocalOperationContextAccessorTests
     [Fact]
     public void Current_RestoresThePreviousContext_ForANestedScopeThatEnds()
     {
-        // The Functions middleware opens a baseline scope and the workflow executor nests a
-        // job-and-step scope inside it. The inner one has to unwind cleanly or the next invocation
-        // on this thread inherits the wrong billing identity.
         var accessor = new AsyncLocalOperationContextAccessor();
         var outer = Context("function:1");
 
@@ -61,8 +56,6 @@ public class AsyncLocalOperationContextAccessorTests
     [Fact]
     public async Task Current_FlowsToAwaitedWork_ForAScopeOpenedBeforeIt()
     {
-        // The whole reason for AsyncLocal. ConsumptionWriter reads this several awaits below the
-        // host code that opened the scope, with nothing in between carrying it as a parameter.
         var accessor = new AsyncLocalOperationContextAccessor();
         var context = Context("scope-a");
 

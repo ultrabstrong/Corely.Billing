@@ -28,10 +28,6 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.ValidFromUtc).IsRequired();
         builder.Property(e => e.ValidToUtc);
 
-        // Not unique: GrantId is the primary key, so it is already unique globally and a unique
-        // index on (AccountId, GrantId) could never reject a row the key does not reject first.
-        // The index stays because every grant read filters on AccountId, and it names
-        // only AccountId because GrantId rides along as the clustered-key row locator anyway.
         builder.HasIndex(e => e.AccountId);
     }
 }

@@ -155,10 +155,6 @@ Domain/
 
 Favor brevity over verbosity when planning and writing code. Code that isn't written cannot break, and doesn't need to be maintained.
 
-### Comments
-
-Comments should explain *why*, not *what*. Good comments explain non-obvious business rules, why an approach was chosen over the alternatives, and edge cases that aren't apparent from the code.
-
 ### Time Abstraction
 
 Use `TimeProvider`, never `DateTime.UtcNow`. `AddBillingServices` registers `TimeProvider.System` only if the host has not registered one. No test sleeps on the wall clock — drive time with `FakeTimeProvider`.

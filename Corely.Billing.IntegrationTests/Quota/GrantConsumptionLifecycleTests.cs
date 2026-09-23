@@ -4,15 +4,6 @@ using Corely.Billing.Quota.Models;
 
 namespace Corely.Billing.IntegrationTests.Quota;
 
-/// <summary>
-/// Grants and the consumption ledger together, asking what each grant's balance reads afterwards.
-/// </summary>
-/// <remarks>
-/// Every layer below has its own tests, and a grant with one unit left was still once charged five
-/// hundred: the policy tests asserted an allocation, the quota tests a call to a substituted ledger,
-/// and the ledger tests rows. None closed the loop from a grant, through a charge, back to a balance.
-/// These do, through the public services, with a fake clock for validity windows and the TTL.
-/// </remarks>
 public sealed class GrantConsumptionLifecycleTests : IDisposable
 {
     private static readonly Guid AccountId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -77,8 +68,6 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     [Fact]
     public async Task Balance_NeverExceedsAGrantsQuantity_ForWorkThatCouldHaveFitElsewhere()
     {
-        // Stronger than "the ledger totals the work done", which the old policy also satisfied while
-        // charging the right amount to entirely the wrong grant.
         var small = await _ledger.SeedGrantAsync(quantity: 60, expiresInDays: 2);
         var large = await _ledger.SeedGrantAsync(quantity: 1000, expiresInDays: 60);
 
@@ -110,7 +99,6 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     [Fact]
     public async Task ReserveAsync_Refuses_ForASecondJobAgainstAnAlreadyHeldGrant()
     {
-        // The second caller has to see the first caller's hold, so it must be a row, not memory.
         await _ledger.SeedGrantAsync(quantity: 1);
 
         var first = await _ledger.ReserveAsync("job:a/step:1", quantity: 1);
@@ -135,8 +123,6 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     [Fact]
     public async Task ReserveAsync_Succeeds_ForASecondJobAfterTheFirstHoldExpired()
     {
-        // A process killed between reserving and settling leaves a hold nothing resolves; the TTL
-        // is the only thing that gives it back.
         await _ledger.SeedGrantAsync(quantity: 1);
 
         await _ledger.ReserveAsync("job:a/step:1", quantity: 1);
@@ -161,7 +147,6 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     [Fact]
     public async Task ReserveAsync_Refuses_ForAnAccountWhoseOnlyGrantIsOverdrawn()
     {
-        // An overdrawn grant reports no room rather than negative room.
         var grant = await _ledger.SeedGrantAsync(quantity: 10);
         await _ledger.ProcessAsync("job:a/step:1", 500);
 
@@ -186,8 +171,6 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     [Fact]
     public async Task SettleAsync_MovesTheCharge_ForAGrantThatExpiredWhileTheWorkRan()
     {
-        // Settlement re-allocates against the grants live at that moment, and the hold on the
-        // expired grant is given back rather than settled.
         var expiringToday = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 1);
         var laterGrant = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 60);
 

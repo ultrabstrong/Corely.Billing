@@ -37,8 +37,6 @@ public static class ServiceRegistrationExtensions
 
         if (options.EFConfigurationFactory != null)
         {
-            // Keyed so a container holding another library's (or the host's own) configuration
-            // cannot hand it to BillingDbContext, and Billing's cannot leak into theirs.
             var efConfigurationFactory = options.EFConfigurationFactory;
             serviceCollection.AddKeyedScoped(
                 EFConfigurationKeys.BILLING,
@@ -100,8 +98,6 @@ public static class ServiceRegistrationExtensions
         serviceCollection.AddScoped<IConsumptionService, ConsumptionService>();
         serviceCollection.AddScoped<IQuotaService, QuotaService>();
 
-        // The host's decorators sit between the service and its telemetry decorator, so telemetry
-        // records what the host decided -- a denied call included.
         options.ServiceDecorators?.Invoke(serviceCollection);
 
         serviceCollection.Decorate<IGrantService, GrantServiceTelemetryDecorator>();

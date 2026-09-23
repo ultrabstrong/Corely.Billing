@@ -60,8 +60,6 @@ public class ConsumptionProcessorTests
     [Fact]
     public async Task ReserveAsync_StampsTheAmbientIdentity_ForAnEventThatCarriesNone()
     {
-        // A caller free to supply the correlation id or key is free to supply a different one per
-        // attempt, which is the double-charge.
         var repo = MockRepo();
 
         await CreateProcessor(repo, Accessor("job:abc/step:def")).ReserveAsync(MakeEvent(3));
@@ -103,8 +101,6 @@ public class ConsumptionProcessorTests
     [Fact]
     public async Task ReserveAsync_Succeeds_ForAConcurrentWriteThatWonTheKey()
     {
-        // Both attempts find nothing, and the loser's insert fails on the unique index. That row is
-        // the winner's, so the work is recorded.
         var repo = MockRepoThatFails(new DbUpdateException("duplicate key"));
         SetupGet(repo)
             .ReturnsAsync((ConsumptionEventEntity?)null)
@@ -119,7 +115,6 @@ public class ConsumptionProcessorTests
     [Fact]
     public async Task ReserveAsync_Fails_ForADuplicateKeyWhoseRowIsAbsent()
     {
-        // Same exception type, opposite meaning: reporting success would report revenue no row backs.
         var repo = MockRepoThatFails(new DbUpdateException("something else"));
         SetupExistingRow(repo, null);
 
@@ -166,7 +161,6 @@ public class ConsumptionProcessorTests
     [Fact]
     public async Task ReserveAsync_Fails_ForExhaustedRetries()
     {
-        // The provider has already been called; a success here reports income with no row behind it.
         var repo = MockRepoThatFails(new InvalidOperationException("boom"));
         SetupExistingRow(repo, null);
 
@@ -183,7 +177,6 @@ public class ConsumptionProcessorTests
     [Fact]
     public async Task ReserveAsync_HoldsTheReleasedRowAgain_ForAStepRetriedAfterItsHoldWasReleased()
     {
-        // The key is unique, so holding again has to reuse the row rather than insert a second one.
         var released = new ConsumptionEventEntity
         {
             Quantity = 5,

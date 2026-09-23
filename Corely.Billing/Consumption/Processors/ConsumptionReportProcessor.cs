@@ -24,27 +24,9 @@ internal class ConsumptionReportProcessor(
         .Value;
     private readonly TimeProvider _timeProvider = timeProvider.ThrowIfNull(nameof(timeProvider));
 
-    /// <summary>
-    /// The cutoff before which an unresolved reservation has stopped holding quota.
-    /// </summary>
     private DateTime LiveReservationsFromUtc =>
         _timeProvider.GetUtcNow().UtcDateTime - _reservationOptions.ReservationTtl;
 
-    /// <summary>
-    /// Narrows to the rows that represent quota actually spoken for.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Settled counts. Released does not -- the hold was given back when the work failed
-    /// terminally. An unresolved reservation counts while it is inside the TTL and stops counting
-    /// once past it.
-    /// </para>
-    /// <para>
-    /// Counting only settled rows would let two pieces of work against the same nearly exhausted
-    /// grant both pass the check; counting every unresolved row would let a process killed
-    /// mid-flight hold quota for ever.
-    /// </para>
-    /// </remarks>
     private static IQueryable<ConsumptionEventEntity> WhereCounted(
         IQueryable<ConsumptionEventEntity> query,
         DateTime liveFromUtc
@@ -133,7 +115,6 @@ internal class ConsumptionReportProcessor(
         var buckets = raw.GroupBy(e => TruncateToBucket(e.UtcTimestamp, bucket))
             .ToDictionary(g => g.Key, g => g.Sum(e => e.Quantity));
 
-        // Every bucket in the window, empty ones included, so a chart has a continuous axis.
         var allBuckets = new List<ConsumptionTimeBucketData>();
         for (
             var bucketStart = TruncateToBucket(fromUtc, bucket);

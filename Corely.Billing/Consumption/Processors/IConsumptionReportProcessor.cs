@@ -30,13 +30,5 @@ internal interface IConsumptionReportProcessor
 
     Task<DateTime?> GetEarliestConsumptionAsync(Guid accountId, CancellationToken ct = default);
 
-    /// <summary>
-    /// Reservations that were never resolved and have passed their TTL.
-    /// </summary>
-    /// <remarks>
-    /// Every one of these is work that died between holding quota and settling it. They stop
-    /// counting against a grant on their own, so nothing breaks -- which is exactly why they need
-    /// counting: a rising number is the only sign that something upstream is failing silently.
-    /// </remarks>
     Task<int> CountAbandonedReservationsAsync(Guid accountId, CancellationToken ct = default);
 }

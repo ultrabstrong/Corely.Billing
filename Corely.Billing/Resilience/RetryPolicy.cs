@@ -41,7 +41,6 @@ internal static class RetryPolicy
         if (options.MaxAttempts <= 0)
             throw new ArgumentOutOfRangeException(nameof(options.MaxAttempts));
 
-        // If the caller already requested cancellation, propagate immediately.
         ct.ThrowIfCancellationRequested();
 
         var attempt = 0;

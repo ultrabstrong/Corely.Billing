@@ -112,7 +112,6 @@ internal class ConsumptionReportProcessorTelemetryDecorator(
             () => _inner.CountAbandonedReservationsAsync(accountId, ct)
         );
 
-        // Recorded even at zero, so the metric distinguishes "none abandoned" from "nobody asked".
         _telemetry.Record(BillingMetricNames.Consumption.RESERVATION_ABANDONED, count);
         return count;
     }

@@ -63,14 +63,6 @@ public class BillingOptions
         return this;
     }
 
-    /// <summary>
-    /// Wraps the public services before their telemetry decorators are applied.
-    /// </summary>
-    /// <remarks>
-    /// The place for a host's authorization. Decorate <c>IGrantService</c>, <c>IConsumptionService</c>
-    /// and <c>IQuotaService</c> with Scrutor's <c>Decorate</c>; the processors behind them are
-    /// internal and never reach the host.
-    /// </remarks>
     public BillingOptions DecorateServices(Action<IServiceCollection> decorate)
     {
         ArgumentNullException.ThrowIfNull(decorate);

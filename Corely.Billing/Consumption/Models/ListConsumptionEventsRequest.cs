@@ -3,10 +3,6 @@ using Corely.Common.Filtering.Ordering;
 
 namespace Corely.Billing.Consumption.Models;
 
-/// <remarks>
-/// Explicit filters rather than a <c>FilterBuilder</c>: operations and units are registered tokens,
-/// which a filter builder has no operation for, and they are the filters that matter most here.
-/// </remarks>
 public record ListConsumptionEventsRequest(
     Guid AccountId,
     DateTime? FromUtc = null,

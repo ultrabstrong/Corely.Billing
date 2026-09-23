@@ -51,10 +51,6 @@ public sealed class BillingTestHost : IBillingTestHost, IDisposable
         return await work(scope.ServiceProvider);
     }
 
-    /// <summary>
-    /// Runs <paramref name="work"/> in a fresh DI scope inside the operation context
-    /// <paramref name="idempotencyScope"/> names, the way a host runs one unit of work.
-    /// </summary>
     public async Task<T> InOperationAsync<T>(
         string idempotencyScope,
         Func<IServiceProvider, Task<T>> work

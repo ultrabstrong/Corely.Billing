@@ -13,14 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.IntegrationTests.Providers;
 
-/// <summary>
-/// The shipped migrations and every provider-translated query, against real SQL Server and MySQL.
-/// </summary>
-/// <remarks>
-/// SQLite proves the logic; these prove the SQL. Each case is one a provider could translate
-/// differently: the reservation TTL predicate, the idempotency key prefix match, the unique index,
-/// date bucketing, and the filter and order builders.
-/// </remarks>
 public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLifetime
 {
     private static readonly Guid AccountId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -135,8 +127,6 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     [RequiresDockerFact]
     public async Task UniqueIndexAllowsTheSameKey_ForDifferentAccounts()
     {
-        // Scoped per account on purpose: two tenants can produce identical scopes and must not
-        // block each other.
         var inserted = await Host.QueryAsync(db =>
         {
             db.ConsumptionEvents.AddRange(

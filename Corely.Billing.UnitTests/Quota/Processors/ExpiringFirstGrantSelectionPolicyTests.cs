@@ -58,8 +58,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_SpendsTheSoonestExpiringFirst_ForSeveralGrantsWithRoom()
     {
-        // The product decision the policy is named for: quota the customer would otherwise lose is
-        // spent before quota that keeps.
         var soon = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
         var later = MakeGrant(TestGrantId2, 100, Now.AddDays(-1), Now.AddDays(30));
 
@@ -71,9 +69,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_SpreadsAcrossGrants_ForWorkLargerThanTheFirstGrantsRemainder()
     {
-        // The bug this replaces. Selecting on "has any room left" charged a five-hundred-page
-        // document entirely to a grant with one page free, leaving it 499 overspent and the next
-        // grant untouched. Nothing blocked, so it was invisible until someone reconciled an invoice.
         var almostSpent = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
         var fresh = MakeGrant(TestGrantId2, 1000, Now.AddDays(-1), Now.AddDays(30));
 
@@ -95,8 +90,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_UsesOneGrant_ForWorkThatExactlyFillsIt()
     {
-        // The boundary itself. One page either side of this is a different shape, so it is worth
-        // pinning rather than inferring from the two neighbours below.
         var almostSpent = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
         var fresh = MakeGrant(TestGrantId2, 1000, Now.AddDays(-1), Now.AddDays(30));
 
@@ -118,7 +111,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_TakesOnePageFromTheNextGrant_ForWorkOnePageOverTheEdge()
     {
-        // Off by one in the direction that matters: the old code charged all 41 to the first grant.
         var almostSpent = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
         var fresh = MakeGrant(TestGrantId2, 1000, Now.AddDays(-1), Now.AddDays(30));
 
@@ -137,8 +129,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_SpendsTheLastPage_ForAGrantWithExactlyOneLeft()
     {
-        // Literally the case from the bug report: a grant with one page remaining was selected for a
-        // five-hundred-page document and charged all five hundred.
         var onePageLeft = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
         var fresh = MakeGrant(TestGrantId2, 1000, Now.AddDays(-1), Now.AddDays(30));
 
@@ -172,9 +162,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_AddsNoCapacityBack_ForAnAlreadyOverdrawnGrant()
     {
-        // Overdraft-once leaves grants reading past their quantity. Subtracting naively would make
-        // an overdrawn grant look like it had negative room, and negative room must not become
-        // capacity somewhere else.
         var overdrawn = MakeGrant(TestGrantId1, 10, Now.AddDays(-10), Now.AddDays(1));
         var available = MakeGrant(TestGrantId2, 50, Now.AddDays(-5), Now.AddDays(2));
 
@@ -195,8 +182,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_ReportsTheShortfall_ForWorkLargerThanEveryGrantTogether()
     {
-        // Reported rather than refused. Before the work this is insufficient quota; afterwards the
-        // provider has already been paid and the same number becomes the overdraft.
         var first = MakeGrant(TestGrantId1, 10, Now.AddDays(-1), Now.AddDays(2));
         var second = MakeGrant(TestGrantId2, 5, Now.AddDays(-1), Now.AddDays(30));
 
@@ -227,8 +212,6 @@ public class ExpiringFirstGrantSelectionPolicyTests
     [Fact]
     public void Split_BreaksExpiryTiesBySize_ForGrantsExpiringTogether()
     {
-        // The order has to be total, or a replay of the same work allocates differently and the
-        // idempotency keys no longer line up.
         var expiry = Now.AddDays(2);
         var larger = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), expiry);
         var smaller = MakeGrant(TestGrantId2, 10, Now.AddDays(-1), expiry);

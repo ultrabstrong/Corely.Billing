@@ -5,13 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.IntegrationTests.Infrastructure;
 
-/// <summary>
-/// Drives grants and quota through the public services, the way a host's pipeline step does.
-/// </summary>
-/// <remarks>
-/// Every call gets a fresh DI scope, because that is how a host runs a unit of work and because a
-/// shared DbContext would answer from its change tracker rather than the database.
-/// </remarks>
 public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
 {
     public async Task<Guid> SeedGrantAsync(long quantity, int expiresInDays = 30)
@@ -35,7 +28,6 @@ public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
         return result.CreatedId;
     }
 
-    /// <summary>Reserve the floor, then settle to the real count.</summary>
     public async Task ProcessAsync(string idempotencyScope, long quantity)
     {
         await ReserveAsync(idempotencyScope, quantity: 1);

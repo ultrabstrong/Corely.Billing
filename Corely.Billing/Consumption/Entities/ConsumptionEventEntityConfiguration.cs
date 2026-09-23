@@ -29,8 +29,6 @@ internal sealed class ConsumptionEventEntityConfiguration(IDbTypes dbTypes)
             .HasConversion(operation => operation.Value, value => UsageOperation.From(value))
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
-        // Stored as its name rather than an ordinal, so the column reads during a dispute, and
-        // length-capped so it does not become nvarchar(max) for an eight-character word.
         builder
             .Property(e => e.Outcome)
             .HasConversion<string>()
@@ -46,13 +44,8 @@ internal sealed class ConsumptionEventEntityConfiguration(IDbTypes dbTypes)
             .HasMaxLength(ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH)
             .IsRequired();
 
-        // The whole double-charge defence is this line. A retry rebuilds the same key and the
-        // second insert is rejected by the database rather than by anything the application
-        // remembered to check.
         builder.HasIndex(e => new { e.AccountId, e.IdempotencyKey }).IsUnique();
 
-        // Correlation is no longer unique: one unit of work spanning two grants writes two rows
-        // under one correlation id, and a reconciliation delta later adds a third.
         builder.HasIndex(e => new { e.AccountId, e.CorrelationId });
     }
 }

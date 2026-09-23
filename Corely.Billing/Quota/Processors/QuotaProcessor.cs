@@ -10,14 +10,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Corely.Billing.Quota.Processors;
 
-/// <summary>
-/// Quota in terms of grants: which ones a piece of work draws on, and what it finally cost them.
-/// </summary>
-/// <remarks>
-/// The split against the ledger is by what each layer understands. This one knows grants, their order
-/// and their capacity; the consumption processor knows rows. So settlement is worked out here and
-/// handed down as a per-grant split, rather than the ledger inferring anything about grants.
-/// </remarks>
 internal class QuotaProcessor(
     IGrantProcessor grantProcessor,
     IConsumptionProcessor consumptionProcessor,
@@ -58,17 +50,12 @@ internal class QuotaProcessor(
             if (context.Grants.Count == 0)
                 return QuotaAvailability.Exhausted;
 
-            // One unit is the smallest question worth asking. Anything larger would be guessing at a
-            // size nothing knows yet, and this check exists to catch the obvious no.
             var split = _grantSelectionPolicy.Split(context.Grants, context.Totals, quantity: 1);
 
             return split.Shortfall > 0 ? QuotaAvailability.Exhausted : QuotaAvailability.Available;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            // Swallowed on purpose, and the only place that does it. This check sits at the front
-            // door of a pipeline: a database blip here must not stop every piece of work from
-            // starting, when the accurate check at reservation would have caught it.
             _logger.LogWarning(
                 ex,
                 "Could not determine {Operation}/{Unit} quota availability for AccountId {AccountId}. "
@@ -108,8 +95,6 @@ internal class QuotaProcessor(
 
         if (split.Shortfall > 0)
         {
-            // Refused on the total across every valid grant, which is the honest meaning of
-            // "insufficient quota" -- not "the one grant I picked was too small".
             _logger.LogInformation(
                 "Insufficient {Operation}/{Unit} quota for AccountId {AccountId}: {Requested} requested, "
                     + "{Short} short across {GrantCount} grants.",
@@ -144,9 +129,6 @@ internal class QuotaProcessor(
             var reserved = await _consumptionProcessor.ReserveAsync(reservation, ct);
             if (reserved.ResultCode != ReserveConsumptionResultCode.Success)
             {
-                // Partially reserved. The rows already written stay outstanding and are released
-                // when the caller gives up, or expire if it dies -- either way the caller is told
-                // the reservation failed, so the work does not start.
                 _logger.LogError(
                     "Could not reserve {Quantity} on grant {GrantId} for AccountId {AccountId}: "
                         + "{ResultCode} {Message}",
@@ -189,8 +171,6 @@ internal class QuotaProcessor(
 
         if (outstanding.Count == 0)
         {
-            // A replay whose reservations were already settled. The ledger treats that as a no-op,
-            // and re-deriving a split for rows that no longer exist would only invent charges.
             return await ApplyAsync(request, new Dictionary<Guid, long>(), overdrawn: false, ct);
         }
 
@@ -212,10 +192,6 @@ internal class QuotaProcessor(
 
         if (overdrawn)
         {
-            // Overdraft-once. The work has already been paid for, so refusing now means eating the
-            // cost, giving the customer nothing, and nothing stopping it recurring. The last grant
-            // absorbs it and goes negative, which is what makes the overrun visible rather than
-            // silently absent.
             var lastGrantId = split.Shares.LastOrDefault()?.GrantId ?? outstanding[^1].GrantId;
 
             quantityByGrant[lastGrantId] =
@@ -303,14 +279,6 @@ internal class QuotaProcessor(
         return Math.Clamp((double)(total - consumed) / total, 0, 1);
     }
 
-    /// <summary>
-    /// Removes this operation's own holds from the per-grant totals.
-    /// </summary>
-    /// <remarks>
-    /// Without this, settling a hundred-unit piece of work against a hold of one would see that unit
-    /// as consumed and allocate the hundred around it -- the work would be competing with the
-    /// reservation it took out for itself.
-    /// </remarks>
     private static List<GrantTotalConsumptions> SubtractOwnReservations(
         List<GrantTotalConsumptions> totals,
         List<ConsumptionEvent> outstanding
@@ -328,7 +296,6 @@ internal class QuotaProcessor(
 
     private sealed record QuotaContext(List<Grant> Grants, List<GrantTotalConsumptions> Totals);
 
-    /// <summary>The account's live grants and what has been drawn from each.</summary>
     private async Task<QuotaContext> LoadAsync(
         Guid accountId,
         UsageOperation operation,

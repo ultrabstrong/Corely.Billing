@@ -7,8 +7,6 @@ using Corely.Billing.Usage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-// No database: without an EF configuration factory, BillingOptions registers in-memory
-// repositories. They live as long as the DI scope, so the whole demo runs in one.
 var services = new ServiceCollection();
 services.AddLogging();
 services.AddBillingServices(
