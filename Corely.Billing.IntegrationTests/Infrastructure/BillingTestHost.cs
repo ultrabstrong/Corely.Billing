@@ -10,7 +10,7 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace Corely.Billing.IntegrationTests.Infrastructure;
 
-public sealed class BillingTestHost : IDisposable
+public sealed class BillingTestHost : IBillingTestHost, IDisposable
 {
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
     private readonly ServiceProvider _serviceProvider;
