@@ -1,5 +1,50 @@
 # Usage shapes: showing how widely the library applies
 
+## Starting cold
+
+For a session picking this up with no history.
+
+**Read first:** this repository's `CLAUDE.md`, `DOCUMENTATION-STYLE.md`, and `Corely.Billing/Docs/`
+(especially `reservations.md` and `services/`). Corely.IAM is the standard for every convention;
+where this plan is silent, do what IAM does.
+
+**The IAM precedent** under `C:\source\git\ultrabstrong\Corely.IAM\`: `Corely.IAM/Docs/usage-shapes.md`
+(the page to model this one on), `Corely.IAM.Demos.UsersOnly` and `.SharedAccount` (demo host
+shape, README style, `--seed`), and `Plans/Completed/simple-usage-shapes-docs-and-demos.md` (what
+went wrong building them — LocalDB plus the migration tool, not SQLite with `EnsureCreated`).
+
+**Code the gaps point at** (all under `Corely.Billing/`):
+
+| Gap | Where |
+|---|---|
+| Unlimited quantity | `Grants/Models/Grant.cs`, `Grants/Entities/`, `Grants/Validators/GrantValidator.cs`, `Quota/Processors/ExpiringFirstGrantSelectionPolicy.cs`, `QuotaProcessor.RemainingRatio` |
+| Active-grant query | `Grants/Processors/IGrantProcessor.ListActiveGrantsAsync` (exists, internal), `Services/IGrantService.cs` |
+
+A schema change is a migration in both providers: `.\AddMigration.ps1 <Name>` from the repository
+root, then the provider matrix (`$env:CORELY_RUN_CONTAINER_TESTS = "1"`, Docker running) to prove it
+on SQL Server and MySQL.
+
+**Ask the owner before building:** gaps 1 and 2 (the recommendations are written below), and
+whether to build the IAM demo. Do not start the library changes until those are answered.
+
+**The consumer.** DocsToData (`C:\source\git\pinnacleinnovation\DocsToData`) uses this library in
+production-shaped code. A nullable `Quantity` is a breaking change for it: after release, DocsToData
+bumps both `Corely.Billing` entries in `Directory.Packages.props`, regenerates
+`iac/local/billing-schema.sql` with `corely-billing-db db script -i -p MsSql`, and handles null
+where it reads `Quantity`. Note that follow-up in DocsToData rather than doing it from this session.
+
+**Shipping it:** bump `<Version>` in `Corely.Billing/Corely.Billing.csproj`, and in the CLI's csproj
+too if a migration was added (the CLI's major tracks the library's). Releasing is tagging `vX.Y.Z` on
+`master`; ask before tagging, since a published version cannot be deleted.
+
+**Running beside `web-components-and-demos.md`:** work on a branch or a separate `git worktree`, not
+the shared checkout. Expect to merge `Corely.Billing.slnx`, the root `README.md`, `release.yml`,
+`check-package-versions.sh` and `Corely.Billing/Docs/index.md`.
+
+**Done when:** the library changes are tested on all three tiers including the provider matrix,
+`RebuildAndTest.ps1` is green, the docs page is written, the demos are clicked through, and this plan
+moves to `Plans/Completed/` with an Outcome section. Commit locally; push only when the owner says so.
+
 ## The problem
 
 Corely.Billing reads as a metering system: overlapping grants, reservations, settlement, grant-edge

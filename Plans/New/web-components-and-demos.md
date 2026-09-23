@@ -1,5 +1,52 @@
 # Web components and a demo portal
 
+## Starting cold
+
+For a session picking this up with no history.
+
+**Read first:** this repository's `CLAUDE.md`, `DOCUMENTATION-STYLE.md` and `Corely.Billing/Docs/`
+(the library's public surface). Corely.IAM is the standard for every convention here; where this
+plan is silent, do what IAM does.
+
+**Source to port** (DocsToData, a separate repository, read-only for this work):
+
+| What | Path under `C:\source\git\pinnacleinnovation\DocsToData\DocsToData.AdminPortalWebApp\` |
+|---|---|
+| Grant list | `Components/Pages/Grants.razor` + `.razor.cs` |
+| Grant editor | `Components/Pages/GrantEditor.razor` + `.razor.cs` |
+| Usage page | `Components/Pages/Usage.razor` + `.razor.cs` |
+| Chart module | `wwwroot/js/usage-chart.js` (Chart.js from `libman.json`, loaded in `Components/App.razor`) |
+| Unit counts | `Components/UsageText.cs` |
+
+Those pages already call the current Corely.Billing API, so they port without an API change. Run
+DocsToData's local stack (`iac/local/Start-LocalStack.ps1 -Run`, sign in `admin` / `Test1234`) to see
+them working.
+
+**The IAM precedent** under `C:\source\git\ultrabstrong\Corely.IAM\`: `Corely.IAM.Web/` (project
+shape, `Docs/`, vendored `wwwroot/lib`, `Extensions/` registration), `Corely.IAM.Web.UnitTests/`
+(bUnit), `Corely.IAM.Web.FunctionalTests/Demos/` (demo smoke tests and why they need extern
+aliases), `Corely.IAM.Demos.*` and `Corely.IAM.Demos.Assets` (demo hosts and shared static assets),
+and `Plans/Completed/simple-usage-shapes-docs-and-demos.md` (what went wrong building those demos).
+
+**Ask the owner before building:** the three decisions at the end of this plan. Everything else,
+proceed.
+
+**Shipping it:** the new package needs a `dotnet pack` step in `.github/workflows/release.yml`, an
+entry in `scripts/check-package-versions.sh`, and its own `<Version>`. The nuget.org trusted-publisher
+policy already covers `Corely.Billing*`, so no nuget.org change is needed. Releasing is tagging
+`vX.Y.Z` on `master`; ask before tagging, since a published version cannot be deleted.
+
+**Running beside `usage-shapes-docs-and-demos.md`:** that plan changes the library (a migration, a
+new service method). Work on a branch or a separate `git worktree`, not the shared checkout. Expect
+to merge `Corely.Billing.slnx`, the root `README.md`, `release.yml`, `check-package-versions.sh` and
+`Corely.Billing/Docs/index.md`. If that plan makes `Grant.Quantity` nullable, the components print
+"Unlimited" for a null quantity; if it lands first, handle it here, and if it lands after, it is that
+plan's follow-up.
+
+**Done when:** the package builds, its bUnit and smoke tests pass, `RebuildAndTest.ps1` is green, the
+demo portal is clicked through at desktop and phone widths, docs are written, and this plan moves to
+`Plans/Completed/` with an Outcome section. Commit locally; push only when the owner says so.
+
 ## The problem
 
 Every host of Corely.Billing ends up building the same screens: a list of grants, a form to create
