@@ -7,7 +7,7 @@ namespace Corely.Billing.IntegrationTests.Infrastructure;
 
 public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
 {
-    public async Task<Guid> SeedGrantAsync(long quantity, int expiresInDays = 30)
+    public async Task<Guid> SeedGrantAsync(long? quantity, int expiresInDays = 30)
     {
         var now = host.TimeProvider.GetUtcNow().UtcDateTime;
         var result = await host.WithScopeAsync(services =>

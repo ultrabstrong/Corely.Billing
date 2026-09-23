@@ -271,7 +271,10 @@ internal class QuotaProcessor(
         long charged
     )
     {
-        var total = grants.Sum(g => g.Quantity);
+        if (grants.Any(g => g.Quantity is null))
+            return 1;
+
+        var total = grants.Sum(g => g.Quantity!.Value);
         if (total <= 0)
             return 0;
 

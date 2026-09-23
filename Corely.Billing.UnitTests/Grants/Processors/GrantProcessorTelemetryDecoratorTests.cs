@@ -46,6 +46,22 @@ public class GrantProcessorTelemetryDecoratorTests
     }
 
     [Fact]
+    public async Task CreateGrantAsync_RecordsNoQuantity_ForAnUnlimitedGrant()
+    {
+        _inner
+            .Setup(p => p.CreateGrantAsync(It.IsAny<CreateGrantRequest>(), default))
+            .ReturnsAsync(new CreateGrantResult(CreateGrantResultCode.Success, "", GrantId));
+
+        await _decorator.CreateGrantAsync(CreateRequest() with { Quantity = null });
+
+        _telemetry.Verify(t => t.Increment(BillingMetricNames.Grants.GRANT_SAVED), Times.Once);
+        _telemetry.Verify(
+            t => t.Record(BillingMetricNames.Grants.GRANT_QUANTITY, It.IsAny<double>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
     public async Task CreateGrantAsync_RecordsNothing_ForAFailedCreate()
     {
         _inner

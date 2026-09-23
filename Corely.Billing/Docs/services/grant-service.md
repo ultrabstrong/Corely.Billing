@@ -25,12 +25,21 @@ var result = await grantService.CreateGrantAsync(new CreateGrantRequest(
 var grantId = result.CreatedId;
 ```
 
+### Unlimited
+
+A null `Quantity` is an unlimited grant. Quota draws on it before any limited grant and never finds it short.
+
+```csharp
+await grantService.CreateGrantAsync(new CreateGrantRequest(
+    accountId, MyUsage.DocumentExtraction, MyUsage.Page, Quantity: null, termStart, termStart.AddYears(1)));
+```
+
 ### List with Filtering and Pagination
 
 ```csharp
 var result = await grantService.ListGrantsAsync(new ListGrantsRequest(
     accountId,
-    Filter: Filter.For<Grant>().Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(100)),
+    Filter: Filter.For<Grant>().Where(g => g.ValidToUtc, ComparableFilter<DateTime>.GreaterThan(now)),
     Order: Order.For<Grant>().By(g => g.ValidToUtc, SortDirection.Ascending),
     Skip: 0, Take: 25));
 
@@ -51,7 +60,7 @@ await grantService.UpdateGrantAsync(new UpdateGrantRequest(
 | Rule | Code |
 |------|------|
 | `AccountId` and `GrantId` not empty | `ValidationError` |
-| `Quantity` zero or more | `ValidationError` |
+| `Quantity` zero or more, or null for unlimited | `ValidationError` |
 | `ValidToUtc` after `ValidFromUtc` | `ValidationError` |
 | Operation and unit registered | `ValidationError` |
 

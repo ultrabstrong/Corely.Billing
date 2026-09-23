@@ -21,7 +21,7 @@ if (availability == QuotaAvailability.Exhausted)
     return Refuse();
 ```
 
-`Unknown` means the check could not run. Let the work start; reservation is the accurate check.
+`Unknown` means the check could not run. Let the work start; reservation is the accurate check. A gate that must fail closed, such as a subscription, treats `Unknown` as a refusal instead.
 
 ### Reserve, Settle, Release
 
@@ -49,7 +49,7 @@ catch (WorkFailedException)
 | `Shares` | `ReserveQuotaResult` | The `GrantShare` per grant the hold drew on |
 | `SettledQuantity` | `SettleQuotaResult` | What was charged |
 | `Overdrawn` | `SettleQuotaResult` | The charge exceeded every live grant; the last one absorbed it |
-| `RemainingRatio` | `SettleQuotaResult` | What is left across live grants, 0 to 1 |
+| `RemainingRatio` | `SettleQuotaResult` | What is left across live grants, 0 to 1; 1 while an unlimited grant is live |
 
 ## Notes
 

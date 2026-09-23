@@ -97,6 +97,19 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     }
 
     [Fact]
+    public async Task Balance_ChargesOnlyTheUnlimitedGrant_ForWorkBesideALimitedGrantExpiringSooner()
+    {
+        var expiringSoon = await _ledger.SeedGrantAsync(quantity: 10, expiresInDays: 2);
+        var unlimited = await _ledger.SeedGrantAsync(quantity: null, expiresInDays: 365);
+
+        await _ledger.ProcessAsync("job:a/step:1", 5000);
+        await _ledger.ProcessAsync("job:b/step:1", 5000);
+
+        Assert.Equal(0, await _ledger.BalanceAsync(expiringSoon));
+        Assert.Equal(10_000, await _ledger.BalanceAsync(unlimited));
+    }
+
+    [Fact]
     public async Task ReserveAsync_Refuses_ForASecondJobAgainstAnAlreadyHeldGrant()
     {
         await _ledger.SeedGrantAsync(quantity: 1);

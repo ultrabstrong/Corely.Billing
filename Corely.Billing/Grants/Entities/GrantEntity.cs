@@ -9,7 +9,7 @@ internal class GrantEntity : IHasCreatedUtc
     public DateTime CreatedUtc { get; set; }
 
     public Guid AccountId { get; set; }
-    public long Quantity { get; set; }
+    public long? Quantity { get; set; }
     public UsageUnit Unit { get; set; }
     public UsageOperation Operation { get; set; }
     public DateTime ValidFromUtc { get; set; }

@@ -6,7 +6,7 @@ public record UpdateGrantRequest(
     Guid AccountId,
     Guid GrantId,
     UsageUnit Unit,
-    long Quantity,
+    long? Quantity,
     DateTime ValidFromUtc,
     DateTime ValidToUtc,
     Dictionary<string, string>? Tags = null

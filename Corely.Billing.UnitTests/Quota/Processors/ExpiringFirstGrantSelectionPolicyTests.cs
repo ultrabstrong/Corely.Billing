@@ -15,7 +15,7 @@ public class ExpiringFirstGrantSelectionPolicyTests
 
     private readonly ExpiringFirstGrantSelectionPolicy _policy = new();
 
-    private static Grant MakeGrant(Guid id, long qty, DateTime fromUtc, DateTime toUtc) =>
+    private static Grant MakeGrant(Guid id, long? qty, DateTime fromUtc, DateTime toUtc) =>
         new()
         {
             GrantId = id,
@@ -250,5 +250,49 @@ public class ExpiringFirstGrantSelectionPolicyTests
         );
 
         Assert.Equal(10, Assert.Single(split.Shares).Quantity);
+    }
+
+    [Fact]
+    public void Split_SpendsTheUnlimitedGrantFirst_ForAnUnlimitedGrantBesideOneExpiringSooner()
+    {
+        var soon = MakeGrant(TestGrantId1, 100, Now.AddDays(-1), Now.AddDays(2));
+        var unlimited = MakeGrant(TestGrantId2, null, Now.AddDays(-1), Now.AddDays(365));
+
+        var split = _policy.Split([soon, unlimited], [], quantity: 40);
+
+        Assert.Multiple(() =>
+        {
+            Assert.Equal(new GrantShare(TestGrantId2, 40), Assert.Single(split.Shares));
+            Assert.Equal(0, split.Shortfall);
+        });
+    }
+
+    [Fact]
+    public void Split_NeverRunsShort_ForAnUnlimitedGrantWithAnyAmountConsumed()
+    {
+        var unlimited = MakeGrant(TestGrantId1, null, Now.AddDays(-1), Now.AddDays(365));
+
+        var split = _policy.Split(
+            [unlimited],
+            [new GrantTotalConsumptions(TestGrantId1, long.MaxValue)],
+            quantity: long.MaxValue
+        );
+
+        Assert.Multiple(() =>
+        {
+            Assert.Equal(new GrantShare(TestGrantId1, long.MaxValue), Assert.Single(split.Shares));
+            Assert.Equal(0, split.Shortfall);
+        });
+    }
+
+    [Fact]
+    public void Split_SpendsTheSoonestExpiringUnlimitedGrant_ForARenewalOverlappingTheCurrentTerm()
+    {
+        var renewal = MakeGrant(TestGrantId1, null, Now.AddDays(-1), Now.AddDays(365));
+        var current = MakeGrant(TestGrantId2, null, Now.AddDays(-364), Now.AddDays(1));
+
+        var split = _policy.Split([renewal, current], [], quantity: 1);
+
+        Assert.Equal(TestGrantId2, Assert.Single(split.Shares).GrantId);
     }
 }

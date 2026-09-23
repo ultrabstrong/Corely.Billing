@@ -17,7 +17,7 @@ public sealed class GrantListTests : IDisposable
 
     public void Dispose() => _host.Dispose();
 
-    private async Task SeedAsync(params long[] quantities)
+    private async Task SeedAsync(params long?[] quantities)
     {
         for (var i = 0; i < quantities.Length; i++)
         {
@@ -70,21 +70,19 @@ public sealed class GrantListTests : IDisposable
     }
 
     [Fact]
-    public async Task ListGrantsAsync_TranslatesTheFilter_ForAQuantityFilter()
+    public async Task ListGrantsAsync_TranslatesTheFilter_ForAnUnlimitedFilter()
     {
-        await SeedAsync(10, 20, 30, 40);
+        await SeedAsync(10, null, 30, null);
 
         var result = await ListAsync(
             new ListGrantsRequest(
                 AccountId,
-                Filter: Filter
-                    .For<Grant>()
-                    .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(25))
+                Filter: Filter.For<Grant>().Where(g => g.Quantity, ComparableFilter<long>.IsNull())
             )
         );
 
         Assert.Equal(2, result.Data!.TotalCount);
-        Assert.All(result.Data.Items, g => Assert.True(g.Quantity >= 25));
+        Assert.All(result.Data.Items, g => Assert.Null(g.Quantity));
     }
 
     [Fact]

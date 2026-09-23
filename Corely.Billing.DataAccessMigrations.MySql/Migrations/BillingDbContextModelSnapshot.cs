@@ -105,7 +105,7 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<long>("Quantity")
+                    b.Property<long?>("Quantity")
                         .HasColumnType("bigint");
 
                     b.Property<string>("TagsJson")

@@ -129,6 +129,17 @@ public class QuotaProcessorTests
     }
 
     [Fact]
+    public async Task ReserveAsync_HoldsOnTheUnlimitedGrant_ForWorkLargerThanEveryLimitedGrant()
+    {
+        HaveGrants(Grant(GrantId1, 10, expiresInDays: 2), Grant(GrantId2, null));
+
+        var result = await Processor().ReserveAsync(Reserve(1_000_000));
+
+        Assert.Equal(ReserveQuotaResultCode.Success, result.ResultCode);
+        VerifyReserved(GrantId2, 1_000_000);
+    }
+
+    [Fact]
     public async Task ReserveAsync_RefusesOnTheTotalAcrossGrants_ForInsufficientQuota()
     {
         HaveGrants(Grant(GrantId1, 10), Grant(GrantId2, 5));
@@ -237,6 +248,26 @@ public class QuotaProcessorTests
     }
 
     [Fact]
+    public async Task SettleAsync_ReportsNothingUsed_ForAnUnlimitedGrantBesideALimitedOne()
+    {
+        HaveGrants(Grant(GrantId1, 100, expiresInDays: 2), Grant(GrantId2, null));
+        HaveTotals(
+            new GrantTotalConsumptions(GrantId1, 90),
+            new GrantTotalConsumptions(GrantId2, 1)
+        );
+        HaveOutstanding(Outstanding(GrantId2, 1));
+
+        var result = await Processor().SettleAsync(Settle(500));
+
+        Assert.Multiple(() =>
+        {
+            Assert.False(result.Overdrawn);
+            Assert.Equal(1, result.RemainingRatio);
+        });
+        VerifySettled(new Dictionary<Guid, long> { [GrantId2] = 500 });
+    }
+
+    [Fact]
     public async Task SettleAsync_WritesNothing_ForAReplayWithNoOutstandingReservations()
     {
         var result = await Processor().SettleAsync(Settle(20));
@@ -339,6 +370,15 @@ public class QuotaProcessorTests
         HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
 
         Assert.Equal(QuotaAvailability.Exhausted, await Availability());
+    }
+
+    [Fact]
+    public async Task GetAvailabilityAsync_ReportsAvailable_ForAnUnlimitedGrantBesideASpentOne()
+    {
+        HaveGrants(Grant(GrantId1, 10), Grant(GrantId2, null));
+        HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
+
+        Assert.Equal(QuotaAvailability.Available, await Availability());
     }
 
     [Fact]
@@ -446,7 +486,7 @@ public class QuotaProcessorTests
             )
             .ReturnsAsync([.. outstanding]);
 
-    private Grant Grant(Guid grantId, long quantity, int expiresInDays = 30) =>
+    private Grant Grant(Guid grantId, long? quantity, int expiresInDays = 30) =>
         new()
         {
             GrantId = grantId,

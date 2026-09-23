@@ -37,7 +37,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, op, unit, pages
 
 ## Grant Selection
 
-Live grants are those whose window contains the current time. They are spent in order of `ValidToUtc`, then smallest `Quantity`, then `ValidFromUtc`, then `GrantId`, so quota the account would otherwise lose is used first. The order is total, so a replay allocates exactly as the original did.
+Live grants are those whose window contains the current time. Unlimited grants (a null `Quantity`) are spent first, and take the whole charge. Limited grants follow in order of `ValidToUtc`, then smallest `Quantity`, then `ValidFromUtc`, then `GrantId`, so quota the account would otherwise lose is used first. The order is total, so a replay allocates exactly as the original did.
 
 ## Overdraft
 
@@ -55,6 +55,6 @@ When the actual quantity exceeds every live grant's remainder, settlement still 
 
 ## Notes
 
-- `SettleQuotaResult.RemainingRatio` is what is left across live grants after the charge, from 0 to 1
+- `SettleQuotaResult.RemainingRatio` is what is left across live grants after the charge, from 0 to 1, and 1 while an unlimited grant is live
 - `GetAvailabilityAsync` answers without a quantity and returns `Unknown` rather than failing when the database is unreachable
 - `IConsumptionService.CountAbandonedReservationsAsync` counts holds that expired unresolved — a rising number means work is dying between reserve and settle

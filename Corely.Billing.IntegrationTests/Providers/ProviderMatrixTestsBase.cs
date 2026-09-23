@@ -78,6 +78,24 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     }
 
     [RequiresDockerFact]
+    public async Task UnlimitedGrantTakesTheWork_ForAnUnlimitedGrantBesideALimitedOne()
+    {
+        var expiringSoon = await _ledger.SeedGrantAsync(quantity: 10, expiresInDays: 2);
+        var unlimited = await _ledger.SeedGrantAsync(quantity: null, expiresInDays: 365);
+
+        await _ledger.ProcessAsync("job:a/step:1", 500);
+        var availability = await Host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IQuotaService>()
+                .GetAvailabilityAsync(AccountId, TestUsage.Extraction, TestUsage.Page)
+        );
+
+        Assert.Equal(0, await _ledger.BalanceAsync(expiringSoon));
+        Assert.Equal(500, await _ledger.BalanceAsync(unlimited));
+        Assert.Equal(QuotaAvailability.Available, availability);
+    }
+
+    [RequiresDockerFact]
     public async Task ExpiredHoldsStopCounting_ForAHoldPastItsTtl()
     {
         await _ledger.SeedGrantAsync(quantity: 1);
@@ -232,6 +250,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     {
         await _ledger.SeedGrantAsync(quantity: 10);
         await _ledger.SeedGrantAsync(quantity: 30);
+        await _ledger.SeedGrantAsync(quantity: null);
         await _ledger.SeedGrantAsync(quantity: 20);
 
         var result = await Host.WithScopeAsync(services =>
@@ -242,13 +261,13 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                         AccountId,
                         Filter: Filter
                             .For<Grant>()
-                            .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20)),
+                            .Where(g => g.Quantity, ComparableFilter<long>.IsNotNull()),
                         Order: Order.For<Grant>().By(g => g.Quantity, SortDirection.Ascending)
                     )
                 )
         );
 
-        Assert.Equal([20, 30], result.Data!.Items.Select(g => g.Quantity));
+        Assert.Equal([10, 20, 30], result.Data!.Items.Select(g => g.Quantity));
     }
 }
 

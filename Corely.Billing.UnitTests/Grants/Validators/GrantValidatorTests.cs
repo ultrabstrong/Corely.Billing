@@ -33,6 +33,15 @@ public class GrantValidatorTests
     }
 
     [Fact]
+    public void Validate_Passes_ForAnUnlimitedQuantity()
+    {
+        var grant = ValidGrant();
+        grant.Quantity = null;
+
+        Assert.True(_validator.Validate(grant).IsValid);
+    }
+
+    [Fact]
     public void Validate_Fails_ForAnEmptyAccountId()
     {
         var grant = ValidGrant();
