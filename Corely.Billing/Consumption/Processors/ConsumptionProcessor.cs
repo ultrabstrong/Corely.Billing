@@ -132,7 +132,6 @@ internal class ConsumptionProcessor(
                 );
             }
 
-            // No retry on DbUpdateException: the failed entity stays tracked, so a retry fails on the tracker.
             await RetryPolicy.ExecuteAsync(
                 token => _consumptionEventRepo.CreateAsync(reservation, token),
                 _retryOptions with
@@ -154,7 +153,6 @@ internal class ConsumptionProcessor(
         }
         catch (Exception ex)
         {
-            // Lost an insert race: detected by lookup, not provider error codes.
             if (ex is DbUpdateException && await AlreadyRecordedAsync(reservation, ct))
             {
                 _logger.LogInformation(

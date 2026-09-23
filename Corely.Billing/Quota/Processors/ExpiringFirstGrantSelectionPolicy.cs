@@ -21,7 +21,6 @@ internal sealed class ExpiringFirstGrantSelectionPolicy : IGrantSelectionPolicy
 
         foreach (
             var grant in grants
-                // A total order, so a replay allocates identically.
                 .OrderBy(g => g.ValidToUtc)
                 .ThenBy(g => g.Quantity)
                 .ThenBy(g => g.ValidFromUtc)

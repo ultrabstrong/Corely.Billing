@@ -4,7 +4,6 @@ using Corely.Billing.Usage;
 
 namespace Corely.Billing.Consumption.Processors;
 
-// Composed, not hashed: people read this column during billing disputes.
 internal static class IdempotencyKeyFactory
 {
     public static string Create(
@@ -16,7 +15,6 @@ internal static class IdempotencyKeyFactory
     {
         var key = Prefix(context, operation, unit) + grantId.ToString("N");
 
-        // Never truncate: two units of work would share a key.
         return key.Length <= ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH
             ? key
             : throw new ArgumentException(
