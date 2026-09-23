@@ -68,32 +68,24 @@ Consumes the new surface: `BillingOptions`, the three services, authorization vi
 telemetry via `UseTelemetry`. Its billing migrations retire; schema comes from `corely-billing-db`.
 Existing databases adopt the baseline without losing rows.
 
-## Progress (uncommitted in Corely.Billing working tree)
+## Progress
 
-Done:
-- Library reshaped to the target above; `Corely.Billing` builds clean. `BillingOptions`,
-  `AddBillingServices`, three public services over internal processors (Grant, Consumption,
-  ConsumptionReport, Quota), single internal `BillingDbContext`, FluentValidation validators,
-  shared `Models/` results, `ListQueryHelper`, `NullBillingTelemetry`, `ReservationOptions`.
-- `Corely.Billing.IntegrationTests` created (SQLite `BillingTestHost`); 39 passing: reporting,
-  reservation ledger, entity configuration, grant listing via FilterBuilder/OrderBuilder.
-- Unit tests rewritten for grants: validator, mapper, processor, telemetry decorator; new
-  `ServiceFactory` (mock repos) and `TestUsage`.
+Done, committed locally:
+- Library reshaped to the target above; unit tests on mock repos; SQLite integration tests including
+  the grant/ledger balance invariants moved from DocsToData.
+- `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` with baseline `InitialMigration`s, the
+  `corely-billing-db` tool and its unit tests, the migration scripts, and an opt-in provider matrix
+  that passes on SQL Server and MySQL containers.
+- Docs, README, CLAUDE.md, DOCUMENTATION-STYLE.md, DESIGN-DECISIONS.md, Feature-Ideas, settings,
+  CI/release packing both packages, and the zero-setup `Corely.Billing.ConsoleTest` demo.
+- DocsToData consumes the new surface (its own repository).
 
-Next, in order:
-1. Unit tests still on the old API, to port then delete: Consumption/Services/ConsumptionWriterTests
-   (-> Consumption/Processors/ConsumptionProcessorTests, Mock<IRepo> cases; SaveAsync cases become
-   ReserveAsync), Consumption/Models/ConsumptionEventTests (-> Validators/ConsumptionEventValidatorTests;
-   Stamp tests drop), Consumption/Mappers/ConsumptionEventMapperTests, IdempotencyKeyFactoryTests
-   (namespace only), both consumption telemetry decorator tests, Quota/Services/QuotaServiceTests
-   (-> QuotaProcessorTests over mocked processors), QuotaTelemetryDecoratorTests,
-   Usage/UsageVocabularyTests (builder gone; BillingOptions), plus new BillingOptionsTests,
-   ServiceRegistrationExtensionsTests, ReserveQuotaRequestValidatorTests, service decorator tests.
-   Then commit.
-2. Migration projects (MsSql, MySql) with baseline InitialMigration, CLI + CLI unit tests copied
-   from IAM, AddMigration/RemoveMigration/ListMigrations scripts, provider matrix tests.
-3. Repo files: CLAUDE.md, README, DOCUMENTATION-STYLE.md, DESIGN-DECISIONS.md, Plans/Feature-Ideas.md,
-   .claude/settings.json, RebuildAndTest.ps1, check-package-versions (library + CLI), release packs CLI,
-   Docs/ per project, ConsoleTest demo.
-4. DocsToData consumes the new surface; its billing migrations retire; existing databases adopt the
-   baseline (decision for the user: adopt in place vs. recreate).
+Open for the owner:
+- Create `ultrabstrong/Corely.Billing` on GitHub and push `master`.
+- nuget.org trusted-publisher policy bound to `release.yml`, package scope `Corely.Billing*`.
+- Tag `v1.0.0-preview.1`.
+- Known rough edges, each a decision rather than a bug:
+  - IAM and Billing both define `Models.RetrieveResultCode` (and `ModifyResult`, `PagedResult`);
+    a file importing both namespaces needs an alias. The fix is to move them into Corely.Common.
+  - IAM and Billing each register `IEFConfiguration`; in one container the last one wins for both
+    DbContexts. Harmless while both share a database.
