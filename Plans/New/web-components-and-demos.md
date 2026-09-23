@@ -110,6 +110,9 @@ settled when the pass starts:
 - A remaining-balance bar per grant on `GrantList`, with an "expires in N days" callout.
 - Empty states that say what to do next ("No grants — create one") instead of an empty table.
 - Light and dark from one set of tokens.
+- Display names, not tokens. DocsToData's grant list and delete prompt print the raw operation and
+  unit (`document_extraction`, `page`); the editor's dropdowns already use `IUsageVocabulary` display
+  names, and every other view should too.
 - The overdraft made visible: a grant past its quantity reads as overdrawn, not as 100%.
 
 ### 3. A demo portal — `Corely.Billing.Demos.Portal`
