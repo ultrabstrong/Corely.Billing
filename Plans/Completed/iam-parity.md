@@ -86,6 +86,7 @@ Done:
 
 Known rough edges, each a decision rather than a bug:
   - IAM and Billing both define `Models.RetrieveResultCode` (and `ModifyResult`, `PagedResult`);
-    a file importing both namespaces needs an alias. The fix is to move them into Corely.Common.
+    a file importing both namespaces needs an alias. Kept that way on purpose; see
+    `DESIGN-DECISIONS.md`.
   - IAM and Billing each register `IEFConfiguration`; in one container the last one wins for both
     DbContexts. Harmless while both share a database.
