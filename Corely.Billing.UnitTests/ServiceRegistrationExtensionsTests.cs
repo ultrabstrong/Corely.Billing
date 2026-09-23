@@ -1,8 +1,11 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.DataAccess;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Telemetry;
 using Corely.Billing.Usage;
+using Corely.DataAccess.EntityFramework.Configurations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -50,6 +53,55 @@ public class ServiceRegistrationExtensionsTests
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IGrantService>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IConsumptionService>());
         Assert.NotNull(scope.ServiceProvider.GetRequiredService<IQuotaService>());
+    }
+
+    [Fact]
+    public void AddBillingServices_RegistersOnlyAKeyedEFConfiguration_ForAnEFConfigurationFactory()
+    {
+        using var provider = Build(
+            BillingOptions
+                .Create(new ConfigurationManager(), _ => Mock.Of<IEFConfiguration>())
+                .RegisterTestUsage()
+        );
+        using var scope = provider.CreateScope();
+
+        Assert.NotNull(
+            scope.ServiceProvider.GetKeyedService<IEFConfiguration>(EFConfigurationKeys.BILLING)
+        );
+        Assert.Null(scope.ServiceProvider.GetService<IEFConfiguration>());
+    }
+
+    [Fact]
+    public void BillingDbContext_IgnoresTheHostsUnkeyedEFConfiguration_ForAHostThatRegisteredOne()
+    {
+        var billingConfiguration = new Mock<EFInMemoryConfigurationBase> { CallBase = true };
+        billingConfiguration
+            .Setup(c => c.Configure(It.IsAny<DbContextOptionsBuilder>()))
+            .Callback<DbContextOptionsBuilder>(b =>
+                b.UseInMemoryDatabase(Guid.NewGuid().ToString())
+            );
+        var decoyConfiguration = new Mock<IEFConfiguration>();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddBillingServices(
+            BillingOptions
+                .Create(new ConfigurationManager(), _ => billingConfiguration.Object)
+                .RegisterTestUsage()
+        );
+        services.AddScoped(_ => decoyConfiguration.Object);
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+
+        _ = scope.ServiceProvider.GetRequiredService<BillingDbContext>().Database.ProviderName;
+
+        billingConfiguration.Verify(
+            c => c.Configure(It.IsAny<DbContextOptionsBuilder>()),
+            Times.Once
+        );
+        decoyConfiguration.Verify(
+            c => c.Configure(It.IsAny<DbContextOptionsBuilder>()),
+            Times.Never
+        );
     }
 
     [Fact]

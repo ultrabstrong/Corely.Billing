@@ -22,6 +22,10 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 services.AddBillingServices(options);
 ```
 
+The configuration `efConfigFactory` builds is private to Billing: it is registered under a key only
+Billing's DbContext resolves, never as a plain `IEFConfiguration`. A host's own DbContexts register
+their own.
+
 ### Test Setup (Mock Repositories)
 
 ```csharp

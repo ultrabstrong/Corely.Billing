@@ -37,6 +37,9 @@ public class MsSqlEFConfiguration(string connectionString)
 | SQL Server | `EFMsSqlConfigurationBase` | `Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;` |
 | MySQL | `EFMySqlConfigurationBase` | `Server=localhost;Database=my_app;Uid=root;Pwd=password;` |
 
+The factory serves Billing's DbContext only. If the host has DbContexts of its own that take an
+`IEFConfiguration`, register one for them — Billing does not.
+
 ## 4) Configure BillingOptions
 
 Register every operation and unit the host bills for. Nothing can be granted or consumed without them.

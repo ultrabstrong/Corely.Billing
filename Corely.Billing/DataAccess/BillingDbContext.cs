@@ -3,15 +3,21 @@ using Corely.Billing.Grants.Entities;
 using Corely.DataAccess.EntityFramework;
 using Corely.DataAccess.EntityFramework.Configurations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.DataAccess;
 
 internal class BillingDbContext : DbContextBase
 {
-    public BillingDbContext(IEFConfiguration efConfiguration)
+    public BillingDbContext(
+        [FromKeyedServices(EFConfigurationKeys.BILLING)] IEFConfiguration efConfiguration
+    )
         : base(efConfiguration) { }
 
-    public BillingDbContext(DbContextOptions<DbContextBase> opts, IEFConfiguration efConfiguration)
+    public BillingDbContext(
+        DbContextOptions<DbContextBase> opts,
+        [FromKeyedServices(EFConfigurationKeys.BILLING)] IEFConfiguration efConfiguration
+    )
         : base(opts, efConfiguration) { }
 
     public DbSet<GrantEntity> Grants => Set<GrantEntity>();
