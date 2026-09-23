@@ -34,7 +34,7 @@ Options are per invocation, which suits CI and test fixtures that receive a conn
 
 ```powershell
 $env:CORELY_BILLING_DB_PROVIDER = "MsSql"
-$env:CORELY_BILLING_DB_CONNECTION = "Server=(localdb)\MSSQLLocalDB;Database=CorelyIam;Trusted_Connection=True;"
+$env:CORELY_BILLING_DB_CONNECTION = "Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;"
 ```
 
 ## Database Operations
@@ -129,15 +129,13 @@ Prompts for confirmation. Use `-f, --force` to skip the prompt.
 
 ## Migrations History Table
 
-IAM records its migrations in `__CorelyIamMigrationsHistory` rather than the default `__EFMigrationsHistory`, so that it can share a database with a consumer's own contexts without every context writing to one table.
+Billing records its migrations in `__CorelyBillingMigrationsHistory` rather than the default `__EFMigrationsHistory`, so it can share a database with Corely.IAM and a host's own contexts without every context writing to one table.
 
-`--history-table` overrides this. Its purpose is databases migrated before that default existed, whose IAM history lives in `__EFMigrationsHistory`:
+`--history-table` overrides the table. Pass the same value on every command against that database:
 
 ```bash
-corely-billing-db db migrate --history-table __EFMigrationsHistory
+corely-billing-db db migrate --history-table __MyBillingHistory
 ```
-
-The alternative is to copy the records into the new table once — see the [tool README](../README.md) for the statements and how to verify the result.
 
 ## Providers
 

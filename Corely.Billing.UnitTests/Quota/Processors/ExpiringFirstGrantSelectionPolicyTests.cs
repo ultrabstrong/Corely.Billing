@@ -239,6 +239,19 @@ public class ExpiringFirstGrantSelectionPolicyTests
     }
 
     [Fact]
+    public void Split_BreaksFullTiesByGrantId_ForIdenticalGrantsInEitherOrder()
+    {
+        var first = MakeGrant(TestGrantId1, 10, Now.AddDays(-1), Now.AddDays(2));
+        var second = MakeGrant(TestGrantId2, 10, Now.AddDays(-1), Now.AddDays(2));
+
+        var forward = _policy.Split([first, second], [], quantity: 5);
+        var reversed = _policy.Split([second, first], [], quantity: 5);
+
+        Assert.Equal(TestGrantId1, Assert.Single(forward.Shares).GrantId);
+        Assert.Equal(TestGrantId1, Assert.Single(reversed.Shares).GrantId);
+    }
+
+    [Fact]
     public void Split_Throws_ForANegativeQuantity() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => _policy.Split([], [], quantity: -1));
 

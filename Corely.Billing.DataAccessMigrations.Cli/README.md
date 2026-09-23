@@ -1,6 +1,6 @@
-# Corely IAM Database Migration CLI
+# Corely Billing Database Migration CLI
 
-Creates and migrates the Corely IAM database schema. This is the supported way to stand up the IAM
+Creates and migrates the Corely Billing database schema. This is the supported way to stand up the billing
 tables — the library itself never applies migrations at runtime.
 
 The tool ships both provider migration sets, so nothing beyond it needs to be referenced.
@@ -18,8 +18,8 @@ dotnet tool install --global Corely.Billing.DataAccessMigrations.Cli
 
 The command is `corely-billing-db`.
 
-The tool's major version tracks the library's: **CLI 2.x targets Corely.Billing 2.x**. Minor and patch
-versions move independently, since most IAM releases add no migrations.
+The tool's major version tracks the library's: **CLI 1.x targets Corely.Billing 1.x**. Minor and patch
+versions move independently, since most library releases add no migrations.
 
 ## Configuration
 
@@ -36,17 +36,17 @@ keep one in its own install directory, shared by every repository and CI job on 
 
 ```bash
 # Per invocation
-corely-billing-db db create -p MsSql -c "Server=(localdb)\MSSQLLocalDB;Database=CorelyIam;Trusted_Connection=True;"
+corely-billing-db db create -p MsSql -c "Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;"
 
 # Or once per shell
 export CORELY_BILLING_DB_PROVIDER=MsSql
-export CORELY_BILLING_DB_CONNECTION="Server=(localdb)\MSSQLLocalDB;Database=CorelyIam;Trusted_Connection=True;"
+export CORELY_BILLING_DB_CONNECTION="Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;"
 corely-billing-db db create
 ```
 
 ```powershell
 $env:CORELY_BILLING_DB_PROVIDER = "MsSql"
-$env:CORELY_BILLING_DB_CONNECTION = "Server=(localdb)\MSSQLLocalDB;Database=CorelyIam;Trusted_Connection=True;"
+$env:CORELY_BILLING_DB_CONNECTION = "Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;"
 corely-billing-db db create
 ```
 
@@ -69,32 +69,18 @@ for a script that is safe to run repeatedly.
 
 ## Migrations history table
 
-IAM records its migrations in `__CorelyIamMigrationsHistory` rather than the default
-`__EFMigrationsHistory`, so it can share a database with your own contexts without their migration
-records interleaving.
+Billing records its migrations in `__CorelyBillingMigrationsHistory` rather than the default
+`__EFMigrationsHistory`, so it can share a database with Corely.IAM and your own contexts without
+their migration records interleaving.
 
-A database that was migrated before this default existed has its IAM history in
-`__EFMigrationsHistory`. Either keep using it:
+`--history-table` overrides the table for every `db` command:
 
 ```bash
-corely-billing-db db migrate --history-table __EFMigrationsHistory
+corely-billing-db db migrate --history-table __MyBillingHistory
 ```
 
-or copy the records across once and drop the option:
-
-```sql
--- SQL Server
-SELECT * INTO __CorelyIamMigrationsHistory FROM __EFMigrationsHistory;
-
--- MySQL
-CREATE TABLE __CorelyIamMigrationsHistory AS SELECT * FROM __EFMigrationsHistory;
-```
-
-That copies everything, which is what you want when IAM is the only context in the database. If it
-shares the database, restrict the copy to the migration ids `corely-billing-db db list` reports.
-
-Run `db status` afterwards: every IAM migration should read as applied. If they read as pending,
-the copy did not land and migrating would try to recreate tables that already exist.
+Use the same value on every command against that database, or the tool will see every migration as
+pending and try to recreate tables that already exist.
 
 ## Examples
 

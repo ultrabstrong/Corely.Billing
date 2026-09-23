@@ -32,6 +32,7 @@ internal sealed class ExpiringFirstGrantSelectionPolicy : IGrantSelectionPolicy
                 .OrderBy(g => g.ValidToUtc)
                 .ThenBy(g => g.Quantity)
                 .ThenBy(g => g.ValidFromUtc)
+                .ThenBy(g => g.GrantId)
         )
         {
             if (outstanding == 0)

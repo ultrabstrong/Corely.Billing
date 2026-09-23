@@ -26,7 +26,6 @@ public static class BillingMetricNames
 
     public static class Consumption
     {
-        public const string CONSUMPTION_SAVED = "metering.consumption.saved";
         public const string CONSUMPTION_QUANTITY = "metering.consumption.quantity";
         public const string CONSUMPTION_TOTAL_QUERIED = "metering.consumption.total_queried";
         public const string CONSUMPTION_GRANTS_QUERIED = "metering.consumption.grants_queried";

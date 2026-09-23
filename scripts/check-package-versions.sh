@@ -15,6 +15,7 @@ STRICT="${STRICT:-0}"
 # Project directory -> csproj, for every project this repository publishes.
 PACKAGES=(
   "Corely.Billing:Corely.Billing/Corely.Billing.csproj"
+  "Corely.Billing.DataAccessMigrations.Cli:Corely.Billing.DataAccessMigrations.Cli/Corely.Billing.DataAccessMigrations.Cli.csproj"
 )
 
 read_version() { # <git-ref-or-empty> <path>

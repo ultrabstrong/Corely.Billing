@@ -34,9 +34,11 @@ jobs:
       - name: Build
         run: dotnet build Corely.Billing.slnx --configuration Release --no-restore
 
+      # The provider matrix is opt-in and stays skipped here, so no database containers
+      # are needed. Everything else runs against SQLite with no external dependencies.
       - name: Test
         run: dotnet test --solution Corely.Billing.slnx --configuration Release --no-build
 
-      # Reports only. A bump is required at release time, not on every push.
+      # Reports only here. A version bump is required at release time, not on every push.
       - name: Package versions
         run: bash scripts/check-package-versions.sh
