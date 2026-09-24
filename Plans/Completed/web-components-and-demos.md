@@ -164,3 +164,39 @@ release rather than the visual pass.
 - Consumption entry from the UI. Consumption is written by the work being billed, through quota,
   never typed in.
 - Invoicing, prices or money. Billing counts units; what a unit costs is the host's business.
+
+## Outcome
+
+Done, folded into `usage-shapes-docs-and-demos.md` at the owner's request, visual pass included.
+The three decisions were taken as recommended: `Corely.Billing.Web`, Blazor Server only, opt-in
+routed pages.
+
+- **Components**: `GrantList`, `GrantEditor`, `UsageChart`, `ConsumptionTable`, `UsageDashboard`,
+  plus `IBillingAccountAccessor` (one required method; `CanManageGrantsAsync` defaults to true) and
+  `AddBillingWeb<T>()`. Version 1.0.0-preview.1, packed by `release.yml`, checked by
+  `check-package-versions.sh`.
+- **Routed pages opt in by assembly**: a host that never adds the assembly to its router gets
+  none of them, which answers IAM's lesson without a second assembly.
+- **Visual pass**, against the `dataviz` method with a validated palette (light and dark):
+  - usage and live capacity are **two charts on one time axis**, not one. Drawn together, a week's
+    ~200 pages sat under a 6,000-page grant and read as noise, and two measures of different kinds
+    should not share an axis. Capacity is per grant, stacked and stepped, folding past three into
+    "Other grants".
+  - balance meters per grant, with running-low and overdrawn states carried by icon and label
+  - display names everywhere; unlimited grants read "Unlimited" and draw no capacity
+  - empty states that say what to do; cards below 768px; Bootstrap tokens for dark mode, and the
+    chart redraws when `data-bs-theme` changes
+  - the bar/line/area toggle and DocsToData's tag-filter inputs (never sent to the request) were
+    dropped; delete confirms inline, so no Bootstrap JS is needed
+- **Concurrency**: sibling components in one circuit loaded at once and hit
+  "a second operation was started on this context". Owning a scope per component fixed that but
+  would have hidden the signed-in user from an IAM host's decorators. Components share the circuit
+  scope and queue calls through one scoped gate; a bUnit test fails without it.
+- **Tests**: `Corely.Billing.Web.UnitTests` (bUnit, 36) and `Corely.Billing.Web.FunctionalTests`
+  (the three demos: routing, static assets including the chart script and scoped CSS, and the
+  subscription flow). `RebuildAndTest.ps1` green: 384 total, 26 skipped (the opt-in matrix, run
+  separately and passing).
+- **Portal** clicked through at desktop and phone widths, light and dark: seeded chart, filters,
+  simulate, create an unlimited grant, edit it, delete it with confirmation.
+- **Docs**: `Corely.Billing.Web/Docs/` (index, setup, pages, styling, one page per component),
+  linked from the README.

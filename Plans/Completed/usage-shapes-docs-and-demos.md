@@ -163,3 +163,56 @@ question is whether a small public example earns its upkeep. Recommend it, after
 - Payments, renewals or dunning. A subscription here is a grant with dates. What creates the next
   one is the host's business.
 - Proration, plan changes mid-term, or pricing of any kind.
+
+## Outcome
+
+Done, together with `web-components-and-demos.md`, which the owner folded into this work. Branch
+`usage-shapes-and-web`, committed locally, not pushed or tagged.
+
+### Decisions the owner made
+
+- **Gap 1: nullable `Quantity`, on the grant only.** Reservation, settlement, availability and the
+  selection policy's inputs keep their shapes.
+- **Gap 2: no new service method.** "Is this account entitled?" goes through the existing contract,
+  `GetAvailabilityAsync`, and the selection policy was changed instead: live unlimited grants are
+  spent first, then the old expiring-first order. A host that must fail closed treats `Unknown` as a
+  refusal; the subscription demo does.
+- **The IAM demo: built now**, along with the whole web plan.
+
+### Library
+
+- `Grant.Quantity`, `CreateGrantRequest.Quantity` and `UpdateGrantRequest.Quantity` are `long?`.
+  Migration `NullableGrantQuantity` in both providers. `ExpiringFirstGrantSelectionPolicy` orders
+  unlimited grants first and lets one take the whole charge. `RemainingRatio` reads 1 while one is
+  live, where summing `long.MaxValue`s would have overflowed. Telemetry skips the quantity metric
+  for an unlimited grant.
+- Versions: `Corely.Billing` 1.0.0-preview.3, the CLI 1.0.0-preview.2 (it ships the migration).
+- Tests: unit (policy, validator, quota processor, telemetry decorator), a SQLite lifecycle test,
+  and a provider-matrix case. Every new policy test was watched fail against the old policy. The
+  matrix passes on SQL Server and MySQL.
+
+### Found along the way
+
+- **Corely.Common's `ComparableFilter` threw on every nullable property** except `IsNull` and
+  `IsNotNull`: `FilterBuilder` has a `T?` overload, but the filter typed its constants as `T`. Making
+  `Quantity` nullable broke Billing's own quantity-filter tests. Fixed in Corely.Common on branch
+  `nullable-comparable-filters` (2.0.3, unreleased, with tests that fail without the fix). Until it
+  ships, Billing's tests and docs filter grants with `IsNull`/`IsNotNull` and by date. After it
+  ships, bump Corely.Common here and restore a quantity-comparison test.
+
+### Docs and demos
+
+- `Corely.Billing/Docs/usage-shapes.md`: all five shapes, linked from the docs index and README.
+- `Corely.Billing.Demos.Subscription`: Razor Pages, the smallest host. Its smoke test drives
+  subscribe, two visits, cancel, and the closed gate over HTTP. The one-call "record without a hold"
+  convenience was not needed: the reserve-and-settle pair is two lines in `Membership.cs`.
+- `Corely.Billing.Demos.WithIAM`: Corely.IAM 2.3.0 from NuGet, both schemas in one database from
+  their own tools, and grants and usage authorized through `DecorateServices` against registered
+  IAM resource types. Its authorization decorators are a working sketch for `iam-permissions-package.md`.
+
+### Follow-ups
+
+- DocsToData: `Plans/New/corely-billing-web-and-unlimited-grants.md` in that repository lists the
+  package bump, the schema script, the null-quantity reads, and the move onto the components.
+- Signed-in pages of the IAM demo were not clicked through in a browser: that needs a password
+  typed into the sign-in form, which was left to the owner. Its anonymous paths are smoke-tested.
