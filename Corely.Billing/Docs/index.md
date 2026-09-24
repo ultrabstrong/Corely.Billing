@@ -1,6 +1,6 @@
 # Corely.Billing Documentation
 
-Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left, and keeps the ledger reconciled across retries. Supports SQL Server and MySQL.
+Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left. It serves a metered pipeline with reservations and retries, and just as well a subscription, prepaid credits, a trial, or feature access. Supports SQL Server and MySQL.
 
 ```mermaid
 flowchart LR
@@ -26,7 +26,8 @@ flowchart LR
 
 Blue is what the host configures, green is the public API, amber is internal, grey is the schema and the tool that owns it.
 
-- **Grants** — an account's allowance of a unit for an operation, valid for a window
+- **Grants** — an account's allowance of a unit for an operation, valid for a window, limited or unlimited
+- **Usage shapes** — metered, subscription, prepaid credits, trial, or seats, from the same schema
 - **Reservations** — quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting** — work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries** — a retried unit of work recognises its own earlier rows instead of charging twice
@@ -37,6 +38,7 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 ## Topics
 
 - [Step-by-Step Setup](step-by-step-setup.md)
+- [Usage Shapes](usage-shapes.md)
 - [BillingOptions Configuration](billing-options.md)
 - [Usage Vocabulary](usage-vocabulary.md)
 - [Operation Context](operation-context.md)
@@ -53,6 +55,7 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 ### Tools
 
 - [Migration CLI](../../Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) — database creation, migrations, scripting
+- [Corely.Billing.Web](../../Corely.Billing.Web/Docs/index.md) — Blazor components for grants and usage
 
 ## Quick Start
 

@@ -16,7 +16,8 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                 type: "bigint",
                 nullable: true,
                 oldClrType: typeof(long),
-                oldType: "bigint");
+                oldType: "bigint"
+            );
         }
 
         /// <inheritdoc />
@@ -30,7 +31,8 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                 defaultValue: 0L,
                 oldClrType: typeof(long),
                 oldType: "bigint",
-                oldNullable: true);
+                oldNullable: true
+            );
         }
     }
 }

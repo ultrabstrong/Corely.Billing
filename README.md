@@ -2,6 +2,8 @@
 
 Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left — kept reconciled across retries, so a replayed unit of work is never charged twice.
 
+Not only for metering: a subscription, prepaid credits, a trial, or seats use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
+
 ```mermaid
 flowchart LR
     options["<b>BillingOptions</b><br/>usage and hooks"] --> add["<b>AddBillingServices</b>"]
@@ -26,7 +28,7 @@ flowchart LR
 
 ## Highlights
 
-- **Grants** — an account's allowance of a unit for an operation, valid for a window
+- **Grants** — an account's allowance of a unit for an operation, valid for a window, limited or unlimited
 - **Reservations** — quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting** — work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries** — a retried unit of work recognises its own earlier rows instead of charging twice
@@ -72,15 +74,23 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 |------|-------------|
 | **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library — setup, services, reservations, architecture |
 | [Migration CLI](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) | Database creation, migrations, and scripting |
+| [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components — grant list and editor, usage chart, usage events |
 
 ## Solution Structure
 
 | Project | Purpose |
 |---------|---------|
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota |
+| `Corely.Billing.Web` | Blazor components and opt-in routed pages for grants and usage |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo: grant, reserve, settle on SQLite |
+| `Corely.Billing.Demos.Portal` | The web components against a seeded account, with simulated usage |
+| `Corely.Billing.Demos.Subscription` | The smallest host: one unlimited grant per term gates a page |
+| `Corely.Billing.Demos.WithIAM` | A metered host signed in through Corely.IAM, authorized by IAM permissions |
+| `Corely.Billing.Demos.Assets` | Bootstrap for the demos, served once |
 | `Corely.Billing.UnitTests` | Unit tests on mock repositories |
 | `Corely.Billing.IntegrationTests` | SQLite tests, plus an opt-in SQL Server and MySQL matrix |
+| `Corely.Billing.Web.UnitTests` | bUnit tests for the web components |
+| `Corely.Billing.Web.FunctionalTests` | In-process smoke tests for the demo hosts |
 | `Corely.Billing.DataAccessMigrations.Cli` | Migration CLI — creates and migrates the billing schema (published as a .NET tool) |
 | `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` | EF Core migrations per database provider, bundled into the CLI |
 

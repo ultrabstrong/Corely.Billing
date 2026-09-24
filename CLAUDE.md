@@ -24,8 +24,9 @@ Each tier owns exactly one seam.
 
 | Tier | Owns | Substrate | Project |
 |------|------|-----------|---------|
-| Unit | One class's logic, dependencies substituted | No database | `Corely.Billing.UnitTests`, `Corely.Billing.DataAccessMigrations.Cli.UnitTests` |
+| Unit | One class's logic, dependencies substituted | No database | `Corely.Billing.UnitTests`, `Corely.Billing.Web.UnitTests` (bUnit), `Corely.Billing.DataAccessMigrations.Cli.UnitTests` |
 | Integration | Persistence — EF translation, schema, provider behavior, and the composed grant/ledger balance | SQLite / Testcontainers | `Corely.Billing.IntegrationTests` |
+| Functional | HTTP — the demo hosts start, route, serve assets, and a Razor Pages flow runs | `WebApplicationFactory` in-process | `Corely.Billing.Web.FunctionalTests` |
 
 ### Where does a new test go?
 
@@ -33,6 +34,7 @@ Walk down and stop at the **first** tier that can prove the case:
 
 1. Provable with no database? → **Unit**
 2. Needs real SQL translation, real schema, provider behavior, or a balance read back through the ledger? → **Integration**
+3. Needs the HTTP pipeline — a host starting, routing, static assets, antiforgery? → **Functional**. A Blazor circuit is out of this tier's reach; component behavior is bUnit's.
 
 **A case proven at tier N is never re-proven at tier N+1.** If a case seems to fit two tiers, it is usually two cases. Split it.
 
@@ -52,10 +54,14 @@ dotnet test --solution Corely.Billing.slnx
 
 # Unit tier
 dotnet test --project Corely.Billing.UnitTests
+dotnet test --project Corely.Billing.Web.UnitTests
 dotnet test --project Corely.Billing.DataAccessMigrations.Cli.UnitTests
 
 # Integration tier — real EF on SQLite. No external dependencies.
 dotnet test --project Corely.Billing.IntegrationTests
+
+# Functional tier — the demo hosts in-process on SQLite. No external dependencies.
+dotnet test --project Corely.Billing.Web.FunctionalTests
 
 # Single class / method. The filter is /assembly/namespace/class/method.
 dotnet test --project Corely.Billing.UnitTests --filter-query "/*/*/QuotaProcessorTests/*"
@@ -100,6 +106,9 @@ Billing records migrations in `__CorelyBillingMigrationsHistory`, so it shares a
 | Project | Purpose |
 |---------|---------|
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
+| `Corely.Billing.Web` | Blazor Server components and opt-in routed pages. Versioned on its own. No reference to Corely.IAM |
+| `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |
+| `Corely.Billing.Demos.Assets` | Bootstrap for the demos, served as a static web asset so it is vendored once |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo on SQLite |
 | `Corely.Billing.UnitTests` | Unit tests (xUnit, Moq) on mock repositories |
 | `Corely.Billing.IntegrationTests` | SQLite tests and the opt-in provider matrix |
@@ -134,7 +143,8 @@ Domain/
 ### Boundaries that are the point of the library
 
 - **No vocabulary.** Operations and units are tokens a host registers on `BillingOptions`. Nothing in this repository may name a consumer's operation or unit outside a test.
-- **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it.
+- **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too; only `Corely.Billing.Demos.WithIAM` references IAM.
+- **Web components share the circuit's scope.** They queue their calls through one scoped gate instead of owning scopes, because a host's authorization decorators read scoped user state that a fresh scope would not have.
 - **No telemetry backend.** Metrics go through `IBillingTelemetry` with unprefixed names; the host prefixes and exports them.
 - **Ledger writes go through quota.** `IConsumptionService` only reads. Every consumption row is tied to a reservation against a grant.
 
