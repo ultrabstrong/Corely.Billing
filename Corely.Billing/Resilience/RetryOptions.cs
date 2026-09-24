@@ -17,4 +17,15 @@ internal sealed record RetryOptions
     public Func<Exception, bool>? ShouldRetry { get; init; }
 
     public Action<int, Exception, TimeSpan>? OnRetry { get; init; }
+
+    public bool IsRetryable(Exception ex) => ShouldRetry?.Invoke(ex) ?? true;
+
+    public TimeSpan RetryDelay(int attempt, Random random)
+    {
+        var exponential = BaseDelay.TotalMilliseconds * Math.Pow(BackoffFactor, attempt - 1);
+        var ms = Math.Min(exponential, MaxDelay.TotalMilliseconds);
+        if (JitterFactor > 0)
+            ms *= 1 + ((random.NextDouble() * 2 - 1) * JitterFactor);
+        return TimeSpan.FromMilliseconds(ms);
+    }
 }

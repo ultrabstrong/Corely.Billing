@@ -2,7 +2,7 @@ using Corely.Billing.Resilience;
 
 namespace Corely.Billing.UnitTests.Resilience;
 
-public class RetryOptionsExtensionsTests
+public class RetryOptionsTests
 {
     private static readonly RetryOptions NoJitter = new()
     {

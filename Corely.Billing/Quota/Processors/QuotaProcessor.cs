@@ -2,7 +2,6 @@ using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
-using Corely.Billing.Quota.Extensions;
 using Corely.Billing.Quota.Mappers;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Usage;

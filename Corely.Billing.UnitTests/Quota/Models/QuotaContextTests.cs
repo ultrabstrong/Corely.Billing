@@ -1,11 +1,10 @@
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Grants.Models;
-using Corely.Billing.Quota.Extensions;
 using Corely.Billing.Quota.Models;
 
-namespace Corely.Billing.UnitTests.Quota.Extensions;
+namespace Corely.Billing.UnitTests.Quota.Models;
 
-public class QuotaContextExtensionsTests
+public class QuotaContextTests
 {
     private static readonly Guid GrantId1 = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid GrantId2 = Guid.Parse("22222222-2222-2222-2222-222222222222");
