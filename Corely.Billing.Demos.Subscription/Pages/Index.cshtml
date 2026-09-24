@@ -1,0 +1,35 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Subscription";
+}
+
+<h1 class="h3 mb-4">Your subscription</h1>
+
+@if (Model.Term is { } term)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="card-text mb-1"><span class="badge text-bg-success me-2">Active</span>Until @term.ValidToUtc.ToString("MMMM d, yyyy")</p>
+            <p class="text-body-secondary mb-3">Started @term.ValidFromUtc.ToString("MMMM d, yyyy")</p>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" href="/members">Open the members area</a>
+                <form method="post" asp-page-handler="Cancel">
+                    <button type="submit" class="btn btn-outline-danger">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <p class="card-text">You have no subscription.</p>
+            <form method="post" asp-page-handler="Subscribe">
+                <button type="submit" class="btn btn-primary">Subscribe for a year</button>
+            </form>
+        </div>
+    </div>
+    <p class="text-body-secondary">The <a href="/members">members area</a> stays closed until you subscribe.</p>
+}

@@ -17,6 +17,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Corely.Billing.UnitTests" />
     <InternalsVisibleTo Include="Corely.Billing.IntegrationTests" />
+    <InternalsVisibleTo Include="Corely.Billing.Web.FunctionalTests" />
     <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.Cli" />
     <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.MsSql" />
     <InternalsVisibleTo Include="Corely.Billing.DataAccessMigrations.MySql" />

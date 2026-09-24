@@ -29,8 +29,10 @@
   <Project Path="Corely.Billing.DataAccessMigrations.MySql/Corely.Billing.DataAccessMigrations.MySql.csproj" />
   <Project Path="Corely.Billing.Demos.Assets/Corely.Billing.Demos.Assets.csproj" />
   <Project Path="Corely.Billing.Demos.Portal/Corely.Billing.Demos.Portal.csproj" />
+  <Project Path="Corely.Billing.Demos.Subscription/Corely.Billing.Demos.Subscription.csproj" />
   <Project Path="Corely.Billing.IntegrationTests/Corely.Billing.IntegrationTests.csproj" />
   <Project Path="Corely.Billing.UnitTests/Corely.Billing.UnitTests.csproj" />
+  <Project Path="Corely.Billing.Web.FunctionalTests/Corely.Billing.Web.FunctionalTests.csproj" />
   <Project Path="Corely.Billing.Web.UnitTests/Corely.Billing.Web.UnitTests.csproj" />
   <Project Path="Corely.Billing.Web/Corely.Billing.Web.csproj" />
   <Project Path="Corely.Billing/Corely.Billing.csproj" />
