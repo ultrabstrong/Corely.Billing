@@ -19,91 +19,99 @@ namespace Corely.Billing;
 
 public static class ServiceRegistrationExtensions
 {
-    public static IServiceCollection AddBillingServices(
-        this IServiceCollection serviceCollection,
-        BillingOptions options
-    )
+    extension(IServiceCollection serviceCollection)
     {
-        ArgumentNullException.ThrowIfNull(serviceCollection);
-        ArgumentNullException.ThrowIfNull(options);
-
-        if (options.Operations.Count == 0 || options.Units.Count == 0)
+        public IServiceCollection AddBillingServices(BillingOptions options)
         {
-            throw new InvalidOperationException(
-                "Register at least one operation and one unit on BillingOptions. Nothing can be "
-                    + "granted or consumed without them."
+            ArgumentNullException.ThrowIfNull(serviceCollection);
+            ArgumentNullException.ThrowIfNull(options);
+
+            if (options.Operations.Count == 0 || options.Units.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "Register at least one operation and one unit on BillingOptions. Nothing can be "
+                        + "granted or consumed without them."
+                );
+            }
+
+            if (options.EFConfigurationFactory != null)
+            {
+                var efConfigurationFactory = options.EFConfigurationFactory;
+                serviceCollection.AddKeyedScoped(
+                    EFConfigurationKeys.BILLING,
+                    (sp, _) => efConfigurationFactory(sp)
+                );
+                serviceCollection.AddDbContext<BillingDbContext>();
+                serviceCollection.RegisterEntityFrameworkReposAndUoW();
+            }
+            else
+            {
+                serviceCollection.RegisterMockReposAndUoW();
+            }
+
+            serviceCollection.TryAddSingleton(TimeProvider.System);
+            serviceCollection.TryAddSingleton<
+                IOperationContextAccessor,
+                AsyncLocalOperationContextAccessor
+            >();
+            serviceCollection.AddSingleton<IUsageVocabulary>(
+                new UsageVocabulary(
+                    [
+                        .. options.Operations.Select(o => new UsageOperationDefinition(
+                            o.Key,
+                            o.Value
+                        )),
+                    ],
+                    [.. options.Units.Select(u => new UsageUnitDefinition(u.Key, u.Value))]
+                )
             );
-        }
 
-        if (options.EFConfigurationFactory != null)
-        {
-            var efConfigurationFactory = options.EFConfigurationFactory;
-            serviceCollection.AddKeyedScoped(
-                EFConfigurationKeys.BILLING,
-                (sp, _) => efConfigurationFactory(sp)
+            if (options.TelemetryFactory != null)
+                serviceCollection.AddSingleton(options.TelemetryFactory);
+            else
+                serviceCollection.AddSingleton<IBillingTelemetry, NullBillingTelemetry>();
+
+            serviceCollection.Configure<ReservationOptions>(
+                options.Configuration.GetSection(ReservationOptions.NAME)
             );
-            serviceCollection.AddDbContext<BillingDbContext>();
-            serviceCollection.RegisterEntityFrameworkReposAndUoW();
+
+            serviceCollection.AddValidatorsFromAssemblyContaining<FluentValidationProvider>(
+                includeInternalTypes: true
+            );
+            serviceCollection.AddScoped<IFluentValidatorFactory, FluentValidatorFactory>();
+            serviceCollection.AddScoped<IValidationProvider, FluentValidationProvider>();
+
+            serviceCollection.AddScoped<IGrantSelectionPolicy, ExpiringFirstGrantSelectionPolicy>();
+
+            serviceCollection.AddScoped<IGrantProcessor, GrantProcessor>();
+            serviceCollection.Decorate<IGrantProcessor, GrantProcessorTelemetryDecorator>();
+
+            serviceCollection.AddScoped<IConsumptionProcessor, ConsumptionProcessor>();
+            serviceCollection.Decorate<
+                IConsumptionProcessor,
+                ConsumptionProcessorTelemetryDecorator
+            >();
+
+            serviceCollection.AddScoped<IConsumptionReportProcessor, ConsumptionReportProcessor>();
+            serviceCollection.Decorate<
+                IConsumptionReportProcessor,
+                ConsumptionReportProcessorTelemetryDecorator
+            >();
+
+            serviceCollection.AddScoped<IQuotaProcessor, QuotaProcessor>();
+            serviceCollection.Decorate<IQuotaProcessor, QuotaProcessorTelemetryDecorator>();
+
+            serviceCollection.AddScoped<IGrantService, GrantService>();
+            serviceCollection.AddScoped<IConsumptionService, ConsumptionService>();
+            serviceCollection.AddScoped<IQuotaService, QuotaService>();
+
+            options.ServiceDecorators?.Invoke(serviceCollection);
+
+            serviceCollection.Decorate<IGrantService, GrantServiceTelemetryDecorator>();
+            serviceCollection.Decorate<IConsumptionService, ConsumptionServiceTelemetryDecorator>();
+            serviceCollection.Decorate<IQuotaService, QuotaServiceTelemetryDecorator>();
+
+            return serviceCollection;
         }
-        else
-        {
-            serviceCollection.RegisterMockReposAndUoW();
-        }
-
-        serviceCollection.TryAddSingleton(TimeProvider.System);
-        serviceCollection.TryAddSingleton<
-            IOperationContextAccessor,
-            AsyncLocalOperationContextAccessor
-        >();
-        serviceCollection.AddSingleton<IUsageVocabulary>(
-            new UsageVocabulary(
-                [.. options.Operations.Select(o => new UsageOperationDefinition(o.Key, o.Value))],
-                [.. options.Units.Select(u => new UsageUnitDefinition(u.Key, u.Value))]
-            )
-        );
-
-        if (options.TelemetryFactory != null)
-            serviceCollection.AddSingleton(options.TelemetryFactory);
-        else
-            serviceCollection.AddSingleton<IBillingTelemetry, NullBillingTelemetry>();
-
-        serviceCollection.Configure<ReservationOptions>(
-            options.Configuration.GetSection(ReservationOptions.NAME)
-        );
-
-        serviceCollection.AddValidatorsFromAssemblyContaining<FluentValidationProvider>(
-            includeInternalTypes: true
-        );
-        serviceCollection.AddScoped<IFluentValidatorFactory, FluentValidatorFactory>();
-        serviceCollection.AddScoped<IValidationProvider, FluentValidationProvider>();
-
-        serviceCollection.AddScoped<IGrantSelectionPolicy, ExpiringFirstGrantSelectionPolicy>();
-
-        serviceCollection.AddScoped<IGrantProcessor, GrantProcessor>();
-        serviceCollection.Decorate<IGrantProcessor, GrantProcessorTelemetryDecorator>();
-
-        serviceCollection.AddScoped<IConsumptionProcessor, ConsumptionProcessor>();
-        serviceCollection.Decorate<IConsumptionProcessor, ConsumptionProcessorTelemetryDecorator>();
-
-        serviceCollection.AddScoped<IConsumptionReportProcessor, ConsumptionReportProcessor>();
-        serviceCollection.Decorate<
-            IConsumptionReportProcessor,
-            ConsumptionReportProcessorTelemetryDecorator
-        >();
-
-        serviceCollection.AddScoped<IQuotaProcessor, QuotaProcessor>();
-        serviceCollection.Decorate<IQuotaProcessor, QuotaProcessorTelemetryDecorator>();
-
-        serviceCollection.AddScoped<IGrantService, GrantService>();
-        serviceCollection.AddScoped<IConsumptionService, ConsumptionService>();
-        serviceCollection.AddScoped<IQuotaService, QuotaService>();
-
-        options.ServiceDecorators?.Invoke(serviceCollection);
-
-        serviceCollection.Decorate<IGrantService, GrantServiceTelemetryDecorator>();
-        serviceCollection.Decorate<IConsumptionService, ConsumptionServiceTelemetryDecorator>();
-        serviceCollection.Decorate<IQuotaService, QuotaServiceTelemetryDecorator>();
-
-        return serviceCollection;
     }
 }

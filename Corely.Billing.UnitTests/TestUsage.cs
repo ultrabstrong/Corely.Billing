@@ -15,14 +15,17 @@ internal static class TestUsage
     internal static UsageOperation Unregistered { get; } = UsageOperation.From("never_registered");
     internal static UsageUnit UnregisteredUnit { get; } = UsageUnit.From("never_registered");
 
-    internal static BillingOptions RegisterTestUsage(this BillingOptions options) =>
-        options
-            .RegisterOperation(Extraction.Value, "Extraction")
-            .RegisterOperation(NoOp.Value, "No-op")
-            .RegisterOperation(Other.Value, "Other")
-            .RegisterUnit(Page.Value, "page")
-            .RegisterUnit(Byte.Value, "byte")
-            .RegisterUnit(Document.Value, "document");
+    extension(BillingOptions options)
+    {
+        internal BillingOptions RegisterTestUsage() =>
+            options
+                .RegisterOperation(Extraction.Value, "Extraction")
+                .RegisterOperation(NoOp.Value, "No-op")
+                .RegisterOperation(Other.Value, "Other")
+                .RegisterUnit(Page.Value, "page")
+                .RegisterUnit(Byte.Value, "byte")
+                .RegisterUnit(Document.Value, "document");
+    }
 
     internal static IUsageVocabulary Vocabulary { get; } =
         new UsageVocabulary(

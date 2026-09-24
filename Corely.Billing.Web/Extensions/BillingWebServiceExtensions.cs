@@ -6,14 +6,15 @@ namespace Corely.Billing.Web.Extensions;
 
 public static class BillingWebServiceExtensions
 {
-    public static IServiceCollection AddBillingWeb<TAccountAccessor>(
-        this IServiceCollection services
-    )
-        where TAccountAccessor : class, IBillingAccountAccessor
+    extension(IServiceCollection services)
     {
-        services.TryAddSingleton(TimeProvider.System);
-        services.AddScoped<IBillingAccountAccessor, TAccountAccessor>();
-        services.TryAddScoped<BillingCallGate>();
-        return services;
+        public IServiceCollection AddBillingWeb<TAccountAccessor>()
+            where TAccountAccessor : class, IBillingAccountAccessor
+        {
+            services.TryAddSingleton(TimeProvider.System);
+            services.AddScoped<IBillingAccountAccessor, TAccountAccessor>();
+            services.TryAddScoped<BillingCallGate>();
+            return services;
+        }
     }
 }

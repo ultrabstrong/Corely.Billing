@@ -12,12 +12,15 @@ internal static class TestUsage
     internal static UsageUnit Byte { get; } = UsageUnit.From("byte");
     internal static UsageUnit Document { get; } = UsageUnit.From("document");
 
-    internal static BillingOptions RegisterTestUsage(this BillingOptions options) =>
-        options
-            .RegisterOperation(Extraction.Value, "Extraction")
-            .RegisterOperation(NoOp.Value, "No-op")
-            .RegisterOperation(Other.Value, "Other")
-            .RegisterUnit(Page.Value, "page")
-            .RegisterUnit(Byte.Value, "byte")
-            .RegisterUnit(Document.Value, "document");
+    extension(BillingOptions options)
+    {
+        internal BillingOptions RegisterTestUsage() =>
+            options
+                .RegisterOperation(Extraction.Value, "Extraction")
+                .RegisterOperation(NoOp.Value, "No-op")
+                .RegisterOperation(Other.Value, "Other")
+                .RegisterUnit(Page.Value, "page")
+                .RegisterUnit(Byte.Value, "byte")
+                .RegisterUnit(Document.Value, "document");
+    }
 }
