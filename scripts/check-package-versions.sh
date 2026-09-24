@@ -23,7 +23,7 @@ read_version() { # <git-ref-or-empty> <path>
   if [ -z "$1" ]; then
     sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$2" | head -1
   else
-    git show "$1:$2" 2>/dev/null | sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' | head -1
+    { git show "$1:$2" 2>/dev/null || true; } | sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' | head -1
   fi
 }
 
