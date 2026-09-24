@@ -59,7 +59,27 @@ DocsToData afterwards: delete its three decorators, their tests and `AddBillingA
 the resource types. A follow-up in DocsToData registers its own non-billing types (`extraction`,
 `sftp`, `document_workflows`) the same way, and deletes the unused `PermissionConstants.ENTITLEMENTS`.
 
-## Open questions for the discussion
+## The demo already exists: `Corely.Billing.Demos.WithIAM`
+
+The showcase for this package is `Corely.Billing.Demos.WithIAM`, which is already built. Enhance it;
+do not add another demo. Today it hand-writes what this package would provide, and those pieces are
+the starting point for the package:
+
+- `Authorization/GrantAuthorizationDecorator.cs` and `ConsumptionAuthorizationDecorator.cs`, passed
+  to `BillingOptions.DecorateServices`
+- `Program.cs` registering the `grants` and `usage` resource types with `IAMOptions`
+- `IamBillingAccountAccessor.cs`, with `CanManageGrantsAsync` asking IAM for Update on `grants`
+
+When the package ships, the demo deletes its `Authorization/` folder, calls
+`.UseCorelyIamPermissions()` and the package's resource-type registration instead, and takes the
+resource names question 1 settles. Its seeded member `bobby`, who has no roles, is the case that
+shows a denial. Add whatever else the package needs to show, a user with read but not write
+permission for one, to that seed.
+
+It also records a constraint the package must keep: Corely.Billing.Web's components share the
+circuit's DI scope, because IAM's user context is scoped. Decorators resolved in a fresh scope would
+see no user and deny everything.
+
 
 1. **Resource type names.** Keep DocsToData's (`grants`, `metering`, `quota`) or rename for the
    library's vocabulary (`consumption` instead of `metering`)? Existing permission rows would need
