@@ -27,7 +27,7 @@
   <Project Path="Corely.Billing.DataAccessMigrations.Cli.UnitTests/Corely.Billing.DataAccessMigrations.Cli.UnitTests.csproj" />
   <Project Path="Corely.Billing.DataAccessMigrations.MsSql/Corely.Billing.DataAccessMigrations.MsSql.csproj" />
   <Project Path="Corely.Billing.DataAccessMigrations.MySql/Corely.Billing.DataAccessMigrations.MySql.csproj" />
-  <Project Path="Corely.Billing.Demos.Assets/Corely.Billing.Demos.Assets.csproj" />
+  <Project Path="Corely.Billing.Demos.Bootstrap/Corely.Billing.Demos.Bootstrap.csproj" />
   <Project Path="Corely.Billing.Demos.Portal/Corely.Billing.Demos.Portal.csproj" />
   <Project Path="Corely.Billing.Demos.Subscription/Corely.Billing.Demos.Subscription.csproj" />
   <Project Path="Corely.Billing.Demos.WithIAM/Corely.Billing.Demos.WithIAM.csproj" />

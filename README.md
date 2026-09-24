@@ -89,7 +89,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | `Corely.Billing.Demos.Portal` | The web components against a seeded account, with simulated usage |
 | `Corely.Billing.Demos.Subscription` | The smallest host: one unlimited grant per term gates a page |
 | `Corely.Billing.Demos.WithIAM` | A metered host signed in through Corely.IAM, authorized by IAM permissions |
-| `Corely.Billing.Demos.Assets` | Bootstrap for the demos, served once |
+| `Corely.Billing.Demos.Bootstrap` | Bootstrap for the demos, served once |
 | `Corely.Billing.UnitTests` | Unit tests on mock repositories |
 | `Corely.Billing.IntegrationTests` | SQLite tests, plus an opt-in SQL Server and MySQL matrix |
 | `Corely.Billing.Web.UnitTests` | bUnit tests for the web components |

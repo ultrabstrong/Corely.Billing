@@ -108,7 +108,7 @@ Billing records migrations in `__CorelyBillingMigrationsHistory`, so it shares a
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
 | `Corely.Billing.Web` | Blazor Server components and opt-in routed pages. Versioned on its own. No reference to Corely.IAM |
 | `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |
-| `Corely.Billing.Demos.Assets` | Bootstrap for the demos, served as a static web asset so it is vendored once |
+| `Corely.Billing.Demos.Bootstrap` | Bootstrap for the demos, served as a static web asset so it is vendored once |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo on SQLite |
 | `Corely.Billing.UnitTests` | Unit tests (xUnit, Moq) on mock repositories |
 | `Corely.Billing.IntegrationTests` | SQLite tests and the opt-in provider matrix |
