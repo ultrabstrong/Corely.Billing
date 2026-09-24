@@ -1,0 +1,17 @@
+@switch (Status)
+{
+    case GrantStatus.Active:
+        <span class="badge rounded-pill text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
+        break;
+    case GrantStatus.Upcoming:
+        <span class="badge rounded-pill text-bg-info"><i class="bi bi-clock me-1" aria-hidden="true"></i>Upcoming</span>
+        break;
+    default:
+        <span class="badge rounded-pill text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Expired</span>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public GrantStatus Status { get; set; }
+}

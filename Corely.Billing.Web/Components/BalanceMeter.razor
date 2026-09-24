@@ -1,0 +1,49 @@
+@if (Balance.IsUnlimited)
+{
+    <div class="cbw-meter-text">
+        <i class="bi bi-infinity" aria-hidden="true"></i>
+        <span>@UsageText.Count(Balance.Used, UnitDisplayName) used, no limit</span>
+    </div>
+}
+else
+{
+    <div class="cbw-meter @SeverityClass"
+         role="meter"
+         aria-valuemin="0"
+         aria-valuemax="@Balance.Quantity"
+         aria-valuenow="@Math.Min(Balance.Used, Balance.Quantity ?? 0)"
+         aria-label="@($"{Balance.Used:N0} of {Balance.Quantity:N0} used")">
+        <div class="cbw-meter-fill" style="width: @WidthPercent"></div>
+    </div>
+    <div class="cbw-meter-text">
+        @if (Balance.IsOverdrawn)
+        {
+            <i class="bi bi-exclamation-octagon-fill cbw-overdrawn-icon" aria-hidden="true"></i>
+            <span class="fw-semibold">Overdrawn by @UsageText.Count(Balance.Overdraft, UnitDisplayName)</span>
+        }
+        else
+        {
+            @if (Balance.IsRunningLow)
+            {
+                <i class="bi bi-exclamation-triangle-fill cbw-low-icon" aria-hidden="true"></i>
+            }
+            <span>@(Balance.Remaining == 0 && Balance.Quantity > 0 ? $"All {UsageText.Count(Balance.Quantity.Value, UnitDisplayName)} used" : $"{UsageText.Count(Balance.Remaining, UnitDisplayName)} left of {Balance.Quantity:N0}")</span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public GrantBalance Balance { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string UnitDisplayName { get; set; } = string.Empty;
+
+    private string SeverityClass =>
+        Balance.IsOverdrawn ? "cbw-meter-overdrawn"
+        : Balance.IsRunningLow ? "cbw-meter-low"
+        : string.Empty;
+
+    private string WidthPercent =>
+        (Balance.UsedRatio * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
+}

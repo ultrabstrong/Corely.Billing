@@ -1,0 +1,118 @@
+.cbw-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
+}
+
+.cbw-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.cbw-empty-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.cbw-grant-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cbw-grant-head,
+.cbw-grant-row {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1.2fr) minmax(12rem, 1.4fr) minmax(12rem, 1.2fr) 7rem 9.5rem;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 1rem;
+}
+
+.cbw-grant-head {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.cbw-grant-row {
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.cbw-grant-name,
+.cbw-grant-window {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.cbw-grant-allowance {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.cbw-grant-operation,
+.cbw-grant-when {
+    font-size: 0.875rem;
+}
+
+.cbw-grant-actions {
+    display: flex;
+    gap: 0.375rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.cbw-action-label {
+    display: none;
+}
+
+.cbw-confirm-text {
+    font-size: 0.875rem;
+    width: 100%;
+    text-align: right;
+}
+
+@media (max-width: 767.98px) {
+    .cbw-grant-head {
+        display: none;
+    }
+
+    .cbw-grant-row {
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "name status"
+            "balance balance"
+            "window window"
+            "actions actions";
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: var(--bs-border-radius-lg);
+    }
+
+    .cbw-grant-name { grid-area: name; }
+    .cbw-grant-status { grid-area: status; }
+    .cbw-grant-balance { grid-area: balance; }
+    .cbw-grant-window { grid-area: window; }
+
+    .cbw-grant-actions {
+        grid-area: actions;
+        justify-content: flex-start;
+    }
+
+    .cbw-action-label {
+        display: inline;
+        margin-left: 0.375rem;
+    }
+
+    .cbw-confirm-text {
+        text-align: left;
+    }
+}

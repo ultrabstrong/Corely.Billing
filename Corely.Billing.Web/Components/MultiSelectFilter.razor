@@ -1,0 +1,54 @@
+@typeparam TValue where TValue : notnull
+
+<details class="cbw-filter">
+    <summary class="btn btn-sm @(Selected.Count > 0 ? "btn-secondary" : "btn-outline-secondary")">
+        @Label@(Selected.Count > 0 ? $" · {Selected.Count}" : string.Empty)
+        <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+    </summary>
+    <div class="cbw-filter-menu" role="group" aria-label="@Label">
+        @if (Options.Count == 0)
+        {
+            <span class="text-body-secondary small">None yet</span>
+        }
+        @for (var i = 0; i < Options.Count; i++)
+        {
+            var option = Options[i];
+            var id = $"cbw-{_id}-{i}";
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="@id" checked="@Selected.Contains(option.Value)"
+                       @onchange="() => ToggleAsync(option.Value)" />
+                <label class="form-check-label" for="@id">@option.Text</label>
+            </div>
+        }
+        @if (Selected.Count > 0)
+        {
+            <button type="button" class="btn btn-link btn-sm p-0 mt-1" @onclick="ClearAsync">Clear</button>
+        }
+    </div>
+</details>
+
+@code {
+    private readonly string _id = Guid.NewGuid().ToString("N")[..8];
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<(TValue Value, string Text)> Options { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public IReadOnlySet<TValue> Selected { get; set; } = new HashSet<TValue>();
+
+    [Parameter]
+    public EventCallback<IReadOnlySet<TValue>> SelectedChanged { get; set; }
+
+    private Task ToggleAsync(TValue value)
+    {
+        var next = new HashSet<TValue>(Selected);
+        if (!next.Remove(value))
+            next.Add(value);
+        return SelectedChanged.InvokeAsync(next);
+    }
+
+    private Task ClearAsync() => SelectedChanged.InvokeAsync(new HashSet<TValue>());
+}

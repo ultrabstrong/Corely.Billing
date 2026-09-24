@@ -1,0 +1,42 @@
+@inherits BillingComponentBase
+<div class="cbw-dashboard">
+    <div class="cbw-filters" role="toolbar" aria-label="Usage filters">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Range">
+            @foreach (var preset in RangePresets)
+            {
+                <button type="button" class="btn @(_preset == preset.Key ? "btn-primary" : "btn-outline-primary")"
+                        aria-pressed="@(_preset == preset.Key)" @onclick="() => SelectPreset(preset.Key)">
+                    @preset.Label
+                </button>
+            }
+        </div>
+        <label class="cbw-date">
+            <span class="visually-hidden">From</span>
+            <input type="date" class="form-control form-control-sm" value="@_from.ToString("yyyy-MM-dd")" @onchange="FromChanged" />
+        </label>
+        <span class="text-body-secondary" aria-hidden="true">–</span>
+        <label class="cbw-date">
+            <span class="visually-hidden">To</span>
+            <input type="date" class="form-control form-control-sm" value="@_to.ToString("yyyy-MM-dd")" @onchange="ToChanged" />
+        </label>
+
+        <MultiSelectFilter TValue="UsageUnit" Label="Unit" Options="_unitOptions" Selected="_units" SelectedChanged="UnitsChanged" />
+        <MultiSelectFilter TValue="UsageOperation" Label="Operation" Options="_operationOptions" Selected="_operations" SelectedChanged="OperationsChanged" />
+        <MultiSelectFilter TValue="string" Label="Provider" Options="_providerOptions" Selected="_providers" SelectedChanged="ProvidersChanged" />
+        <MultiSelectFilter TValue="Guid" Label="Grant" Options="_grantOptions" Selected="_grantIds" SelectedChanged="GrantsChanged" />
+    </div>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+    else if (_filter is not null)
+    {
+        <div class="cbw-panel">
+            <UsageChart @ref="_chart" AccountId="AccountId" Filter="_filter" />
+        </div>
+        <div class="cbw-panel">
+            <ConsumptionTable @ref="_table" AccountId="AccountId" Filter="_filter" />
+        </div>
+    }
+</div>

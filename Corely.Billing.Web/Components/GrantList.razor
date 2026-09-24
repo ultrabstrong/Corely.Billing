@@ -1,0 +1,83 @@
+@inherits BillingComponentBase
+<div class="cbw-grants">
+    @if (CanManage && _grants.Count > 0)
+    {
+        <div class="cbw-toolbar">
+            <a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>
+        </div>
+    }
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+
+    @if (_loading)
+    {
+        <div class="cbw-empty text-body-secondary" role="status">Loading grants…</div>
+    }
+    else if (_grants.Count == 0 && _error is null)
+    {
+        <div class="cbw-empty">
+            <p class="cbw-empty-title">No grants yet</p>
+            @if (CanManage)
+            {
+                <p class="text-body-secondary">A grant is what this account may use: a quantity of one unit, for one operation, between two dates.</p>
+                <a class="btn btn-primary btn-sm" href="@NewGrantHref">Create the first grant</a>
+            }
+            else
+            {
+                <p class="text-body-secondary">Grants given to this account will appear here.</p>
+            }
+        </div>
+    }
+    else if (_grants.Count > 0)
+    {
+        <ul class="cbw-grant-rows" aria-label="Grants">
+            <li class="cbw-grant-head" aria-hidden="true">
+                <span>Grant</span>
+                <span>Balance</span>
+                <span>Valid</span>
+                <span>Status</span>
+                <span></span>
+            </li>
+            @foreach (var grant in _grants)
+            {
+                var status = grant.StatusAt(Now);
+                <li class="cbw-grant-row" data-grant-id="@grant.GrantId">
+                    <div class="cbw-grant-name">
+                        <span class="cbw-grant-allowance">@UsageText.Count(grant.Quantity, Vocabulary.DisplayName(grant.Unit))</span>
+                        <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(grant.Operation)</span>
+                    </div>
+                    <div class="cbw-grant-balance">
+                        <BalanceMeter Balance="BalanceOf(grant)" UnitDisplayName="@Vocabulary.DisplayName(grant.Unit)" />
+                    </div>
+                    <div class="cbw-grant-window">
+                        <span>@grant.ValidFromUtc.ToString("MMM d, yyyy") – @grant.ValidToUtc.ToString("MMM d, yyyy")</span>
+                        <span class="cbw-grant-when text-body-secondary">@WhenText(grant, status)</span>
+                    </div>
+                    <div class="cbw-grant-status">
+                        <GrantStatusBadge Status="status" />
+                    </div>
+                    <div class="cbw-grant-actions">
+                        @if (_confirmingDelete == grant.GrantId)
+                        {
+                            <span class="cbw-confirm-text">Delete this grant?</span>
+                            <button type="button" class="btn btn-sm btn-danger" disabled="@_deleting" @onclick="() => DeleteAsync(grant)">Delete</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deleting" @onclick="CancelDelete">Keep</button>
+                        }
+                        else if (CanManage)
+                        {
+                            <a class="btn btn-sm btn-outline-primary" href="@GrantHref(grant.GrantId)" aria-label="Edit grant">
+                                <i class="bi bi-pencil" aria-hidden="true"></i><span class="cbw-action-label">Edit</span>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete grant" @onclick="() => ConfirmDelete(grant)">
+                                <i class="bi bi-trash" aria-hidden="true"></i><span class="cbw-action-label">Delete</span>
+                            </button>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>

@@ -1,0 +1,29 @@
+.cbw-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.cbw-date input {
+    width: 9.5rem;
+}
+
+.cbw-panel {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+}
+
+@media (max-width: 575.98px) {
+    .cbw-panel {
+        padding: 0.75rem;
+    }
+
+    .cbw-date input {
+        width: 8.5rem;
+    }
+}

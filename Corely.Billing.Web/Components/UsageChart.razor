@@ -1,0 +1,44 @@
+@inherits BillingComponentBase
+<figure class="cbw-chart">
+    <figcaption class="cbw-chart-caption">
+        <span class="cbw-chart-title">@Title</span>
+        <span class="cbw-chart-subtitle text-body-secondary">@Subtitle</span>
+    </figcaption>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+    else if (_loading && _model is null)
+    {
+        <div class="cbw-chart-placeholder text-body-secondary" role="status">Loading usage…</div>
+    }
+    else if (_model is { IsEmpty: true })
+    {
+        <div class="cbw-chart-placeholder text-body-secondary">
+            Nothing was used in this range, and no limited grant covers it.
+        </div>
+    }
+
+    <div class="cbw-chart-canvas" hidden="@(!ShowCharts)">
+        <canvas @ref="_usageCanvas" role="img" aria-label="@UsageLabel"></canvas>
+    </div>
+
+    <div hidden="@(!ShowCharts || _model?.Capacity.Count == 0)">
+        <div class="cbw-chart-caption cbw-chart-caption-secondary">
+            <span class="cbw-chart-title">Live capacity</span>
+            <span class="cbw-chart-subtitle text-body-secondary">What each limited grant allows while it is live</span>
+        </div>
+        <div class="cbw-chart-canvas cbw-chart-canvas-capacity">
+            <canvas @ref="_capacityCanvas" role="img" aria-label="Live capacity per grant"></canvas>
+        </div>
+    </div>
+
+    @if (_model is { HasUnlimitedGrant: true, IsEmpty: false })
+    {
+        <p class="cbw-chart-note text-body-secondary">
+            <i class="bi bi-infinity" aria-hidden="true"></i>
+            An unlimited grant covers this range, so it has no capacity to draw.
+        </p>
+    }
+</figure>

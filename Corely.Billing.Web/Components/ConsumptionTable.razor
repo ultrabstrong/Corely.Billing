@@ -1,0 +1,67 @@
+@inherits BillingComponentBase
+<section class="cbw-events" aria-label="@Title">
+    <div class="cbw-events-title">@Title</div>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger" role="alert">@_error</div>
+    }
+    else if (_loading && _items.Count == 0)
+    {
+        <div class="cbw-events-empty text-body-secondary" role="status">Loading…</div>
+    }
+    else if (_totalCount == 0)
+    {
+        <div class="cbw-events-empty text-body-secondary">Nothing was used in this range.</div>
+    }
+    else
+    {
+        <div class="cbw-event-head" role="row">
+            @foreach (var column in Columns)
+            {
+                <button type="button" class="cbw-sort @(_sortBy == column.Field ? "cbw-sort-active" : null)" @onclick="() => SortAsync(column.Field)"
+                        aria-sort="@AriaSort(column.Field)">
+                    @column.Label
+                    <i class="bi @SortIcon(column.Field)" aria-hidden="true"></i>
+                </button>
+            }
+            <span>Status</span>
+            <span>Grant</span>
+        </div>
+        <ul class="cbw-event-rows">
+            @foreach (var item in _items)
+            {
+                <li class="cbw-event-row">
+                    <span class="cbw-event-when">@item.UtcTimestamp.ToString("MMM d, yyyy HH:mm")</span>
+                    <span class="cbw-event-quantity">@item.Quantity.ToString("N0")<span class="cbw-event-quantity-unit"> @Vocabulary.DisplayName(item.Unit)@(item.Quantity == 1 ? "" : "s")</span></span>
+                    <span class="cbw-event-unit text-body-secondary">@Vocabulary.DisplayName(item.Unit)</span>
+                    <span class="cbw-event-operation">@Vocabulary.DisplayName(item.Operation)</span>
+                    <span class="cbw-event-provider text-body-secondary">@item.Provider</span>
+                    <span class="cbw-event-status"><OutcomeBadge Outcome="item.Outcome" /></span>
+                    <span class="cbw-event-grant font-monospace text-body-secondary" title="@item.GrantId">@item.GrantId.ToString()[^8..]</span>
+                    @if (item.Tags is { Count: > 0 })
+                    {
+                        <span class="cbw-event-tags">
+                            @foreach (var (key, value) in item.Tags)
+                            {
+                                <span class="badge text-bg-light border">@key=@value</span>
+                            }
+                        </span>
+                    }
+                </li>
+            }
+        </ul>
+
+        <nav class="cbw-pager" aria-label="Pages">
+            <span class="text-body-secondary">@(_skip + 1)–@Math.Min(_skip + PageSize, _totalCount) of @_totalCount.ToString("N0")</span>
+            <span class="cbw-pager-buttons">
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_skip == 0)" @onclick="() => PageAsync(-1)" aria-label="Previous page">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(_skip + PageSize >= _totalCount)" @onclick="() => PageAsync(1)" aria-label="Next page">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+            </span>
+        </nav>
+    }
+</section>

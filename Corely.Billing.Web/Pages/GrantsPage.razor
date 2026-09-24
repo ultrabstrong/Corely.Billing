@@ -1,0 +1,16 @@
+@page "/grants"
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Grants</PageTitle>
+
+<h1 class="h3 mb-3">Grants</h1>
+
+@if (Loaded && AccountId is null)
+{
+    <div class="alert alert-warning" role="alert">No account is selected.</div>
+}
+else if (AccountId is { } accountId)
+{
+    <GrantList AccountId="accountId" CanManage="CanManage" />
+}

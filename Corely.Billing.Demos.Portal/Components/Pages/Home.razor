@@ -1,0 +1,38 @@
+@page "/"
+@inject UsageSimulator Simulator
+
+<PageTitle>Billing portal</PageTitle>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Demo account</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(DemoUsage.Extraction, 40)">
+            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Simulate extraction
+        </button>
+        <button type="button" class="btn btn-outline-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(DemoUsage.Summaries, 10)">
+            Simulate summaries
+        </button>
+    </div>
+</div>
+
+@if (_message is not null)
+{
+    <div class="alert alert-info py-2" role="status">@_message</div>
+}
+
+<UsageDashboard @ref="_dashboard" AccountId="DemoUsage.AccountId" DefaultRange="90d" />
+
+@code {
+    private UsageDashboard? _dashboard;
+    private string? _message;
+    private bool _running;
+
+    private async Task SimulateAsync(Corely.Billing.Usage.UsageOperation operation, int maxPages)
+    {
+        _running = true;
+        _message = await Simulator.RunAsync(operation, Random.Shared.Next(1, maxPages + 1));
+        _running = false;
+        if (_dashboard is not null)
+            await _dashboard.RefreshAsync();
+    }
+}

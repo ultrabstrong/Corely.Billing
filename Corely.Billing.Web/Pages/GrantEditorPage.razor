@@ -1,0 +1,30 @@
+@page "/grants/new"
+@page "/grants/{GrantId:guid}"
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject NavigationManager Navigation
+
+<PageTitle>@Heading</PageTitle>
+
+<a class="btn btn-link px-0 mb-2" href="@BillingWebRoutes.GRANTS"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Grants</a>
+<h1 class="h3 mb-3">@Heading</h1>
+
+@if (Loaded && AccountId is null)
+{
+    <div class="alert alert-warning" role="alert">No account is selected.</div>
+}
+else if (AccountId is { } accountId)
+{
+    <div class="cbw-editor-page">
+        <GrantEditor AccountId="accountId" GrantId="GrantId" CanManage="CanManage" OnSaved="BackToList" OnCancel="BackToList" />
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid? GrantId { get; set; }
+
+    private string Heading => GrantId is null ? "New grant" : "Grant";
+
+    private void BackToList() => Navigation.NavigateTo(BillingWebRoutes.GRANTS);
+}
