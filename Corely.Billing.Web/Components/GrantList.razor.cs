@@ -8,9 +8,11 @@ namespace Corely.Billing.Web.Components;
 
 public partial class GrantList
 {
-    private IGrantService GrantService => Service<IGrantService>();
+    [Inject]
+    private IGrantService GrantService { get; set; } = null!;
 
-    private IConsumptionService ConsumptionService => Service<IConsumptionService>();
+    [Inject]
+    private IConsumptionService ConsumptionService { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -106,7 +108,9 @@ public partial class GrantList
 
     private void CancelDelete() => _confirmingDelete = null;
 
-    private async Task DeleteAsync(Grant grant)
+    private Task DeleteAsync(Grant grant) => SerializedAsync(() => DeleteCoreAsync(grant));
+
+    private async Task DeleteCoreAsync(Grant grant)
     {
         _deleting = true;
         var result = await GrantService.DeleteGrantAsync(grant.AccountId, grant.GrantId);

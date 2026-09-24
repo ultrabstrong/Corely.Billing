@@ -13,9 +13,11 @@ public partial class UsageChart : IAsyncDisposable
     private const string MODULE_PATH =
         "./_content/Corely.Billing.Web/Components/UsageChart.razor.js";
 
-    private IConsumptionService ConsumptionService => Service<IConsumptionService>();
+    [Inject]
+    private IConsumptionService ConsumptionService { get; set; } = null!;
 
-    private IGrantService GrantService => Service<IGrantService>();
+    [Inject]
+    private IGrantService GrantService { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;

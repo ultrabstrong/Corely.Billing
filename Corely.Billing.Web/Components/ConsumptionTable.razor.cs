@@ -18,7 +18,8 @@ public partial class ConsumptionTable
         (ConsumptionEventSortField.Provider, "Provider"),
     ];
 
-    private IConsumptionService ConsumptionService => Service<IConsumptionService>();
+    [Inject]
+    private IConsumptionService ConsumptionService { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;

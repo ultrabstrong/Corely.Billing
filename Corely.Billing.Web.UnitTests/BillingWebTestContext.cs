@@ -3,6 +3,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
 
@@ -24,6 +25,7 @@ public abstract class BillingWebTestContext : BunitContext
     protected BillingWebTestContext()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddScoped<BillingCallGate>();
         Services.AddSingleton(Grants.Object);
         Services.AddSingleton(Consumption.Object);
         Services.AddSingleton<IUsageVocabulary>(new TestVocabulary());

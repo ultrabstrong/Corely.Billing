@@ -20,9 +20,11 @@ public partial class UsageDashboard
         (ALL, "All", null),
     ];
 
-    private IConsumptionService ConsumptionService => Service<IConsumptionService>();
+    [Inject]
+    private IConsumptionService ConsumptionService { get; set; } = null!;
 
-    private IGrantService GrantService => Service<IGrantService>();
+    [Inject]
+    private IGrantService GrantService { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -67,13 +69,13 @@ public partial class UsageDashboard
         _unitOptions = [.. Vocabulary.Units.Select(u => (u.Unit, u.DisplayName))];
         _operationOptions = [.. Vocabulary.Operations.Select(o => (o.Operation, o.DisplayName))];
         _preset = DefaultRange;
-        await LoadReferenceDataAsync();
+        await SerializedAsync(LoadReferenceDataAsync);
         ApplyPreset();
     }
 
     public async Task RefreshAsync()
     {
-        await LoadReferenceDataAsync();
+        await SerializedAsync(LoadReferenceDataAsync);
         ApplyPreset();
         StateHasChanged();
         if (_chart is not null)

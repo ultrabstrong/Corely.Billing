@@ -32,6 +32,10 @@
       Aliases="PortalDemo"
     />
     <ProjectReference
+      Include="..\Corely.Billing.Demos.WithIAM\Corely.Billing.Demos.WithIAM.csproj"
+      Aliases="WithIamDemo"
+    />
+    <ProjectReference
       Include="..\Corely.Billing.Demos.Subscription\Corely.Billing.Demos.Subscription.csproj"
       Aliases="SubscriptionDemo"
     />

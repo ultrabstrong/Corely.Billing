@@ -8,7 +8,8 @@ namespace Corely.Billing.Web.Components;
 
 public partial class GrantEditor
 {
-    private IGrantService GrantService => Service<IGrantService>();
+    [Inject]
+    private IGrantService GrantService { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -58,7 +59,9 @@ public partial class GrantEditor
         set => _unit = UsageUnit.From(value);
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync() => SerializedAsync(LoadAsync);
+
+    private async Task LoadAsync()
     {
         _loading = true;
         _loadError = null;
@@ -101,7 +104,9 @@ public partial class GrantEditor
         _loading = false;
     }
 
-    private async Task SaveAsync()
+    private Task SaveAsync() => SerializedAsync(SaveCoreAsync);
+
+    private async Task SaveCoreAsync()
     {
         _error = Validate();
         if (_error is not null)

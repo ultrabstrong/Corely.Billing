@@ -1,3 +1,4 @@
+using Corely.Billing.Web.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -12,6 +13,7 @@ public static class BillingWebServiceExtensions
     {
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IBillingAccountAccessor, TAccountAccessor>();
+        services.TryAddScoped<BillingCallGate>();
         return services;
     }
 }

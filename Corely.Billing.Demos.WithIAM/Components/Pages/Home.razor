@@ -1,0 +1,50 @@
+@page "/"
+@attribute [Authorize]
+@inject IBillingAccountAccessor AccountAccessor
+@inject UsageSimulator Simulator
+
+<PageTitle>Acme Extraction</PageTitle>
+
+@if (_accountId is { } accountId)
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">Usage</h1>
+        <button type="button" class="btn btn-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(accountId)">
+            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Extract a document
+        </button>
+    </div>
+
+    @if (_message is not null)
+    {
+        <div class="alert alert-info py-2" role="status">@_message</div>
+    }
+
+    <UsageDashboard @ref="_dashboard" AccountId="accountId" />
+}
+else if (_loaded)
+{
+    <div class="alert alert-warning" role="alert">You are not in an account yet.</div>
+}
+
+@code {
+    private UsageDashboard? _dashboard;
+    private Guid? _accountId;
+    private bool _loaded;
+    private bool _running;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _accountId = await AccountAccessor.GetAccountIdAsync();
+        _loaded = true;
+    }
+
+    private async Task SimulateAsync(Guid accountId)
+    {
+        _running = true;
+        _message = await Simulator.RunAsync(accountId, Random.Shared.Next(5, 40));
+        _running = false;
+        if (_dashboard is not null)
+            await _dashboard.RefreshAsync();
+    }
+}
