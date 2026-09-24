@@ -166,8 +166,8 @@ question is whether a small public example earns its upkeep. Recommend it, after
 
 ## Outcome
 
-Done, together with `web-components-and-demos.md`, which the owner folded into this work. Branch
-`usage-shapes-and-web`, committed locally, not pushed or tagged.
+Done, together with `web-components-and-demos.md`, which the owner folded into this work. Released as
+1.0.0.
 
 ### Decisions the owner made
 
@@ -186,7 +186,8 @@ Done, together with `web-components-and-demos.md`, which the owner folded into t
   unlimited grants first and lets one take the whole charge. `RemainingRatio` reads 1 while one is
   live, where summing `long.MaxValue`s would have overflowed. Telemetry skips the quantity metric
   for an unlimited grant.
-- Versions: `Corely.Billing` 1.0.0-preview.3, the CLI 1.0.0-preview.2 (it ships the migration).
+- Versions: the owner took Billing out of preview. `Corely.Billing`, the CLI and
+  `Corely.Billing.Web` all ship as 1.0.0.
 - Tests: unit (policy, validator, quota processor, telemetry decorator), a SQLite lifecycle test,
   and a provider-matrix case. Every new policy test was watched fail against the old policy. The
   matrix passes on SQL Server and MySQL.
@@ -195,10 +196,8 @@ Done, together with `web-components-and-demos.md`, which the owner folded into t
 
 - **Corely.Common's `ComparableFilter` threw on every nullable property** except `IsNull` and
   `IsNotNull`: `FilterBuilder` has a `T?` overload, but the filter typed its constants as `T`. Making
-  `Quantity` nullable broke Billing's own quantity-filter tests. Fixed in Corely.Common on branch
-  `nullable-comparable-filters` (2.0.3, unreleased, with tests that fail without the fix). Until it
-  ships, Billing's tests and docs filter grants with `IsNull`/`IsNotNull` and by date. After it
-  ships, bump Corely.Common here and restore a quantity-comparison test.
+  `Quantity` nullable broke Billing's own quantity-filter tests. Fixed in Corely.Common 2.0.3,
+  released; Billing references it and the quantity-comparison tests are back.
 
 ### Docs and demos
 

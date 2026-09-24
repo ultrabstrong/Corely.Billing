@@ -39,7 +39,7 @@ await grantService.CreateGrantAsync(new CreateGrantRequest(
 ```csharp
 var result = await grantService.ListGrantsAsync(new ListGrantsRequest(
     accountId,
-    Filter: Filter.For<Grant>().Where(g => g.ValidToUtc, ComparableFilter<DateTime>.GreaterThan(now)),
+    Filter: Filter.For<Grant>().Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(100)),
     Order: Order.For<Grant>().By(g => g.ValidToUtc, SortDirection.Ascending),
     Skip: 0, Take: 25));
 

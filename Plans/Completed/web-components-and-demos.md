@@ -173,7 +173,7 @@ routed pages.
 
 - **Components**: `GrantList`, `GrantEditor`, `UsageChart`, `ConsumptionTable`, `UsageDashboard`,
   plus `IBillingAccountAccessor` (one required method; `CanManageGrantsAsync` defaults to true) and
-  `AddBillingWeb<T>()`. Version 1.0.0-preview.1, packed by `release.yml`, checked by
+  `AddBillingWeb<T>()`. Version 1.0.0, packed by `release.yml`, checked by
   `check-package-versions.sh`.
 - **Routed pages opt in by assembly**: a host that never adds the assembly to its router gets
   none of them, which answers IAM's lesson without a second assembly.

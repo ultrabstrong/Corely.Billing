@@ -8,7 +8,7 @@ name: Release
 # policy on nuget.org is updated to match. Its package scope is Corely.Billing*, covering every
 # package this repository ships, the migration CLI included.
 #
-#   git tag v1.0.0-preview.1 && git push origin v1.0.0-preview.1
+#   git tag v1.0.0 && git push origin v1.0.0
 #
 on:
   push:

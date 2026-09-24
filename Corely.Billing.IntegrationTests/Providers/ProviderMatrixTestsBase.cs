@@ -261,13 +261,13 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                         AccountId,
                         Filter: Filter
                             .For<Grant>()
-                            .Where(g => g.Quantity, ComparableFilter<long>.IsNotNull()),
+                            .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20)),
                         Order: Order.For<Grant>().By(g => g.Quantity, SortDirection.Ascending)
                     )
                 )
         );
 
-        Assert.Equal([10, 20, 30], result.Data!.Items.Select(g => g.Quantity));
+        Assert.Equal([20, 30], result.Data!.Items.Select(g => g.Quantity));
     }
 }
 

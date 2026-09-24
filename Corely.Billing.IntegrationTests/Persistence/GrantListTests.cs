@@ -70,6 +70,24 @@ public sealed class GrantListTests : IDisposable
     }
 
     [Fact]
+    public async Task ListGrantsAsync_TranslatesTheFilter_ForAQuantityComparison()
+    {
+        await SeedAsync(10, null, 30, 40);
+
+        var result = await ListAsync(
+            new ListGrantsRequest(
+                AccountId,
+                Filter: Filter
+                    .For<Grant>()
+                    .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(25))
+            )
+        );
+
+        Assert.Equal(2, result.Data!.TotalCount);
+        Assert.All(result.Data.Items, g => Assert.True(g.Quantity >= 25));
+    }
+
+    [Fact]
     public async Task ListGrantsAsync_TranslatesTheFilter_ForAnUnlimitedFilter()
     {
         await SeedAsync(10, null, 30, null);
