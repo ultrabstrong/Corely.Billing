@@ -2,6 +2,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
 
 namespace Corely.Billing.Web.Components;
@@ -66,11 +67,7 @@ public partial class GrantList
         );
         if (result.ResultCode != RetrieveResultCode.Success)
         {
-            _error = BillingMessages.RetrieveError(
-                result.ResultCode,
-                "view grants",
-                result.Message
-            );
+            _error = result.ResultCode.ErrorMessage("view grants", result.Message);
             _grants = [];
             _loading = false;
             return;
@@ -95,14 +92,6 @@ public partial class GrantList
 
     private GrantBalance BalanceOf(Grant grant) =>
         GrantBalance.For(grant, _used.GetValueOrDefault(grant.GrantId));
-
-    private string WhenText(Grant grant, GrantStatus status) =>
-        status switch
-        {
-            GrantStatus.Upcoming => $"Starts {BillingMessages.InDays(grant.ValidFromUtc - Now)}",
-            GrantStatus.Active => $"Expires {BillingMessages.InDays(grant.ValidToUtc - Now)}",
-            _ => $"Expired {BillingMessages.DaysAgo(Now - grant.ValidToUtc)}",
-        };
 
     private void ConfirmDelete(Grant grant) => _confirmingDelete = grant.GrantId;
 

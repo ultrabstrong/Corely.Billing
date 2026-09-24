@@ -57,14 +57,14 @@ internal static class RetryPolicy
             {
                 throw;
             }
-            catch (Exception ex) when (ShouldRetry(ex, options))
+            catch (Exception ex) when (options.IsRetryable(ex))
             {
                 last = ex;
                 attempt++;
                 if (attempt >= options.MaxAttempts)
                     break;
 
-                var delay = NextDelay(attempt, options);
+                var delay = options.RetryDelay(attempt, s_random);
                 options.OnRetry?.Invoke(attempt, ex, delay);
                 if (!(options.FastFirst && attempt == 1))
                 {
@@ -74,21 +74,5 @@ internal static class RetryPolicy
         }
 
         throw last ?? new InvalidOperationException("Retry attempts exhausted.");
-    }
-
-    private static bool ShouldRetry(Exception ex, RetryOptions options) =>
-        options.ShouldRetry?.Invoke(ex) ?? true;
-
-    private static TimeSpan NextDelay(int attempt, RetryOptions options)
-    {
-        var exp =
-            options.BaseDelay.TotalMilliseconds * Math.Pow(options.BackoffFactor, attempt - 1);
-        var ms = Math.Min(exp, options.MaxDelay.TotalMilliseconds);
-        if (options.JitterFactor > 0)
-        {
-            var jitter = 1 + ((s_random.NextDouble() * 2 - 1) * options.JitterFactor);
-            ms *= jitter;
-        }
-        return TimeSpan.FromMilliseconds(ms);
     }
 }

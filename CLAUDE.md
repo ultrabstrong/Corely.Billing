@@ -182,6 +182,42 @@ An outcome the caller is expected to handle is a result code, not an exception �
 - One class/enum/interface per file; no `#region` tags
 - Test methods: `<MethodName>_<ExpectedBehavior>_For<InputDescription>`
 
+### Extensions
+
+**Reading or converting a type is an extension on that type, named for what it returns.** A
+conversion between two types, or a reading of one type that anything else could want, belongs in
+`<Type>Extensions` — in an `Extensions` or `Mappers` folder, holding extensions of that one type.
+Write it as a C# 14 `extension(T receiver)` block, `internal` with `InternalsVisibleTo` in the
+`.csproj`, and give it its own unit tests. The point is testability: a private helper can only be
+reached through the class that calls it, and every test of it has to build that class.
+
+```csharp
+internal static class QuotaContextExtensions
+{
+    extension(QuotaContext context)
+    {
+        public double RemainingRatio(long charged) => ...;
+    }
+}
+```
+
+**Do** put it on the type it reads, name it for what comes back (`RemainingRatio`,
+`ToSettleQuotaResult`, `PlaceholderConnectionString`), and test it directly.
+
+**Don't**:
+- leave it as a private helper on the class that happens to need it, including the instance form
+  that closes over a field instead of taking a parameter;
+- inline the conversion where it is used, with no seam at all;
+- write a helper class not attached to a type — `MessageHelper`, `MappingUtils`, a grab-bag
+  `Extensions.cs` or `...Messages` class holding readings of several unrelated types;
+- name it for the receiver or the mechanics — `RemainingRatioOf`, `GetRatioFromContext`;
+- use `this T` parameters in new code (existing ones convert when next touched), or make anything
+  `public` purely so a test can reach it. Public is for real API only.
+
+This covers conversions and derived readings, not every private method: a helper that only
+structures the code it sits in stays where it is, and so does a private step inside an extension
+class. The extension lives in the layer that already knows both types.
+
 ### Plans
 
 Store implementation plans in `Plans/` at the repository root.

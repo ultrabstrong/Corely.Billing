@@ -1,6 +1,8 @@
+using Corely.Billing.Consumption.Extensions;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 
 namespace Corely.Billing.Web.Components;
 
@@ -56,7 +58,7 @@ internal sealed record UsageChartModel(
 
         var capacity = named
             .Select(g => new CapacitySeries(
-                GrantLabel(g, vocabulary),
+                g.AllowanceAndExpiry(vocabulary),
                 LiveQuantity(buckets, bucket, [g])
             ))
             .ToList();
@@ -64,23 +66,12 @@ internal sealed record UsageChartModel(
             capacity.Add(new CapacitySeries(OTHER_GRANTS, LiveQuantity(buckets, bucket, folded)));
 
         return new UsageChartModel(
-            [.. buckets.Select(b => BucketLabel(b.BucketStart, bucket))],
+            [.. buckets.Select(b => bucket.PeriodLabel(b.BucketStart))],
             [.. buckets.Select(b => b.TotalQuantity)],
             capacity,
             relevant.Any(g => g.Quantity is null)
         );
     }
-
-    public static string BucketLabel(DateTime start, TimeBucket bucket) =>
-        bucket switch
-        {
-            TimeBucket.Week => $"Week of {start:MMM d}",
-            TimeBucket.Month => start.ToString("MMM yyyy"),
-            _ => start.ToString("MMM d"),
-        };
-
-    private static string GrantLabel(Grant grant, IUsageVocabulary vocabulary) =>
-        $"{UsageText.Count(grant.Quantity, vocabulary.DisplayName(grant.Unit))} to {grant.ValidToUtc:MMM d, yyyy}";
 
     private static List<long> LiveQuantity(
         IReadOnlyList<ConsumptionTimeBucketData> buckets,
@@ -90,18 +81,10 @@ internal sealed record UsageChartModel(
         [
             .. buckets.Select(b =>
             {
-                var end = End(b.BucketStart, bucket);
+                var end = bucket.NextBucketStart(b.BucketStart);
                 return grants
                     .Where(g => g.ValidFromUtc < end && g.ValidToUtc >= b.BucketStart)
                     .Sum(g => g.Quantity!.Value);
             }),
         ];
-
-    private static DateTime End(DateTime start, TimeBucket bucket) =>
-        bucket switch
-        {
-            TimeBucket.Week => start.AddDays(7),
-            TimeBucket.Month => start.AddMonths(1),
-            _ => start.AddDays(1),
-        };
 }

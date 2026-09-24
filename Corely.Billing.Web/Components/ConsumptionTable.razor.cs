@@ -2,6 +2,7 @@ using Corely.Billing.Consumption.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Corely.Common.Filtering.Ordering;
 using Microsoft.AspNetCore.Components;
 
@@ -81,11 +82,7 @@ public partial class ConsumptionTable
 
         if (result.ResultCode != RetrieveResultCode.Success)
         {
-            _error = BillingMessages.RetrieveError(
-                result.ResultCode,
-                "view usage events",
-                result.Message
-            );
+            _error = result.ResultCode.ErrorMessage("view usage events", result.Message);
             _items = [];
             _totalCount = 0;
         }

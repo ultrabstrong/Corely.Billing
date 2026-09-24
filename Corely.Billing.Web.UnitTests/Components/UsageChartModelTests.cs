@@ -1,4 +1,6 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.Grants.Models;
+using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
 
 namespace Corely.Billing.Web.UnitTests.Components;
@@ -53,20 +55,13 @@ public class UsageChartModelTests : BillingWebTestContext
     {
         var model = Build(
             [Grant(100)],
-            new UsageFilter(
-                Start,
-                Start.AddDays(2),
-                Units: [Corely.Billing.Usage.UsageUnit.From("byte")]
-            )
+            new UsageFilter(Start, Start.AddDays(2), Units: [UsageUnit.From("byte")])
         );
 
         Assert.Empty(model.Capacity);
     }
 
-    private static UsageChartModel Build(
-        IReadOnlyList<Corely.Billing.Grants.Models.Grant> grants,
-        UsageFilter? filter = null
-    )
+    private static UsageChartModel Build(IReadOnlyList<Grant> grants, UsageFilter? filter = null)
     {
         filter ??= new UsageFilter(Start, Start.AddDays(2));
         List<ConsumptionTimeBucketData> buckets =
@@ -78,17 +73,17 @@ public class UsageChartModelTests : BillingWebTestContext
         return UsageChartModel.Build(buckets, grants, TimeBucket.Day, filter, new StubVocabulary());
     }
 
-    private sealed class StubVocabulary : Corely.Billing.Usage.IUsageVocabulary
+    private sealed class StubVocabulary : IUsageVocabulary
     {
-        public IReadOnlyList<Corely.Billing.Usage.UsageOperationDefinition> Operations => [];
-        public IReadOnlyList<Corely.Billing.Usage.UsageUnitDefinition> Units => [];
+        public IReadOnlyList<UsageOperationDefinition> Operations => [];
+        public IReadOnlyList<UsageUnitDefinition> Units => [];
 
-        public bool Knows(Corely.Billing.Usage.UsageOperation operation) => true;
+        public bool Knows(UsageOperation operation) => true;
 
-        public bool Knows(Corely.Billing.Usage.UsageUnit unit) => true;
+        public bool Knows(UsageUnit unit) => true;
 
-        public string DisplayName(Corely.Billing.Usage.UsageOperation operation) => operation.Value;
+        public string DisplayName(UsageOperation operation) => operation.Value;
 
-        public string DisplayName(Corely.Billing.Usage.UsageUnit unit) => unit.Value;
+        public string DisplayName(UsageUnit unit) => unit.Value;
     }
 }

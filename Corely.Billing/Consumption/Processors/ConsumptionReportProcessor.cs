@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Entities;
+using Corely.Billing.Consumption.Extensions;
 using Corely.Billing.Consumption.Mappers;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Models;
@@ -112,14 +113,14 @@ internal class ConsumptionReportProcessor(
             ct
         );
 
-        var buckets = raw.GroupBy(e => TruncateToBucket(e.UtcTimestamp, bucket))
+        var buckets = raw.GroupBy(e => bucket.BucketStart(e.UtcTimestamp))
             .ToDictionary(g => g.Key, g => g.Sum(e => e.Quantity));
 
         var allBuckets = new List<ConsumptionTimeBucketData>();
         for (
-            var bucketStart = TruncateToBucket(fromUtc, bucket);
+            var bucketStart = bucket.BucketStart(fromUtc);
             bucketStart <= toUtc;
-            bucketStart = AdvanceBucket(bucketStart, bucket)
+            bucketStart = bucket.NextBucketStart(bucketStart)
         )
         {
             allBuckets.Add(
@@ -269,27 +270,5 @@ internal class ConsumptionReportProcessor(
                 ? q.OrderByDescending(e => e.UtcTimestamp)
                 : q.OrderBy(e => e.UtcTimestamp),
         };
-    }
-
-    private static DateTime TruncateToBucket(DateTime dt, TimeBucket bucket) =>
-        bucket switch
-        {
-            TimeBucket.Week => StartOfWeek(dt),
-            TimeBucket.Month => new DateTime(dt.Year, dt.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-            _ => new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc),
-        };
-
-    private static DateTime AdvanceBucket(DateTime dt, TimeBucket bucket) =>
-        bucket switch
-        {
-            TimeBucket.Week => dt.AddDays(7),
-            TimeBucket.Month => dt.AddMonths(1),
-            _ => dt.AddDays(1),
-        };
-
-    private static DateTime StartOfWeek(DateTime dt)
-    {
-        var diff = (7 + (dt.DayOfWeek - DayOfWeek.Monday)) % 7;
-        return new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc).AddDays(-diff);
     }
 }

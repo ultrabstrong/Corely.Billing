@@ -20,4 +20,15 @@ public static class DatabaseProviderExtensions
     }
 
     public static string[] GetNames() => Enum.GetNames<DatabaseProvider>();
+
+    extension(DatabaseProvider provider)
+    {
+        public string PlaceholderConnectionString() =>
+            provider switch
+            {
+                DatabaseProvider.MsSql =>
+                    "Server=.;Database=CorelyBilling;Trusted_Connection=True;",
+                _ => "Server=localhost;Database=CorelyBilling;Uid=root;Pwd=;",
+            };
+    }
 }

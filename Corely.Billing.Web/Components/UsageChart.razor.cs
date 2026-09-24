@@ -3,6 +3,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -91,7 +92,7 @@ public partial class UsageChart : IAsyncDisposable
         );
         if (series.ResultCode != RetrieveResultCode.Success)
         {
-            _error = BillingMessages.RetrieveError(series.ResultCode, "view usage", series.Message);
+            _error = series.ResultCode.ErrorMessage("view usage", series.Message);
             _loading = false;
             return;
         }

@@ -2,6 +2,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
 
 namespace Corely.Billing.Web.Components;
@@ -83,8 +84,7 @@ public partial class GrantEditor
         var result = await GrantService.GetGrantAsync(AccountId, GrantId!.Value);
         if (result.ResultCode != RetrieveResultCode.Success || result.Item is null)
         {
-            _loadError = BillingMessages.RetrieveError(
-                result.ResultCode,
+            _loadError = result.ResultCode.ErrorMessage(
                 "view this grant",
                 result.ResultCode == RetrieveResultCode.NotFoundError
                     ? "This grant no longer exists."

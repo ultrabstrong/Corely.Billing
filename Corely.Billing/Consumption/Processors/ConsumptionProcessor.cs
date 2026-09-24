@@ -333,7 +333,7 @@ internal class ConsumptionProcessor(
                 await RetryPolicy.ExecuteAsync(
                     token =>
                         _consumptionEventRepo.CreateAsync(
-                            SpilloverRow(template, operationContext, grantId, quantity, now),
+                            template.ToSpillover(operationContext, grantId, quantity, now),
                             token
                         ),
                     _retryOptions,
@@ -374,36 +374,6 @@ internal class ConsumptionProcessor(
         quantityByGrant is null
             ? []
             : quantityByGrant.Where(kv => !outstanding.Any(r => r.GrantId == kv.Key));
-
-    private static ConsumptionEventEntity SpilloverRow(
-        ConsumptionEventEntity template,
-        OperationContext operationContext,
-        Guid grantId,
-        long quantity,
-        DateTime now
-    ) =>
-        new()
-        {
-            ConsumptionId = Guid.CreateVersion7(),
-            AccountId = template.AccountId,
-            Quantity = quantity,
-            Unit = template.Unit,
-            Operation = template.Operation,
-            Provider = template.Provider,
-            UtcTimestamp = template.UtcTimestamp,
-            CorrelationId = template.CorrelationId,
-            IdempotencyKey = IdempotencyKeyFactory.Create(
-                operationContext,
-                template.Operation,
-                template.Unit,
-                grantId
-            ),
-            GrantId = grantId,
-            FinalizedUtc = now,
-            Outcome = ConsumptionOutcome.Settled,
-            UserId = template.UserId,
-            TagsJson = template.TagsJson,
-        };
 
     private Task<ConsumptionEventEntity?> FindByKeyAsync(
         ConsumptionEventEntity reservation,

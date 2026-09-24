@@ -2,6 +2,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
 
 namespace Corely.Billing.Web.Components;
@@ -91,12 +92,12 @@ public partial class UsageDashboard
         );
         if (grants.ResultCode == RetrieveResultCode.UnauthorizedError)
         {
-            _error = BillingMessages.RetrieveError(grants.ResultCode, "view usage", grants.Message);
+            _error = grants.ResultCode.ErrorMessage("view usage", grants.Message);
             return;
         }
 
         var grantList = grants.Data?.Items ?? [];
-        _grantOptions = [.. grantList.Select(g => (g.GrantId, GrantOptionText(g)))];
+        _grantOptions = [.. grantList.Select(g => (g.GrantId, g.AllowanceAndWindow(Vocabulary)))];
 
         var providers = await ConsumptionService.ListProvidersAsync(AccountId);
         _providerOptions = [.. (providers.Item ?? []).Select(p => (p, p))];
@@ -110,9 +111,6 @@ public partial class UsageDashboard
             .Where(d => d is not null)
             .Min();
     }
-
-    private string GrantOptionText(Grant grant) =>
-        $"{UsageText.Count(grant.Quantity, Vocabulary.DisplayName(grant.Unit))}, {grant.ValidFromUtc:MMM d, yyyy} – {grant.ValidToUtc:MMM d, yyyy}";
 
     private void ApplyPreset()
     {

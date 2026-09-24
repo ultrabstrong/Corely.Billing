@@ -2,6 +2,8 @@ using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
+using Corely.Billing.Quota.Extensions;
+using Corely.Billing.Quota.Mappers;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Usage;
 using Corely.Billing.Validators;
@@ -174,18 +176,15 @@ internal class QuotaProcessor(
             return await ApplyAsync(request, new Dictionary<Guid, long>(), overdrawn: false, ct);
         }
 
-        var context = await LoadAsync(request.AccountId, request.Operation, request.Unit, ct);
-        var totalsWithoutOwnHolds = SubtractOwnReservations(context.Totals, outstanding);
+        var context = (
+            await LoadAsync(request.AccountId, request.Operation, request.Unit, ct)
+        ).WithoutHolds(outstanding);
         var split = _grantSelectionPolicy.Split(
             context.Grants,
-            totalsWithoutOwnHolds,
+            context.Totals,
             request.ActualQuantity
         );
-        var remainingRatio = RemainingRatio(
-            context.Grants,
-            totalsWithoutOwnHolds,
-            request.ActualQuantity
-        );
+        var remainingRatio = context.RemainingRatio(request.ActualQuantity);
 
         var quantityByGrant = split.Shares.ToDictionary(s => s.GrantId, s => s.Quantity);
         var overdrawn = split.Shortfall > 0;
@@ -231,7 +230,7 @@ internal class QuotaProcessor(
             ct
         );
 
-        return ToSettleResult(result, overdrawn: false);
+        return result.ToSettleQuotaResult(overdrawn: false);
     }
 
     private async Task<SettleQuotaResult> ApplyAsync(
@@ -249,55 +248,8 @@ internal class QuotaProcessor(
             ct
         );
 
-        return ToSettleResult(result, overdrawn);
+        return result.ToSettleQuotaResult(overdrawn);
     }
-
-    private static SettleQuotaResult ToSettleResult(
-        ResolveConsumptionResult result,
-        bool overdrawn
-    ) =>
-        new(
-            result.ResultCode == ResolveConsumptionResultCode.Success
-                ? SettleQuotaResultCode.Success
-                : SettleQuotaResultCode.NotRecordedError,
-            result.Message,
-            result.SettledQuantity,
-            overdrawn
-        );
-
-    private static double RemainingRatio(
-        List<Grant> grants,
-        List<GrantTotalConsumptions> totals,
-        long charged
-    )
-    {
-        if (grants.Any(g => g.Quantity is null))
-            return 1;
-
-        var total = grants.Sum(g => g.Quantity!.Value);
-        if (total <= 0)
-            return 0;
-
-        var consumed = totals.Sum(t => t.TotalConsumedQuantity) + charged;
-        return Math.Clamp((double)(total - consumed) / total, 0, 1);
-    }
-
-    private static List<GrantTotalConsumptions> SubtractOwnReservations(
-        List<GrantTotalConsumptions> totals,
-        List<ConsumptionEvent> outstanding
-    ) =>
-        [
-            .. totals.Select(t =>
-                t with
-                {
-                    TotalConsumedQuantity =
-                        t.TotalConsumedQuantity
-                        - outstanding.Where(o => o.GrantId == t.GrantId).Sum(o => o.Quantity),
-                }
-            ),
-        ];
-
-    private sealed record QuotaContext(List<Grant> Grants, List<GrantTotalConsumptions> Totals);
 
     private async Task<QuotaContext> LoadAsync(
         Guid accountId,
