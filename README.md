@@ -4,6 +4,8 @@ Grants, consumption and quota for .NET applications. Records what an account was
 
 Not only for metering: a subscription, prepaid credits, a trial, or seats use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
 
+**Try it running:** three demo apps show the web components, a subscription, and Billing inside a Corely.IAM app. See [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md).
+
 ```mermaid
 flowchart LR
     options["<b>BillingOptions</b><br/>usage and hooks"] --> add["<b>AddBillingServices</b>"]
@@ -75,6 +77,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library — setup, services, reservations, architecture |
 | [Migration CLI](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) | Database creation, migrations, and scripting |
 | [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components — grant list and editor, usage chart, usage events |
+| [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md) | The three demo apps, what each shows, and how to run them |
 
 ## Solution Structure
 

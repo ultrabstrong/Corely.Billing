@@ -39,6 +39,7 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 
 - [Step-by-Step Setup](step-by-step-setup.md)
 - [Usage Shapes](usage-shapes.md)
+- [Demos](demos.md)
 - [BillingOptions Configuration](billing-options.md)
 - [Usage Vocabulary](usage-vocabulary.md)
 - [Operation Context](operation-context.md)
