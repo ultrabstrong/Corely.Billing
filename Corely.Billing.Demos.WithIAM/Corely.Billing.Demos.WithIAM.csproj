@@ -6,8 +6,8 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Corely.IAM" Version="2.3.0" />
-    <PackageReference Include="Corely.IAM.Web" Version="2.3.0" />
+    <PackageReference Include="Corely.IAM" Version="2.3.1" />
+    <PackageReference Include="Corely.IAM.Web" Version="2.4.0" />
     <PackageReference Include="CSharpier.MsBuild" Version="1.3.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
