@@ -8,15 +8,25 @@
     {
         <div class="alert alert-danger" role="alert">@_loadError</div>
     }
+    else if (IsNew)
+    {
+        @ActionGate.Gate(GrantAction.Create, null, Form(true),
+            @<div class="alert alert-secondary" role="status">You are not allowed to create grants.</div>)
+    }
     else
     {
-        @if (!CanManage)
-        {
-            <div class="alert alert-secondary" role="status">You can view this grant but not change it.</div>
-        }
+        @ActionGate.Gate(GrantAction.Update, GrantId, Form(true),
+            @<text>
+                <div class="alert alert-secondary" role="status">You can view this grant but not change it.</div>
+                @Form(false)
+            </text>)
+    }
+</div>
 
-        <form @onsubmit="SaveAsync" novalidate>
-            <fieldset disabled="@(!CanManage || _saving)">
+@code {
+    private RenderFragment Form(bool editable) =>
+        @<form @onsubmit="SaveAsync" novalidate>
+            <fieldset disabled="@(!editable || _saving)">
                 <div class="mb-3">
                     <label for="cbw-operation" class="form-label">Operation</label>
                     <select id="cbw-operation" class="form-select" @bind="OperationValue" disabled="@(!IsNew)">
@@ -69,7 +79,7 @@
             }
 
             <div class="d-flex gap-2">
-                @if (CanManage)
+                @if (editable)
                 {
                     <button type="submit" class="btn btn-primary" disabled="@_saving">
                         @if (_saving)
@@ -81,9 +91,8 @@
                 }
                 @if (OnCancel.HasDelegate)
                 {
-                    <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel">@(CanManage ? "Cancel" : "Back")</button>
+                    <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel">@(editable ? "Cancel" : "Back")</button>
                 }
             </div>
-        </form>
-    }
-</div>
+        </form>;
+}

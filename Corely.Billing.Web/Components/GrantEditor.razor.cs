@@ -10,6 +10,9 @@ namespace Corely.Billing.Web.Components;
 public partial class GrantEditor
 {
     [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
+
+    [Inject]
     private IGrantService GrantService { get; set; } = null!;
 
     [Inject]
@@ -23,9 +26,6 @@ public partial class GrantEditor
 
     [Parameter]
     public Guid? GrantId { get; set; }
-
-    [Parameter]
-    public bool CanManage { get; set; }
 
     [Parameter]
     public EventCallback<Guid> OnSaved { get; set; }

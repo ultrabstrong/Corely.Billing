@@ -21,11 +21,13 @@ public abstract class BillingWebTestContext : BunitContext
 
     protected Mock<IGrantService> Grants { get; } = new();
     protected Mock<IConsumptionService> Consumption { get; } = new();
+    protected RecordingGrantActionGate ActionGate { get; } = new();
 
     protected BillingWebTestContext()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddScoped<BillingCallGate>();
+        Services.AddSingleton<IGrantActionGate>(ActionGate);
         Services.AddSingleton(Grants.Object);
         Services.AddSingleton(Consumption.Object);
         Services.AddSingleton<IUsageVocabulary>(new TestVocabulary());

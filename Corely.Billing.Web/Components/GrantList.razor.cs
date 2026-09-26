@@ -10,6 +10,9 @@ namespace Corely.Billing.Web.Components;
 public partial class GrantList
 {
     [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
+
+    [Inject]
     private IGrantService GrantService { get; set; } = null!;
 
     [Inject]
@@ -23,9 +26,6 @@ public partial class GrantList
 
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
-
-    [Parameter]
-    public bool CanManage { get; set; }
 
     [Parameter]
     public string NewGrantHref { get; set; } = BillingWebRoutes.GRANT_NEW;

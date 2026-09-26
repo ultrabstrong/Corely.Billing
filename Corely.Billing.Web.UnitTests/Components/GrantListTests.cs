@@ -7,11 +7,11 @@ namespace Corely.Billing.Web.UnitTests.Components;
 
 public class GrantListTests : BillingWebTestContext
 {
-    private IRenderedComponent<GrantList> Render(bool canManage = true) =>
-        Render<GrantList>(p => p.Add(c => c.AccountId, AccountId).Add(c => c.CanManage, canManage));
+    private IRenderedComponent<GrantList> Render() =>
+        Render<GrantList>(p => p.Add(c => c.AccountId, AccountId));
 
     [Fact]
-    public void Render_OffersTheFirstGrant_ForAnAccountWithNoneThatCanManage()
+    public void Render_OffersTheFirstGrant_ForAnEmptyAccountAllowedToCreate()
     {
         var list = Render();
 
@@ -20,12 +20,15 @@ public class GrantListTests : BillingWebTestContext
     }
 
     [Fact]
-    public void Render_OffersNoCreateLink_ForAnAccountWithNoneThatCannotManage()
+    public void Render_OffersNoCreateLink_ForAnEmptyAccountNotAllowedToCreate()
     {
-        var list = Render(canManage: false);
+        ActionGate.Deny(GrantAction.Create);
+        var list = Render();
 
         Assert.Contains("No grants yet", list.Markup);
+        Assert.Contains("Grants given to this account will appear here.", list.Markup);
         Assert.Empty(list.FindAll("a"));
+        Assert.Equal([(GrantAction.Create, (Guid?)null)], ActionGate.Calls);
     }
 
     [Fact]
@@ -106,13 +109,46 @@ public class GrantListTests : BillingWebTestContext
     }
 
     [Fact]
-    public void Render_HidesEditAndDelete_ForAHostThatCannotManage()
+    public void Render_AsksTheGateForEachAction_ForARow()
+    {
+        var grant = Grant(10);
+        HaveGrants(grant);
+
+        Render();
+
+        Assert.Equal(
+            [
+                (GrantAction.Create, (Guid?)null),
+                (GrantAction.Update, grant.GrantId),
+                (GrantAction.Delete, grant.GrantId),
+            ],
+            ActionGate.Calls
+        );
+    }
+
+    [Fact]
+    public void Render_ShowsEditOnly_ForUpdateWithoutCreateOrDelete()
     {
         HaveGrants(Grant(10));
+        ActionGate.Deny(GrantAction.Create, GrantAction.Delete);
 
-        var list = Render(canManage: false);
+        var list = Render();
 
-        Assert.Empty(list.FindAll(".cbw-grant-actions a, .cbw-grant-actions button"));
+        Assert.Empty(list.FindAll(".cbw-toolbar"));
+        Assert.Empty(list.FindAll("button[aria-label='Delete grant']"));
+        Assert.Single(list.FindAll("a[aria-label='Edit grant']"));
+    }
+
+    [Fact]
+    public void Render_OffersViewInsteadOfEdit_ForNoUpdate()
+    {
+        var grant = Grant(10);
+        HaveGrants(grant);
+        ActionGate.Deny(GrantAction.Update);
+
+        var view = Render().Find("a[aria-label='View grant']");
+
+        Assert.Equal(BillingWebRoutes.GrantEditor(grant.GrantId), view.GetAttribute("href"));
     }
 
     [Fact]

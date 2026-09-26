@@ -20,12 +20,8 @@ public class GrantEditorTests : BillingWebTestContext
             );
     }
 
-    private IRenderedComponent<GrantEditor> Render(Guid? grantId = null, bool canManage = true) =>
-        Render<GrantEditor>(p =>
-            p.Add(c => c.AccountId, AccountId)
-                .Add(c => c.GrantId, grantId)
-                .Add(c => c.CanManage, canManage)
-        );
+    private IRenderedComponent<GrantEditor> Render(Guid? grantId = null) =>
+        Render<GrantEditor>(p => p.Add(c => c.AccountId, AccountId).Add(c => c.GrantId, grantId));
 
     [Fact]
     public void Save_RefusesWithoutCallingTheService_ForAWindowThatEndsBeforeItStarts()
@@ -92,11 +88,38 @@ public class GrantEditorTests : BillingWebTestContext
     }
 
     [Fact]
-    public void Render_OffersNoSave_ForAHostThatCannotManage()
+    public void Render_ShowsNoForm_ForANewGrantWithoutCreate()
     {
-        var editor = Render(canManage: false);
+        ActionGate.Deny(GrantAction.Create);
 
+        var editor = Render();
+
+        Assert.Empty(editor.FindAll("form"));
+        Assert.Contains("You are not allowed to create grants.", editor.Markup);
+        Assert.Equal([(GrantAction.Create, (Guid?)null)], ActionGate.Calls);
+    }
+
+    [Fact]
+    public void Render_ShowsTheGrantReadOnly_ForAnExistingGrantWithoutUpdate()
+    {
+        var grant = HaveGrant(250);
+        ActionGate.Deny(GrantAction.Update);
+
+        var editor = Render(grant.GrantId);
+
+        Assert.True(editor.Find("fieldset").HasAttribute("disabled"));
         Assert.Empty(editor.FindAll("button[type=submit]"));
+        Assert.Equal("250", editor.Find("#cbw-quantity").GetAttribute("value"));
         Assert.Contains("can view this grant but not change it", editor.Markup);
+        Assert.Equal([(GrantAction.Update, (Guid?)grant.GrantId)], ActionGate.Calls);
+    }
+
+    private Grant HaveGrant(long quantity)
+    {
+        var grant = Grant(quantity);
+        Grants
+            .Setup(g => g.GetGrantAsync(AccountId, grant.GrantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RetrieveSingleResult<Grant>(RetrieveResultCode.Success, "", grant));
+        return grant;
     }
 }

@@ -1,10 +1,11 @@
 @inherits BillingComponentBase
 <div class="cbw-grants">
-    @if (CanManage && _grants.Count > 0)
+    @if (_grants.Count > 0)
     {
-        <div class="cbw-toolbar">
-            <a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>
-        </div>
+        @ActionGate.Gate(GrantAction.Create, null,
+            @<div class="cbw-toolbar">
+                <a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>
+            </div>)
     }
 
     @if (_error is not null)
@@ -20,15 +21,12 @@
     {
         <div class="cbw-empty">
             <p class="cbw-empty-title">No grants yet</p>
-            @if (CanManage)
-            {
-                <p class="text-body-secondary">A grant is what this account may use: a quantity of one unit, for one operation, between two dates.</p>
-                <a class="btn btn-primary btn-sm" href="@NewGrantHref">Create the first grant</a>
-            }
-            else
-            {
-                <p class="text-body-secondary">Grants given to this account will appear here.</p>
-            }
+            @ActionGate.Gate(GrantAction.Create, null,
+                @<text>
+                    <p class="text-body-secondary">A grant is what this account may use: a quantity of one unit, for one operation, between two dates.</p>
+                    <a class="btn btn-primary btn-sm" href="@NewGrantHref">Create the first grant</a>
+                </text>,
+                @<p class="text-body-secondary">Grants given to this account will appear here.</p>)
         </div>
     }
     else if (_grants.Count > 0)
@@ -60,21 +58,31 @@
                         <GrantStatusBadge Status="status" />
                     </div>
                     <div class="cbw-grant-actions">
-                        @if (_confirmingDelete == grant.GrantId)
+                        @if (_confirmingDelete != grant.GrantId)
                         {
-                            <span class="cbw-confirm-text">Delete this grant?</span>
-                            <button type="button" class="btn btn-sm btn-danger" disabled="@_deleting" @onclick="() => DeleteAsync(grant)">Delete</button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deleting" @onclick="CancelDelete">Keep</button>
+                            @ActionGate.Gate(GrantAction.Update, grant.GrantId,
+                                @<a class="btn btn-sm btn-outline-primary" href="@GrantHref(grant.GrantId)" aria-label="Edit grant">
+                                    <i class="bi bi-pencil" aria-hidden="true"></i><span class="cbw-action-label">Edit</span>
+                                </a>,
+                                @<a class="btn btn-sm btn-outline-secondary" href="@GrantHref(grant.GrantId)" aria-label="View grant">
+                                    <i class="bi bi-eye" aria-hidden="true"></i><span class="cbw-action-label">View</span>
+                                </a>)
                         }
-                        else if (CanManage)
-                        {
-                            <a class="btn btn-sm btn-outline-primary" href="@GrantHref(grant.GrantId)" aria-label="Edit grant">
-                                <i class="bi bi-pencil" aria-hidden="true"></i><span class="cbw-action-label">Edit</span>
-                            </a>
-                            <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete grant" @onclick="() => ConfirmDelete(grant)">
-                                <i class="bi bi-trash" aria-hidden="true"></i><span class="cbw-action-label">Delete</span>
-                            </button>
-                        }
+                        @ActionGate.Gate(GrantAction.Delete, grant.GrantId,
+                            @<text>
+                                @if (_confirmingDelete == grant.GrantId)
+                                {
+                                    <span class="cbw-confirm-text">Delete this grant?</span>
+                                    <button type="button" class="btn btn-sm btn-danger" disabled="@_deleting" @onclick="() => DeleteAsync(grant)">Delete</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deleting" @onclick="CancelDelete">Keep</button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Delete grant" @onclick="() => ConfirmDelete(grant)">
+                                        <i class="bi bi-trash" aria-hidden="true"></i><span class="cbw-action-label">Delete</span>
+                                    </button>
+                                }
+                            </text>)
                     </div>
                 </li>
             }

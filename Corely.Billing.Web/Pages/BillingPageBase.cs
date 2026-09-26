@@ -9,14 +9,11 @@ public abstract class BillingPageBase : ComponentBase
 
     protected Guid? AccountId { get; private set; }
 
-    protected bool CanManage { get; private set; }
-
     protected bool Loaded { get; private set; }
 
     protected override async Task OnInitializedAsync()
     {
         AccountId = await AccountAccessor.GetAccountIdAsync();
-        CanManage = AccountId is not null && await AccountAccessor.CanManageGrantsAsync();
         Loaded = true;
     }
 }
