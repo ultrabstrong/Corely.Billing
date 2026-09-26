@@ -1,8 +1,7 @@
 # Corely.Billing.IAM and Corely.Billing.Web.IAM: Corely.IAM permissions, opt-in, server and UI
 
-**Status: decided, ready to build.** The owner settled every decision; the answers are under "Owner
-decisions" at the end and are written into the body below. If something here turns out not to
-work, stop and ask rather than choose.
+**Status: done.** Released as Corely.Billing, .Web and the CLI 2.0.0, with Corely.Billing.IAM and
+Corely.Billing.Web.IAM 1.0.0. What happened is under "Outcome" at the end.
 
 ## The principle this plan serves
 
@@ -399,3 +398,25 @@ instead of its own decorators and accessor, its full `RebuildAndTest.ps1` and op
 pass, and its portal has been clicked through locally as that same kind of user; and a permission for
 each billing resource type can be created in the IAM admin UI. DocsToData is committed locally and
 pushed only when the owner says so.
+
+## Outcome
+
+Built as written; nothing needed a change to Corely.IAM.
+
+- **Released:** tag `v2.0.0`. Corely.Billing, Corely.Billing.Web and `corely-billing-db` at 2.0.0;
+  Corely.Billing.IAM and Corely.Billing.Web.IAM at 1.0.0, both packed by `release.yml` and checked
+  by `check-package-versions.sh`.
+- **Server:** the three decorators copy `RoleProcessorAuthorizationDecorator`; `ListGrantsAsync`
+  takes `authorizedResourceIds` and narrows its query the way IAM's `ListQueryHelper` does.
+  `QuotaAvailability.Unauthorized` is new for a denied availability read.
+- **UI:** `IGrantActionGate` in Corely.Billing.Web, open by default; Corely.Billing.Web.IAM swaps in
+  a `PermissionView` gate and `IamBillingAccountAccessor`. `CanManage` is gone.
+- **Tests:** 39 in Corely.Billing.IAM.UnitTests, including registration through the real
+  `AddIAMServices`; 10 bUnit tests in Corely.Billing.Web.IAM.UnitTests. Forcing every action to Update in
+  `ToAuthAction` turns two of them red.
+- **Demo:** WithIAM drops its own decorators and accessor and seeds `carla` with a Grant editor role.
+  Clicked through as olivia (everything), carla (Edit only) and bobby (nothing).
+- **DocsToData:** takes the packages in one local commit, not yet pushed. `DocsToData.Authorization`
+  and the portal's accessor are deleted, and the local seed gains `editor` with the same role as
+  carla. The IAM admin UI's Create Permission offers `grant`, `consumption` and `quota`. Clicked
+  through as editor and admin, desktop and phone; the full suite and the browser tests pass.
