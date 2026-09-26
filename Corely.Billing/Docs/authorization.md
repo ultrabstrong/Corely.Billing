@@ -6,9 +6,9 @@ A Corely.IAM host does not write these decorators: [Corely.Billing.IAM](../../Co
 
 ## Features
 
-- **Host-owned** — pair with Corely.IAM, or any other model
-- **Service-level** — decorate `IGrantService`, `IQuotaService` and `IConsumptionService`; processors are internal
-- **Result codes, not exceptions** — every result has an `UnauthorizedError` code for a decorator to return
+- **Host-owned**: pair with Corely.IAM, or any other model
+- **Service-level**: decorate `IGrantService`, `IQuotaService` and `IConsumptionService`; processors are internal
+- **Result codes, not exceptions**: every result has an `UnauthorizedError` code for a decorator to return
 
 ## Usage
 

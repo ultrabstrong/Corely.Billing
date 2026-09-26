@@ -52,5 +52,5 @@ Metric names carry no prefix. Add one in the implementation if your dashboards n
 ## Notes
 
 - Constants live on `BillingMetricNames`
-- `GRANT_OVERDRAWN` counts work delivered that no grant had room for — the evidence for estimating work more accurately up front
+- `GRANT_OVERDRAWN` counts work delivered that no grant had room for: the evidence for estimating work more accurately up front
 - Logging goes through `ILogger<T>`; telemetry is metrics only

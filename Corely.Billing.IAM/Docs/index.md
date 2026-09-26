@@ -2,11 +2,11 @@
 
 Corely.IAM permissions for Corely.Billing. Registers the `grant`, `consumption` and `quota` resource types with IAM, and decorates the three Billing services the way Corely.IAM decorates its own: the caller's account first, then CRUDX on the resource type.
 
-- **One call each side** — `RegisterBillingResourceTypes()` on `IAMOptions`, `UseCorelyIamPermissions()` on `BillingOptions`
-- **IAM's own mechanisms** — `IAuthorizationProvider`, `RegisterResourceType` and `UnauthorizedError` results, nothing new
-- **Account first** — a caller authorized for grants in one account cannot reach another's by passing its id
-- **Per-grant permissions** — get, update and delete check the grant's id; lists return only the grants the caller may read
-- **Quota on quota alone** — nobody assigning permissions needs to know that quota reads grants and writes consumption
+- **One call each side**: `RegisterBillingResourceTypes()` on `IAMOptions`, `UseCorelyIamPermissions()` on `BillingOptions`
+- **IAM's own mechanisms**: `IAuthorizationProvider`, `RegisterResourceType` and `UnauthorizedError` results, nothing new
+- **Account first**: a caller authorized for grants in one account cannot reach another's by passing its id
+- **Per-grant permissions**: get, update and delete check the grant's id; lists return only the grants the caller may read
+- **Quota on quota alone**: nobody assigning permissions needs to know that quota reads grants and writes consumption
 
 ## Setup
 

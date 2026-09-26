@@ -15,14 +15,14 @@ An account's grants, newest first, each with its balance, validity window and st
 | `AccountId` | required | The account |
 | `NewGrantHref` | `BillingWebRoutes.GRANT_NEW` | Where "New grant" goes |
 | `GrantHref` | `BillingWebRoutes.GrantEditor` | Where a grant's edit link goes |
-| `OnDeleted` | — | Called with the deleted grant |
+| `OnDeleted` | none | Called with the deleted grant |
 
 ## What Each Row Shows
 
-- **Allowance** — "500 pages", or "Unlimited pages" for a null quantity
-- **Balance** — a meter of used against quantity; running low under a tenth left, overdrawn past the quantity
-- **Validity** — the window, with "Starts in", "Expires in" or "Expired … ago"
-- **Status** — Upcoming, Active or Expired
+- **Allowance**: "500 pages", or "Unlimited pages" for a null quantity
+- **Balance**: a meter of used against quantity; running low under a tenth left, overdrawn past the quantity
+- **Validity**: the window, with "Starts in", "Expires in" or "Expired … ago"
+- **Status**: Upcoming, Active or Expired
 
 ## Notes
 

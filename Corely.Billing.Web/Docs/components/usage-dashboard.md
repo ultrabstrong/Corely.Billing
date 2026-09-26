@@ -17,6 +17,6 @@
 
 ## Filters
 
-- **Range** — the presets, or any from and to date
-- **All** — from the earliest usage or grant
-- **Unit, operation, provider, grant** — multi-select; an empty selection means all
+- **Range**: the presets, or any from and to date
+- **All**: from the earliest usage or grant
+- **Unit, operation, provider, grant**: multi-select; an empty selection means all

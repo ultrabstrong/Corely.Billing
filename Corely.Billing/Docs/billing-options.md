@@ -4,12 +4,12 @@
 
 ## Features
 
-- **Static factory** — `Create()` enforces required parameters via method signature
-- **Fluent chaining** — optional configuration methods return `this`
-- **Registered vocabulary** — operations and units are declared once, at startup
-- **Pluggable telemetry** — a no-op default; supply your own metrics sink
-- **Host decorators** — wrap the public services with authorization or anything else
-- **Two paths** — EF production path and mock testing path from the same API
+- **Static factory**: `Create()` enforces required parameters via method signature
+- **Fluent chaining**: optional configuration methods return `this`
+- **Registered vocabulary**: operations and units are declared once, at startup
+- **Pluggable telemetry**: a no-op default; supply your own metrics sink
+- **Host decorators**: wrap the public services with authorization or anything else
+- **Two paths**: EF production path and mock testing path from the same API
 
 ## Usage
 

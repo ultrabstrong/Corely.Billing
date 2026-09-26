@@ -1,6 +1,6 @@
 # Corely.Billing
 
-Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left — kept reconciled across retries, so a replayed unit of work is never charged twice.
+Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left, kept reconciled across retries so a replayed unit of work is never charged twice.
 
 Not only for metering: a subscription, prepaid credits, a trial, or seats use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
 
@@ -30,14 +30,14 @@ flowchart LR
 
 ## Highlights
 
-- **Grants** — an account's allowance of a unit for an operation, valid for a window, limited or unlimited
-- **Reservations** — quota is held before work starts and settled to what the work cost
-- **Grant-edge splitting** — work larger than one grant's remainder draws from the next, soonest-expiring first
-- **Idempotent retries** — a retried unit of work recognises its own earlier rows instead of charging twice
-- **Overdraft-once** — work already paid for is always recorded, and the overrun stays visible
-- **Registered vocabulary** — operations and units are host-defined tokens, validated on every write
-- **Host-owned authorization** — decorate the public services; no identity library is referenced
-- **Two database providers** — SQL Server and MySQL via EF Core
+- **Grants**: an account's allowance of a unit for an operation, valid for a window, limited or unlimited
+- **Reservations**: quota is held before work starts and settled to what the work cost
+- **Grant-edge splitting**: work larger than one grant's remainder draws from the next, soonest-expiring first
+- **Idempotent retries**: a retried unit of work recognises its own earlier rows instead of charging twice
+- **Overdraft-once**: work already paid for is always recorded, and the overrun stays visible
+- **Registered vocabulary**: operations and units are host-defined tokens, validated on every write
+- **Host-owned authorization**: decorate the public services; no identity library is referenced
+- **Two database providers**: SQL Server and MySQL via EF Core
 
 ## Quick Start
 
@@ -74,9 +74,9 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 
 | Docs | Description |
 |------|-------------|
-| **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library — setup, services, reservations, architecture |
+| **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library: setup, services, reservations, architecture |
 | [Migration CLI](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) | Database creation, migrations, and scripting |
-| [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components — grant list and editor, usage chart, usage events |
+| [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components: grant list and editor, usage chart, usage events |
 | [Corely.Billing.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.IAM/Docs/index.md) | Corely.IAM permissions for grants, consumption and quota |
 | [Corely.Billing.Web.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web.IAM/Docs/index.md) | Each grant action in the web components gated by IAM's `PermissionView` |
 | [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md) | The three demo apps, what each shows, and how to run them |
@@ -85,7 +85,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 
 | Project | Purpose |
 |---------|---------|
-| `Corely.Billing` | Core library — grants, the consumption ledger, quota |
+| `Corely.Billing` | Core library: grants, the consumption ledger, quota |
 | `Corely.Billing.Web` | Blazor components and opt-in routed pages for grants and usage |
 | `Corely.Billing.IAM` | Corely.IAM resource types and authorization decorators for the Billing services |
 | `Corely.Billing.Web.IAM` | Corely.IAM.Web for the web components: the signed-in account and per-action gates |
@@ -100,7 +100,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | `Corely.Billing.IAM.UnitTests` | Unit tests for the IAM decorators and registration |
 | `Corely.Billing.Web.IAM.UnitTests` | bUnit tests of the web components behind IAM's `PermissionView` |
 | `Corely.Billing.Web.FunctionalTests` | In-process smoke tests for the demo hosts |
-| `Corely.Billing.DataAccessMigrations.Cli` | Migration CLI — creates and migrates the billing schema (published as a .NET tool) |
+| `Corely.Billing.DataAccessMigrations.Cli` | Migration CLI that creates and migrates the billing schema (published as a .NET tool) |
 | `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` | EF Core migrations per database provider, bundled into the CLI |
 
 ## License

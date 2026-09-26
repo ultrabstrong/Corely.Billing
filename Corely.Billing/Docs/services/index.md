@@ -18,9 +18,9 @@ Writes to the ledger go through `IQuotaService` only. That is what keeps every c
 TelemetryDecorator → [Host decorators] → Service → Processor decorators → Processor
 ```
 
-- **Host decorators** — whatever the host adds through `BillingOptions.DecorateServices`, typically authorization
-- **Telemetry decorators** — log entry, exit and timing; they sit outside the host's, so a denied call is logged too
-- **Processor decorators** — record the metrics listed in [Telemetry](../telemetry.md)
+- **Host decorators**: whatever the host adds through `BillingOptions.DecorateServices`, typically authorization
+- **Telemetry decorators**: log entry, exit and timing; they sit outside the host's, so a denied call is logged too
+- **Processor decorators**: record the metrics listed in [Telemetry](../telemetry.md)
 
 ## Service vs Processor
 

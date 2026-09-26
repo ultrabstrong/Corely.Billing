@@ -4,12 +4,12 @@ Quota is held before work starts and settled to what the work actually cost. The
 
 ## Features
 
-- **Hold before work** — `ReserveAsync` refuses work the account cannot pay for
-- **Settle to the truth** — `SettleAsync` corrects the hold to the real quantity
-- **Release on failure** — `ReleaseAsync` gives the hold back, keeping the row for audit
-- **TTL expiry** — a hold nobody resolves stops counting after `ReservationTtl`
-- **Grant-edge splitting** — one charge is spread across grants, soonest-expiring first
-- **Overdraft-once** — settlement never refuses work already done
+- **Hold before work**: `ReserveAsync` refuses work the account cannot pay for
+- **Settle to the truth**: `SettleAsync` corrects the hold to the real quantity
+- **Release on failure**: `ReleaseAsync` gives the hold back, keeping the row for audit
+- **TTL expiry**: a hold nobody resolves stops counting after `ReservationTtl`
+- **Grant-edge splitting**: one charge is spread across grants, soonest-expiring first
+- **Overdraft-once**: settlement never refuses work already done
 
 ## Lifecycle
 
@@ -18,7 +18,7 @@ Quota is held before work starts and settled to what the work actually cost. The
 3. `SettleAsync` re-splits the actual quantity across the grants live now, settles each held row, and writes a settled row for any grant it newly draws on.
 4. Or `ReleaseAsync` marks every held row released, leaving its quantity as it was.
 
-Reserve the floor when the real size is unknown — `Quantity: 1` — and let settlement correct it.
+Reserve the floor when the real size is unknown (`Quantity: 1`) and let settlement correct it.
 
 ```csharp
 await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, op, unit, 1, "mistral"));
@@ -57,4 +57,4 @@ When the actual quantity exceeds every live grant's remainder, settlement still 
 
 - `SettleQuotaResult.RemainingRatio` is what is left across live grants after the charge, from 0 to 1, and 1 while an unlimited grant is live
 - `GetAvailabilityAsync` answers without a quantity and returns `Unknown` rather than failing when the database is unreachable
-- `IConsumptionService.CountAbandonedReservationsAsync` counts holds that expired unresolved — a rising number means work is dying between reserve and settle
+- `IConsumptionService.CountAbandonedReservationsAsync` counts holds that expired unresolved. A rising number means work is dying between reserve and settle

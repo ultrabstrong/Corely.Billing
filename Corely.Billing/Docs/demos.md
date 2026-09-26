@@ -7,7 +7,7 @@ Three runnable hosts, each showing a different way to use Corely.Billing, plus o
 | [`Corely.Billing.Demos.Portal`](../../Corely.Billing.Demos.Portal/README.md) | The `Corely.Billing.Web` components on one account | https://localhost:7110 |
 | [`Corely.Billing.Demos.Subscription`](../../Corely.Billing.Demos.Subscription/README.md) | The smallest host: a subscription as one unlimited grant | https://localhost:7111 |
 | [`Corely.Billing.Demos.WithIAM`](../../Corely.Billing.Demos.WithIAM/README.md) | A metered host signed in and authorized through Corely.IAM | https://localhost:7112 |
-| `Corely.Billing.Demos.Bootstrap` | Not an app: Bootstrap and Bootstrap Icons, served once to all three | — |
+| `Corely.Billing.Demos.Bootstrap` | Not an app: Bootstrap and Bootstrap Icons, served once to all three | none |
 
 ## Portal
 
@@ -17,9 +17,9 @@ The web components with nothing else in the way: no sign-in, and a fixed account
 - an upcoming renewal
 - an unlimited grant
 
-- **Home** — `UsageDashboard` composed into the demo's own page, with buttons that reserve and settle a random quantity
-- **`/grants`, `/usage`** — the library's routed pages, present because the host adds its assembly to the router
-- **Theme button** — switches `data-bs-theme`; the components and charts follow
+- **Home**: `UsageDashboard` composed into the demo's own page, with buttons that reserve and settle a random quantity
+- **`/grants`, `/usage`**: the library's routed pages, present because the host adds its assembly to the router
+- **Theme button**: switches `data-bs-theme`; the components and charts follow
 
 ## Subscription
 

@@ -18,11 +18,11 @@ Two charts on one time axis: what was used per period, and what each limited gra
 
 ## Behavior
 
-- **Buckets** — a day up to 31 days, a week up to 120, a month beyond
-- **Capacity** — one stacked, stepped area per grant, so a grant that starts or ends mid-range shows as a step
-- **More than three grants** — the rest fold into "Other grants"
-- **Unlimited grants** — have no capacity to draw; a note says one covers the range
-- **Nothing to show** — an empty state instead of an empty chart
+- **Buckets**: a day up to 31 days, a week up to 120, a month beyond
+- **Capacity**: one stacked, stepped area per grant, so a grant that starts or ends mid-range shows as a step
+- **More than three grants**: the rest fold into "Other grants"
+- **Unlimited grants**: have no capacity to draw; a note says one covers the range
+- **Nothing to show**: an empty state instead of an empty chart
 
 ## Notes
 

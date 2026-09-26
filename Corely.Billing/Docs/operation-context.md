@@ -4,10 +4,10 @@
 
 ## Features
 
-- **Ambient** — nothing between the edge and billing carries it as a parameter
-- **Idempotency scope** — names the billable work, and is the same on every retry of it
-- **Correlation** — joins every ledger row to the logs of the work that caused it
-- **Async-flowing** — backed by `AsyncLocal`, so it follows `await` and does not leak between requests
+- **Ambient**: nothing between the edge and billing carries it as a parameter
+- **Idempotency scope**: names the billable work, and is the same on every retry of it
+- **Correlation**: joins every ledger row to the logs of the work that caused it
+- **Async-flowing**: backed by `AsyncLocal`, so it follows `await` and does not leak between requests
 
 ## Usage
 
@@ -34,7 +34,7 @@ A unique index on `(AccountId, IdempotencyKey)` is what turns a retry into a no-
 | New value per attempt (a fresh `Guid`) | Charged on every retry |
 | Same value for two different units of work | The second is never charged |
 
-Build the scope from identifiers the work already has — a job id and step name, a message id — never from the time or a random value.
+Build the scope from identifiers the work already has (a job id and step name, a message id), never from the time or a random value.
 
 ## Notes
 

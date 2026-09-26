@@ -4,10 +4,10 @@ Operations and units are host-defined tokens. `UsageOperation` names what was do
 
 ## Features
 
-- **Host-defined** — the library ships no operations or units of its own
-- **Registered once** — declared on `BillingOptions`, validated on every write
-- **Stored as text** — the token is the column value, readable in any query
-- **Display names** — a friendly name for reports, separate from the stored token
+- **Host-defined**: the library ships no operations or units of its own
+- **Registered once**: declared on `BillingOptions`, validated on every write
+- **Stored as text**: the token is the column value, readable in any query
+- **Display names**: a friendly name for reports, separate from the stored token
 
 ## Usage
 

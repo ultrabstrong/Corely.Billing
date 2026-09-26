@@ -18,8 +18,8 @@ A form that creates a grant, or edits one when given a `GrantId`.
 |-----------|---------|-------------|
 | `AccountId` | required | The account |
 | `GrantId` | `null` | The grant to edit; `null` creates |
-| `OnSaved` | — | Called with the grant id after a successful save |
-| `OnCancel` | — | Shows a Cancel button when set |
+| `OnSaved` | none | Called with the grant id after a successful save |
+| `OnCancel` | none | Shows a Cancel button when set |
 
 ## Notes
 

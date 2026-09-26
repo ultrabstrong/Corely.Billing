@@ -250,5 +250,8 @@ Store implementation plans in `Plans/` at the repository root.
 - **No version numbers of this library.** Migration guides are the sole exception and live at the repository root.
 - **No references to `Plans/`.**
 - **Match the house style.** Terse and code-forward. Read the neighbouring files in `Docs/` before adding one.
+- **No dashes as punctuation, in anything written.** No em dash, no en dash, and no hyphen standing in
+  for one, in docs, plans, READMEs or comments. Use a colon, a comma, parentheses or a new sentence;
+  write a range with "to". Hyphens inside words (`host-agnostic`) are fine.
 
 The full guide is [`DOCUMENTATION-STYLE.md`](DOCUMENTATION-STYLE.md) at this repository root.
