@@ -101,6 +101,27 @@ CSharpier enforced via MSBuild integration. Files are auto-formatted on build.
 
 Billing records migrations in `__CorelyBillingMigrationsHistory`, so it shares a database with Corely.IAM and a host's own contexts.
 
+## Releasing
+
+One tag releases one package: `<PackageId>-v<Version>`, where the version is exactly the
+`<Version>` in that package's csproj.
+
+```powershell
+git tag Corely.Billing-v2.0.1
+git push origin Corely.Billing-v2.0.1
+```
+
+- The packages are `Corely.Billing`, `Corely.Billing.Web`, `Corely.Billing.IAM`,
+  `Corely.Billing.Web.IAM` and `Corely.Billing.DataAccessMigrations.Cli`, each versioned
+  independently in its own csproj. Releasing two is two tags on the same commit.
+- `release.yml` fails unless the tag names one of them and its version equals the csproj's. A
+  version already on nuget.org fails the push rather than being skipped.
+- The migration CLI's major must equal `Corely.Billing`'s at that commit: CLI 2.x targets Billing 2.x.
+- Tags are pushed only with the owner's say-so. A published version cannot be deleted.
+- `scripts/check-package-versions.sh` runs in CI and reports any package changed since its own last
+  tag without a version bump. It never fails the build.
+- The old `v*` tags are history and stay.
+
 ## Architecture
 
 ### Solution Structure
