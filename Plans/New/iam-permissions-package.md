@@ -309,20 +309,41 @@ This is the showcase; enhance it and do not add another demo.
 **Prove the gate test catches the regression:** make `PermissionViewGrantActionGate` pass
 `AuthAction.Update` for every action, watch the Create and Delete assertions go red, then restore.
 
-## DocsToData afterwards
+## Part 4: DocsToData takes the packages
 
-Tracked in DocsToData when this ships:
+Part of this plan, done by the same session once the packages are released: DocsToData is their
+first consumer, and wiring it up is how this work proves itself. That work is in
+`C:\source\git\pinnacleinnovation\DocsToData` and follows **that repository's** `CLAUDE.md`, which
+differs from this one in ways that matter: push only when the owner says so, one commit at a time
+(every push costs metered CI minutes and storage); click a portal change through on the local stack
+at desktop and phone widths and run the opt-in browser tests before pushing (the `local-stack` skill
+drives both); and nothing towards prod.
 
-- Delete `DocsToData.Authorization/` and its tests. Replace `.DecorateServices(s =>
-  s.AddBillingAuthorization())` with `.UseCorelyIamPermissions()` in the portal, Functions and
-  console hosts.
-- Call `RegisterBillingResourceTypes()` on `IAMOptions`. A follow-up registers DocsToData's own types
-  (`extraction`, `sftp`, `document_workflows`) the same way and deletes the unused
-  `PermissionConstants.ENTITLEMENTS`.
-- Delete `Services/BillingAccountAccessor.cs` and its tests; replace `AddBillingWeb<BillingAccountAccessor>()`
-  with `AddBillingWebIam()`.
+- Bump `Corely.Billing` and `Corely.Billing.Web` in `Directory.Packages.props`, and add
+  `Corely.Billing.IAM` and `Corely.Billing.Web.IAM`. `Corely.Billing.Web.IAM` goes in the portal's
+  csproj; `Corely.Billing.IAM` goes wherever `DocsToData.Authorization` is referenced today.
+- Delete `DocsToData.Authorization/` and `DocsToData.Authorization.Tests/`, and remove both from the
+  solution. Replace `.DecorateServices(s => s.AddBillingAuthorization())` with
+  `.UseCorelyIamPermissions()` in every host that calls it: the portal (`Program.cs`), Functions and
+  the console app (their `ServiceFactory.cs`).
+- Call `RegisterBillingResourceTypes()` on `IAMOptions` in every host that builds one.
+- Delete `DocsToData.AdminPortalWebApp/Services/BillingAccountAccessor.cs` and
+  `DocsToData.AdminPortalWebApp.UnitTests/Services/BillingAccountAccessorTests.cs`; replace
+  `AddBillingWeb<BillingAccountAccessor>()` with `AddBillingWebIam()`.
+- The portal's `Grants.razor`, `GrantEditor.razor` and `Usage.razor` inherit `BillingPageBase`; remove
+  every use of `CanManage` from them.
+- Replace the billing values in `DocsToData.Core/Constants/PermissionConstants.cs` with
+  `BillingResourceTypes` wherever DocsToData references them, and delete the replaced constants.
 - If decision 1 renames `metering` or `quota`, rename existing permission rows in the same change.
   Today DocsToData has only wildcards, so there are none.
+- Seed the local stack (`iac/local`) with a user holding Read and Update on grants but not Create or
+  Delete, as the WithIAM demo does, and click through as that user: no New grant, no Delete, Edit on
+  each row.
+- Move DocsToData's `Plans/Completed/corely-billing-web-and-unlimited-grants.md` Outcome forward by one
+  line pointing at this plan, so the next reader knows the hand-written accessor is gone.
+
+Out of scope, a DocsToData follow-up: registering DocsToData's own types (`extraction`, `sftp`,
+`document_workflows`) the same way, and deleting the unused `PermissionConstants.ENTITLEMENTS`.
 
 ## Owner decisions
 
@@ -359,5 +380,7 @@ depends on how they are answered except where it says so.
 The owner decisions are answered in this file; both packages and the Corely.Billing and
 Corely.Billing.Web changes are built, tested (including the break-and-restore check) and released;
 the WithIAM demo shows the read-and-update user with no New or Delete; DocsToData uses the packages
-instead of its own decorators and accessor; and a permission for each billing resource type can be
-created in the IAM admin UI.
+instead of its own decorators and accessor, its full `RebuildAndTest.ps1` and opt-in browser tests
+pass, and its portal has been clicked through locally as that same kind of user; and a permission for
+each billing resource type can be created in the IAM admin UI. DocsToData is committed locally and
+pushed only when the owner says so.
