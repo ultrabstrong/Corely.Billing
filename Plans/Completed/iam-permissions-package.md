@@ -416,7 +416,8 @@ Built as written; nothing needed a change to Corely.IAM.
   `ToAuthAction` turns two of them red.
 - **Demo:** WithIAM drops its own decorators and accessor and seeds `carla` with a Grant editor role.
   Clicked through as olivia (everything), carla (Edit only) and bobby (nothing).
-- **DocsToData:** takes the packages in one local commit, not yet pushed. `DocsToData.Authorization`
+- **DocsToData:** takes the packages in one commit, `d9f1aff`, pushed on the owner's say-so and
+  deployed to dev. `DocsToData.Authorization`
   and the portal's accessor are deleted, and the local seed gains `editor` with the same role as
   carla. The IAM admin UI's Create Permission offers `grant`, `consumption` and `quota`. Clicked
   through as editor and admin, desktop and phone; the full suite and the browser tests pass.
