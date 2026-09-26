@@ -213,5 +213,7 @@ Done, together with `web-components-and-demos.md`, which the owner folded into t
 
 - DocsToData: `Plans/New/corely-billing-web-and-unlimited-grants.md` in that repository lists the
   package bump, the schema script, the null-quantity reads, and the move onto the components.
-- Signed-in pages of the IAM demo were not clicked through in a browser: that needs a password
-  typed into the sign-in form, which was left to the owner. Its anonymous paths are smoke-tested.
+- Signed-in pages of the IAM demo were checked afterwards in a headless browser against a fresh
+  seed: `olivia` sees both grants, the usage and capacity charts and 13 settled events, with a
+  "New grant" action; `bobby` gets "You are not allowed to view grants" and "…usage", with no
+  action. No console errors on either.
