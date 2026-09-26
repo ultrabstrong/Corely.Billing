@@ -80,10 +80,12 @@ It also records a constraint the package must keep: Corely.Billing.Web's compone
 circuit's DI scope, because IAM's user context is scoped. Decorators resolved in a fresh scope would
 see no user and deny everything.
 
+## Open questions for the discussion
 
-1. **Resource type names.** Keep DocsToData's (`grants`, `metering`, `quota`) or rename for the
-   library's vocabulary (`consumption` instead of `metering`)? Existing permission rows would need
-   renaming; today there are none except wildcards, so this is the cheapest moment.
+1. **Resource type names.** DocsToData uses `grants`, `metering` and `quota`; the WithIAM demo
+   already registers `grants` and `usage`. Pick one set for the library's vocabulary. Existing
+   permission rows would need renaming; today DocsToData has none except wildcards, so this is the
+   cheapest moment.
 2. **Where the IAM check runs.** `AddBillingServices` can inspect the `IServiceCollection` for
    `IAuthorizationProvider`, but that makes the registration order matter (IAM first). The
    alternatives are a check at first resolution, or an `IValidateOptions`/startup filter. Which does
@@ -106,12 +108,14 @@ see no user and deny everything.
 
 ## Relation to other plans
 
-- `web-components-and-demos.md`: the components take a `CanManage` flag or slot. With this package
-  they could read the grants permission themselves when IAM is present. Decide there, after this.
-- `usage-shapes-docs-and-demos.md`: its optional `Corely.Billing.Demos.WithIAM` would be the demo for
-  this package.
-- Corely.IAM's `Plans/New/keyed-ef-configuration.md` touches the same registration code in both
-  libraries; land one before starting the other.
+- `Corely.Billing.Web` shipped with `IBillingAccountAccessor.CanManageGrantsAsync` (defaults to
+  true), which hosts answer themselves. With this package, it could answer from IAM's grants
+  permission. Decide whether the package provides that accessor or leaves it to the host.
+- DocsToData's `Plans/New/corely-billing-web-and-unlimited-grants.md` moves its pages onto the
+  components with a hand-written accessor and its existing decorators. Whichever lands second
+  replaces the hand-written pieces.
+- Done and no longer blocking: `usage-shapes-docs-and-demos.md`, `web-components-and-demos.md`
+  (both in `Completed/`) and Corely.IAM's keyed EF configuration.
 
 ## Done when
 
