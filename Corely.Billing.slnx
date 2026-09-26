@@ -31,6 +31,8 @@
   <Project Path="Corely.Billing.Demos.Portal/Corely.Billing.Demos.Portal.csproj" />
   <Project Path="Corely.Billing.Demos.Subscription/Corely.Billing.Demos.Subscription.csproj" />
   <Project Path="Corely.Billing.Demos.WithIAM/Corely.Billing.Demos.WithIAM.csproj" />
+  <Project Path="Corely.Billing.IAM.UnitTests/Corely.Billing.IAM.UnitTests.csproj" />
+  <Project Path="Corely.Billing.IAM/Corely.Billing.IAM.csproj" />
   <Project Path="Corely.Billing.IntegrationTests/Corely.Billing.IntegrationTests.csproj" />
   <Project Path="Corely.Billing.UnitTests/Corely.Billing.UnitTests.csproj" />
   <Project Path="Corely.Billing.Web.FunctionalTests/Corely.Billing.Web.FunctionalTests.csproj" />

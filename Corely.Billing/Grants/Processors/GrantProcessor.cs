@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Corely.Billing.Grants.Entities;
 using Corely.Billing.Grants.Mappers;
 using Corely.Billing.Grants.Models;
@@ -137,14 +138,23 @@ internal class GrantProcessor(
 
     public Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     )
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
+        var accountId = request.AccountId;
+        List<Guid>? authorizedIds = authorizedResourceIds is null
+            ? null
+            : [.. authorizedResourceIds];
+        Expression<Func<GrantEntity, bool>> scope = authorizedIds is null
+            ? e => e.AccountId == accountId
+            : e => e.AccountId == accountId && authorizedIds.Contains(e.GrantId);
+
         return ListQueryHelper.ExecuteListAsync(
             _grantRepo,
-            e => e.AccountId == request.AccountId,
+            scope,
             request.Filter,
             request.Order,
             q => q.OrderByDescending(e => e.ValidFromUtc).ThenBy(e => e.GrantId),

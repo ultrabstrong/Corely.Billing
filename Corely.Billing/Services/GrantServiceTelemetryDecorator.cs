@@ -40,12 +40,13 @@ internal class GrantServiceTelemetryDecorator(
 
     public Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     ) =>
         _logger.ExecuteWithLoggingAsync(
             nameof(GrantService),
             request,
-            () => _inner.ListGrantsAsync(request, ct)
+            () => _inner.ListGrantsAsync(request, authorizedResourceIds, ct)
         );
 
     public Task<ModifyResult> UpdateGrantAsync(

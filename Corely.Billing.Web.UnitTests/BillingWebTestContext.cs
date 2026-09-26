@@ -52,7 +52,11 @@ public abstract class BillingWebTestContext : BunitContext
     protected void HaveGrants(params Grant[] grants) =>
         Grants
             .Setup(g =>
-                g.ListGrantsAsync(It.IsAny<ListGrantsRequest>(), It.IsAny<CancellationToken>())
+                g.ListGrantsAsync(
+                    It.IsAny<ListGrantsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(
                 new RetrieveListResult<Grant>(

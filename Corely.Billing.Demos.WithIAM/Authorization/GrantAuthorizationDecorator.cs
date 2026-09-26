@@ -32,10 +32,11 @@ internal sealed class GrantAuthorizationDecorator(
 
     public async Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     ) =>
         await AllowedAsync(AuthAction.Read)
-            ? await inner.ListGrantsAsync(request, ct)
+            ? await inner.ListGrantsAsync(request, authorizedResourceIds, ct)
             : new RetrieveListResult<Grant>(RetrieveResultCode.UnauthorizedError, DENIED, null);
 
     public async Task<ModifyResult> UpdateGrantAsync(

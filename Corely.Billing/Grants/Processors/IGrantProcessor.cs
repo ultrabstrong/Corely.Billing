@@ -27,6 +27,7 @@ internal interface IGrantProcessor
 
     Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     );
 

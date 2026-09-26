@@ -18,6 +18,7 @@ public interface IGrantService
 
     Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     );
 

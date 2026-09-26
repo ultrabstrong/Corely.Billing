@@ -24,8 +24,9 @@ internal class GrantService(IGrantProcessor grantProcessor) : IGrantService
 
     public Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
-    ) => _grantProcessor.ListGrantsAsync(request, ct);
+    ) => _grantProcessor.ListGrantsAsync(request, authorizedResourceIds, ct);
 
     public Task<ModifyResult> UpdateGrantAsync(
         UpdateGrantRequest request,

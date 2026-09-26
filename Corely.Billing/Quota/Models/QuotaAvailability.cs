@@ -7,4 +7,6 @@ public enum QuotaAvailability
     Available,
 
     Exhausted,
+
+    Unauthorized,
 }

@@ -104,6 +104,59 @@ public sealed class GrantListTests : IDisposable
     }
 
     [Fact]
+    public async Task ListGrantsAsync_ReturnsOnlyAuthorizedGrants_ForAnAuthorizedSet()
+    {
+        await SeedAsync(10, 20, 30, 40);
+        var all = (await ListAsync(new ListGrantsRequest(AccountId))).Data!.Items;
+        HashSet<Guid> authorized = [all[0].GrantId, all[2].GrantId];
+
+        var result = await _host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .ListGrantsAsync(
+                    new ListGrantsRequest(
+                        AccountId,
+                        Filter: Filter
+                            .For<Grant>()
+                            .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20))
+                    ),
+                    authorized
+                )
+        );
+
+        Assert.Equal(2, result.Data!.TotalCount);
+        Assert.Equal(authorized, result.Data.Items.Select(g => g.GrantId).ToHashSet());
+    }
+
+    [Fact]
+    public async Task ListGrantsAsync_ReturnsNothing_ForAnEmptyAuthorizedSet()
+    {
+        await SeedAsync(10, 20);
+
+        var result = await _host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .ListGrantsAsync(new ListGrantsRequest(AccountId), new HashSet<Guid>())
+        );
+
+        Assert.Equal(0, result.Data!.TotalCount);
+    }
+
+    [Fact]
+    public async Task ListGrantsAsync_ReturnsEveryGrant_ForNoAuthorizedSet()
+    {
+        await SeedAsync(10, 20, 30);
+
+        var result = await _host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .ListGrantsAsync(new ListGrantsRequest(AccountId), null)
+        );
+
+        Assert.Equal(3, result.Data!.TotalCount);
+    }
+
+    [Fact]
     public async Task ListGrantsAsync_AppliesTheOrder_ForAnExplicitOrder()
     {
         await SeedAsync(30, 10, 20);

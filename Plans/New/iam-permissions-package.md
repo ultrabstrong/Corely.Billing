@@ -1,9 +1,7 @@
 # Corely.Billing.IAM and Corely.Billing.Web.IAM: Corely.IAM permissions, opt-in, server and UI
 
-**Status: proposal, detailed.** The shape below is decided: how permissions are checked, where, and
-how the UI shows or hides each action. What is left for the owner is the short list under "Owner
-decisions" at the end. Settle those with the owner, write the answers into this file, then build.
-Everything not listed there is not the building session's call; if something here turns out not to
+**Status: decided, ready to build.** The owner settled every decision; the answers are under "Owner
+decisions" at the end and are written into the body below. If something here turns out not to
 work, stop and ask rather than choose.
 
 ## The principle this plan serves
@@ -95,7 +93,8 @@ A host that installs neither gets what it has today: no checks, every control sh
 
 `BillingResourceTypes`, public static, `SCREAMING_SNAKE_CASE` constants shaped like IAM's
 `PermissionConstants`: one constant per resource type, plus a description for each, used by the
-registration below. The names are owner decision 1. Every check in both packages references these
+registration below. The names are `grant`, `consumption` and `quota` (decision 1): singular, like
+IAM's own, and each named for the Billing service it guards. Every check in both packages references these
 constants; no string literal for a resource type appears anywhere else.
 
 ```csharp
@@ -104,8 +103,8 @@ services.AddIAMServices(iamOptions.RegisterBillingResourceTypes());
 
 `RegisterBillingResourceTypes()` is an extension on `IAMOptions` that calls IAM's own
 `RegisterResourceType(name, description)` once per constant and returns the options. It uses IAM's
-registration exactly as a host would; it adds no registry of its own. (Owner decision 3 confirms this
-over the alternatives.)
+registration exactly as a host would; it adds no registry of its own, and Corely.IAM does not
+change (decision 3).
 
 ### Decorators
 
@@ -146,14 +145,22 @@ type constants, whatever decision 1 names them.
 | `DeleteGrantAsync` | `accountId` | Delete on grants, `grantId` |
 | Every `IConsumptionService` read | the method's account id | Read on consumption, type-level |
 | `GetAvailabilityAsync` | `accountId` | Read on quota |
-| `ReserveAsync`, `SettleAsync`, `ReleaseAsync` | the request's account id | Read on quota **and** Create on consumption (owner decision 4 confirms) |
+| `ReserveAsync`, `SettleAsync`, `ReleaseAsync` | the request's account id | Execute on quota |
 
 Consumption and quota checks are type-level. A consumption event and a quota hold are records of work,
 not resources anyone assigns permissions to one by one, so there is no id to pass. Every consumption
 and quota method carries an account id, so every one gets the account check.
 
-`GetAvailabilityAsync` when denied returns what owner decision 5 settles. Until then, the value
-DocsToData returns today, `QuotaAvailability.Unknown`.
+**Every quota method checks quota permissions and nothing else (decision 4).** The quota service
+reads grants and writes consumption internally, but whoever assigns permissions should not need to
+know that: Read on quota to check availability, Execute on quota to reserve, settle or release. One
+permission for all three writes also means a caller can never hold quota it cannot settle or
+release. Grant and consumption permissions guard only their own services. This replaces DocsToData's
+"Read on quota and Create on metering".
+
+`GetAvailabilityAsync` when denied returns `QuotaAvailability.Unauthorized` (decision 5), a new
+member added by this plan. It is not `Unknown`, which reads as "could not tell, let it through", and
+not `Exhausted`, which would tell the caller the account is out of quota when it is not.
 
 ### Registration
 
@@ -168,10 +175,17 @@ services.AddBillingServices(
 three decorators to the existing `DecorateServices` hook. They sit inside the telemetry decorators,
 as DocsToData's do today, so a denied call is still recorded. Not calling it registers nothing.
 
-When `IAuthorizationProvider` is not registered, fail at startup with a message naming
-`AddIAMServices`. Where that check runs is owner decision 2.
+When `IAuthorizationProvider` is not registered, `UseCorelyIamPermissions()` throws while it
+registers, with a message naming `AddIAMServices` (decision 2). It inspects the
+`IServiceCollection`, so `AddIAMServices` must be called before `AddBillingServices`, as IAM's own
+setup already asks for an order.
 
-### The one Corely.Billing change
+### The Corely.Billing changes
+
+Two, both breaking, so Corely.Billing goes to 2.0.0 (decision 6):
+
+- `QuotaAvailability` gains `Unauthorized`, for the denied availability check above.
+- `IGrantService.ListGrantsAsync` gains a parameter, below.
 
 To scope a list the way IAM does, `IGrantService.ListGrantsAsync` takes the same trailing parameter
 IAM's list processors take, with the same name and meaning:
@@ -334,8 +348,11 @@ drives both); and nothing towards prod.
   every use of `CanManage` from them.
 - Replace the billing values in `DocsToData.Core/Constants/PermissionConstants.cs` with
   `BillingResourceTypes` wherever DocsToData references them, and delete the replaced constants.
-- If decision 1 renames `metering` or `quota`, rename existing permission rows in the same change.
-  Today DocsToData has only wildcards, so there are none.
+- Decision 1 renames `grants` to `grant` and `metering` to `consumption`. Rename any existing
+  permission rows in the same change; today DocsToData has only wildcards, so there are none.
+- Decision 4 moves reserve, settle and release to Execute on quota. The pipeline runs as the system
+  and passes every check, so nothing it does changes; a user role that consumed quota needs Execute
+  on quota instead of Read on quota plus Create on metering.
 - Seed the local stack (`iac/local`) with a user holding Read and Update on grants but not Create or
   Delete, as the WithIAM demo does, and click through as that user: no New grant, no Delete, Edit on
   each row.
@@ -347,26 +364,24 @@ Out of scope, a DocsToData follow-up: registering DocsToData's own types (`extra
 
 ## Owner decisions
 
-Settle these before building. They are naming, placement and release questions; nothing above
-depends on how they are answered except where it says so.
+Settled with the owner; the body above is written to match.
 
-1. **Resource type names.** DocsToData uses `grants`, `metering` and `quota`; the WithIAM demo uses
-   `grants` and `usage`. Pick one set for the library.
-2. **Where the IAM-registered check runs.** Inspecting the `IServiceCollection` inside
-   `UseCorelyIamPermissions` makes registration order matter (IAM first) but fails immediately.
-   A check at first resolution, or an `IValidateOptions`/startup filter, is order-free but fails
-   later.
-3. **Registering the types.** Recommended: `iamOptions.RegisterBillingResourceTypes()`, a second call
-   the host makes, which uses IAM's registration unchanged. The alternative, letting packages
-   contribute types to IAM through DI, is a change to Corely.IAM and would be assessed there first,
-   per the principle above.
-4. **Reserve, settle and release.** Keep "Read on quota and Create on consumption", or give quota its
-   own write action.
-5. **Availability when denied.** `QuotaAvailability.Unknown`, which callers treat as "let it
-   through", suits a pipeline that fails open. `Exhausted` fails closed. Which is the library default?
-6. **Versions.** The two new packages start at 1.0.0. Corely.Billing.Web goes to 2.0.0. Corely.Billing
-   changes a public interface: 2.0.0, or a minor version on the grounds that only decorators
-   implement it? And what range of Corely.IAM do the new packages accept?
+1. **Resource type names: `grant`, `consumption`, `quota`.** Singular like IAM's own, each named for
+   the service it guards. DocsToData's `grants` and `metering` are renamed; only wildcards exist, so
+   no rows move.
+2. **The IAM-registered check runs at registration.** `UseCorelyIamPermissions()` inspects the
+   `IServiceCollection` and throws, naming `AddIAMServices`, when `IAuthorizationProvider` is missing.
+   `AddIAMServices` comes first.
+3. **The host calls `iamOptions.RegisterBillingResourceTypes()`.** An extension on `IAMOptions` in
+   Corely.Billing.IAM, calling IAM's existing `RegisterResourceType`. Corely.IAM does not change.
+4. **Quota is authorized by quota permissions only.** Read on quota for `GetAvailabilityAsync`;
+   Execute on quota for reserve, settle and release. Someone assigning permissions should not need
+   to know that quota reads grants and writes consumption.
+5. **A denied availability check returns a new `QuotaAvailability.Unauthorized`.**
+6. **Versions.** Corely.Billing 2.0.0 (a changed interface signature and a new enum member);
+   the migration tool 2.0.0, because its major follows Corely.Billing's, with no schema change;
+   Corely.Billing.Web 2.0.0; Corely.Billing.IAM and Corely.Billing.Web.IAM 1.0.0. The new packages
+   take Corely.IAM 2.3.1 and Corely.IAM.Web 2.4.0 as minimum versions, NuGet's default rule.
 
 ## Relation to other plans
 

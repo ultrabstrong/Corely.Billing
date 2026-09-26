@@ -106,7 +106,7 @@ public class GrantProcessorTelemetryDecoratorTests
     public async Task ListGrantsAsync_RecordsTheTotal_ForASuccessfulList()
     {
         _inner
-            .Setup(p => p.ListGrantsAsync(It.IsAny<ListGrantsRequest>(), default))
+            .Setup(p => p.ListGrantsAsync(It.IsAny<ListGrantsRequest>(), null, default))
             .ReturnsAsync(
                 new RetrieveListResult<Grant>(
                     RetrieveResultCode.Success,

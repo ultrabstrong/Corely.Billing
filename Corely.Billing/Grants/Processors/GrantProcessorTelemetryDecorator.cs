@@ -94,13 +94,14 @@ internal class GrantProcessorTelemetryDecorator(
 
     public async Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
+        IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
     )
     {
         var result = await _logger.ExecuteWithLoggingAsync(
             nameof(GrantProcessor),
             request,
-            () => _inner.ListGrantsAsync(request, ct)
+            () => _inner.ListGrantsAsync(request, authorizedResourceIds, ct)
         );
         if (result.ResultCode == RetrieveResultCode.Success)
             _telemetry.Record(
