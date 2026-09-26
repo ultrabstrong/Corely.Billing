@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Title>Corely Billing Web IAM</Title>
+    <Description>Corely.IAM for Corely.Billing.Web: each grant action gated by IAM's PermissionView, and the account taken from the signed-in user</Description>
+    <PackageTags>Corely Billing IAM Blazor Razor Authorization Grants</PackageTags>
+    <RepositoryUrl>https://github.com/ultrabstrong/Corely.Billing/tree/master/Corely.Billing.Web.IAM</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/ultrabstrong/Corely.Billing</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.0</Version>
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Corely.Billing.Web.IAM.UnitTests" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Corely.IAM.Web" Version="2.4.0" />
+    <PackageReference Include="CSharpier.MsBuild" Version="1.3.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Corely.Billing.IAM\Corely.Billing.IAM.csproj" />
+    <ProjectReference Include="..\Corely.Billing.Web\Corely.Billing.Web.csproj" />
+  </ItemGroup>
+</Project>
