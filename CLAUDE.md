@@ -24,7 +24,7 @@ Each tier owns exactly one seam.
 
 | Tier | Owns | Substrate | Project |
 |------|------|-----------|---------|
-| Unit | One class's logic, dependencies substituted | No database | `Corely.Billing.UnitTests`, `Corely.Billing.Web.UnitTests` (bUnit), `Corely.Billing.DataAccessMigrations.Cli.UnitTests` |
+| Unit | One class's logic, dependencies substituted | No database | `Corely.Billing.UnitTests`, `Corely.Billing.IAM.UnitTests`, `Corely.Billing.Web.UnitTests` and `Corely.Billing.Web.IAM.UnitTests` (bUnit), `Corely.Billing.DataAccessMigrations.Cli.UnitTests` |
 | Integration | Persistence — EF translation, schema, provider behavior, and the composed grant/ledger balance | SQLite / Testcontainers | `Corely.Billing.IntegrationTests` |
 | Functional | HTTP — the demo hosts start, route, serve assets, and a Razor Pages flow runs | `WebApplicationFactory` in-process | `Corely.Billing.Web.FunctionalTests` |
 
@@ -54,7 +54,9 @@ dotnet test --solution Corely.Billing.slnx
 
 # Unit tier
 dotnet test --project Corely.Billing.UnitTests
+dotnet test --project Corely.Billing.IAM.UnitTests
 dotnet test --project Corely.Billing.Web.UnitTests
+dotnet test --project Corely.Billing.Web.IAM.UnitTests
 dotnet test --project Corely.Billing.DataAccessMigrations.Cli.UnitTests
 
 # Integration tier — real EF on SQLite. No external dependencies.
@@ -107,6 +109,8 @@ Billing records migrations in `__CorelyBillingMigrationsHistory`, so it shares a
 |---------|---------|
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
 | `Corely.Billing.Web` | Blazor Server components and opt-in routed pages. Versioned on its own. No reference to Corely.IAM |
+| `Corely.Billing.IAM` | Corely.IAM permissions for the three services: resource types, decorators shaped like IAM's own, `UseCorelyIamPermissions()`. Versioned on its own |
+| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. Versioned on its own |
 | `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |
 | `Corely.Billing.Demos.Bootstrap` | Bootstrap for the demos, served as a static web asset so it is vendored once |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo on SQLite |
@@ -143,7 +147,7 @@ Domain/
 ### Boundaries that are the point of the library
 
 - **No vocabulary.** Operations and units are tokens a host registers on `BillingOptions`. Nothing in this repository may name a consumer's operation or unit outside a test.
-- **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too; only `Corely.Billing.Demos.WithIAM` references IAM.
+- **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too. Only the opt-in `Corely.Billing.IAM` and `Corely.Billing.Web.IAM` reference IAM, and they follow Corely.IAM's own patterns exactly: where IAM does something for roles, they do the same for grants.
 - **Web components share the circuit's scope.** They queue their calls through one scoped gate instead of owning scopes, because a host's authorization decorators read scoped user state that a fresh scope would not have.
 - **No telemetry backend.** Metrics go through `IBillingTelemetry` with unprefixed names; the host prefixes and exports them.
 - **Ledger writes go through quota.** `IConsumptionService` only reads. Every consumption row is tied to a reservation against a grant.

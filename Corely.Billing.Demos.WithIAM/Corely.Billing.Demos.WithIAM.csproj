@@ -17,6 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Corely.Billing\Corely.Billing.csproj" />
     <ProjectReference Include="..\Corely.Billing.Web\Corely.Billing.Web.csproj" />
+    <ProjectReference Include="..\Corely.Billing.IAM\Corely.Billing.IAM.csproj" />
+    <ProjectReference Include="..\Corely.Billing.Web.IAM\Corely.Billing.Web.IAM.csproj" />
     <ProjectReference Include="..\Corely.Billing.Demos.Bootstrap\Corely.Billing.Demos.Bootstrap.csproj" />
   </ItemGroup>
 </Project>

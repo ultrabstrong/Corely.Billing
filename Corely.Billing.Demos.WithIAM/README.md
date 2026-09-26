@@ -1,6 +1,6 @@
 # Corely.Billing.Demos.WithIAM
 
-A metered host signed in through Corely.IAM. The account comes from the IAM user context, and IAM permissions decide who may see and change grants and usage.
+A metered host signed in through Corely.IAM, wired with Corely.Billing.IAM and Corely.Billing.Web.IAM. The account comes from the IAM user context, and IAM permissions decide what each user sees and may change.
 
 ## Run it
 
@@ -14,15 +14,21 @@ dotnet run --project Corely.Billing.Demos.WithIAM -- --seed
 dotnet run --project Corely.Billing.Demos.WithIAM
 ```
 
-The seed creates account Acme with owner `olivia` and member `bobby`, password `Test1234`, two grants, and some usage. Open https://localhost:7112.
+The seed creates account Acme with three users, password `Test1234`, two grants, and some usage. Open https://localhost:7112.
 
-Sign in as `olivia`: she owns the account, so she sees the usage and can manage grants. Sign in as `bobby`: he is a member with no roles, so every panel says he is not allowed.
+| User | Permissions | Sees |
+|------|-------------|------|
+| `olivia` | Owner, every permission | Usage, and New grant, Edit and Delete |
+| `carla` | Read and Update on `grant`, Read on `consumption` | Usage, and Edit on each row; no New grant, no Delete |
+| `bobby` | A member with no roles | "You are not allowed to…" on every panel |
+
+`carla` is the proof that each grant action is gated on its own permission, not on one "can manage" flag.
 
 `appsettings.Development.json` holds a committed system key. It protects nothing but local demo data.
 
 ## What to look at
 
-- `IamBillingAccountAccessor.cs` - `CurrentAccount.Id` is the billing account; `CanManageGrantsAsync` asks IAM for Update on `grants`.
-- `Authorization/` - two decorators passed to `BillingOptions.DecorateServices`, checking IAM permissions on the `grants` and `usage` resource types. `Program.cs` registers both types with IAM, or IAM would reject permissions on them.
-- `Program.cs` - the quota service is not decorated. Work that consumes quota runs as the system, not as whoever is watching the chart.
+- `Program.cs` - three calls: `RegisterBillingResourceTypes()`, `UseCorelyIamPermissions()` and `AddBillingWebIam()`. No accessor or decorators of its own.
+- `DemoSeed.cs` - `carla`'s role, built from IAM's own registration service.
+- "Extract a document" reserves and settles quota as the signed-in user, so it needs Execute on `quota`: `olivia` has it, `carla` does not.
 - `Components/Layout/DemoLayout.razor` - guards the library's routed pages, which carry no `[Authorize]` of their own.

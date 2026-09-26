@@ -77,6 +77,8 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library — setup, services, reservations, architecture |
 | [Migration CLI](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) | Database creation, migrations, and scripting |
 | [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components — grant list and editor, usage chart, usage events |
+| [Corely.Billing.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.IAM/Docs/index.md) | Corely.IAM permissions for grants, consumption and quota |
+| [Corely.Billing.Web.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web.IAM/Docs/index.md) | Each grant action in the web components gated by IAM's `PermissionView` |
 | [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md) | The three demo apps, what each shows, and how to run them |
 
 ## Solution Structure
@@ -85,6 +87,8 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 |---------|---------|
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota |
 | `Corely.Billing.Web` | Blazor components and opt-in routed pages for grants and usage |
+| `Corely.Billing.IAM` | Corely.IAM resource types and authorization decorators for the Billing services |
+| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the web components: the signed-in account and per-action gates |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo: grant, reserve, settle on SQLite |
 | `Corely.Billing.Demos.Portal` | The web components against a seeded account, with simulated usage |
 | `Corely.Billing.Demos.Subscription` | The smallest host: one unlimited grant per term gates a page |
@@ -93,6 +97,8 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | `Corely.Billing.UnitTests` | Unit tests on mock repositories |
 | `Corely.Billing.IntegrationTests` | SQLite tests, plus an opt-in SQL Server and MySQL matrix |
 | `Corely.Billing.Web.UnitTests` | bUnit tests for the web components |
+| `Corely.Billing.IAM.UnitTests` | Unit tests for the IAM decorators and registration |
+| `Corely.Billing.Web.IAM.UnitTests` | bUnit tests of the web components behind IAM's `PermissionView` |
 | `Corely.Billing.Web.FunctionalTests` | In-process smoke tests for the demo hosts |
 | `Corely.Billing.DataAccessMigrations.Cli` | Migration CLI — creates and migrates the billing schema (published as a .NET tool) |
 | `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` | EF Core migrations per database provider, bundled into the CLI |

@@ -57,6 +57,8 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 
 - [Migration CLI](../../Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) — database creation, migrations, scripting
 - [Corely.Billing.Web](../../Corely.Billing.Web/Docs/index.md) — Blazor components for grants and usage
+- [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) — Corely.IAM permissions for the three services
+- [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md) — IAM's `PermissionView` on each grant action
 
 ## Quick Start
 

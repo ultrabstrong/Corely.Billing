@@ -1,10 +1,9 @@
 using Corely.Billing;
 using Corely.Billing.Demos.WithIAM;
-using Corely.Billing.Demos.WithIAM.Authorization;
 using Corely.Billing.Demos.WithIAM.Components;
-using Corely.Billing.Services;
+using Corely.Billing.IAM.Extensions;
 using Corely.Billing.Web;
-using Corely.Billing.Web.Extensions;
+using Corely.Billing.Web.IAM.Extensions;
 using Corely.IAM;
 using Corely.IAM.Web.Extensions;
 
@@ -25,8 +24,7 @@ builder.Services.AddIAMServices(
             new DemoSecurityConfigurationProvider(builder.Configuration),
             _ => new SqlServerConfiguration(connectionString)
         )
-        .RegisterResourceType(DemoUsage.GRANTS_RESOURCE, "Billing grants")
-        .RegisterResourceType(DemoUsage.USAGE_RESOURCE, "Billing usage")
+        .RegisterBillingResourceTypes()
 );
 
 builder.Services.AddBillingServices(
@@ -34,13 +32,9 @@ builder.Services.AddBillingServices(
         .Create(builder.Configuration, _ => new SqlServerConfiguration(connectionString))
         .RegisterOperation(DemoUsage.Extraction.Value, "Document extraction")
         .RegisterUnit(DemoUsage.Page.Value, "page")
-        .DecorateServices(services =>
-        {
-            services.Decorate<IGrantService, GrantAuthorizationDecorator>();
-            services.Decorate<IConsumptionService, ConsumptionAuthorizationDecorator>();
-        })
+        .UseCorelyIamPermissions()
 );
-builder.Services.AddBillingWeb<IamBillingAccountAccessor>();
+builder.Services.AddBillingWebIam();
 builder.Services.AddScoped<UsageSimulator>();
 
 var app = builder.Build();

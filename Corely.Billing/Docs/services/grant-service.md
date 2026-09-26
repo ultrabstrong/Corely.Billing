@@ -8,7 +8,7 @@ Manages grants: an account's allowance of one unit for one operation, valid betw
 |--------|-----------|---------|
 | `CreateGrantAsync` | `CreateGrantRequest` | `CreateGrantResult` |
 | `GetGrantAsync` | `Guid accountId, Guid grantId` | `RetrieveSingleResult<Grant>` |
-| `ListGrantsAsync` | `ListGrantsRequest` | `RetrieveListResult<Grant>` |
+| `ListGrantsAsync` | `ListGrantsRequest`, `IReadOnlySet<Guid>? authorizedResourceIds` | `RetrieveListResult<Grant>` |
 | `UpdateGrantAsync` | `UpdateGrantRequest` | `ModifyResult` |
 | `DeleteGrantAsync` | `Guid accountId, Guid grantId` | `DeleteGrantResult` |
 
@@ -47,6 +47,8 @@ var grants = result.Data?.Items;
 ```
 
 Without an order, grants list newest `ValidFromUtc` first.
+
+`authorizedResourceIds` narrows the list to those grant ids, for an authorization decorator that knows which grants the caller may read; `null` leaves it unrestricted. It narrows the page and the total together, and leaves the request's own filter untouched. Corely.IAM's list processors take the same parameter.
 
 ### Update
 

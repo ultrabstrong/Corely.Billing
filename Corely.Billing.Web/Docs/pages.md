@@ -32,6 +32,6 @@ app.MapRazorComponents<App>()
 
 ## Notes
 
-- The pages read the account and `CanManage` from `IBillingAccountAccessor`. With no account they say so.
+- The pages read the account from `IBillingAccountAccessor`. With no account they say so.
 - The pages carry no `[Authorize]` attribute. Guard them in the host's layout or router.
 - They render `InteractiveServer` without prerendering.

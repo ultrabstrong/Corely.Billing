@@ -16,6 +16,8 @@ STRICT="${STRICT:-0}"
 PACKAGES=(
   "Corely.Billing:Corely.Billing/Corely.Billing.csproj"
   "Corely.Billing.Web:Corely.Billing.Web/Corely.Billing.Web.csproj"
+  "Corely.Billing.IAM:Corely.Billing.IAM/Corely.Billing.IAM.csproj"
+  "Corely.Billing.Web.IAM:Corely.Billing.Web.IAM/Corely.Billing.Web.IAM.csproj"
   "Corely.Billing.DataAccessMigrations.Cli:Corely.Billing.DataAccessMigrations.Cli/Corely.Billing.DataAccessMigrations.Cli.csproj"
 )
 

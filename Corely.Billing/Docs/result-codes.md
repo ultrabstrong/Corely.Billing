@@ -69,3 +69,4 @@ Returned by both `SettleAsync` and `ReleaseAsync`.
 | `Unknown` | Could not be determined; let the work start |
 | `Available` | Some room across live grants |
 | `Exhausted` | No live grant with anything left |
+| `Unauthorized` | The caller may not check quota for this account |

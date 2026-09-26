@@ -8,7 +8,7 @@ builder.Services.AddBillingWeb<MyAccountAccessor>();
 ```
 
 ```razor
-<GrantList AccountId="accountId" CanManage="true" />
+<GrantList AccountId="accountId" />
 <UsageDashboard AccountId="accountId" />
 ```
 

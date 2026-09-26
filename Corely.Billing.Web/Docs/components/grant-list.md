@@ -5,7 +5,7 @@ An account's grants, newest first, each with its balance, validity window and st
 ## Usage
 
 ```razor
-<GrantList AccountId="accountId" CanManage="canManage" />
+<GrantList AccountId="accountId" />
 ```
 
 ## Parameters
@@ -13,7 +13,6 @@ An account's grants, newest first, each with its balance, validity window and st
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `AccountId` | required | The account |
-| `CanManage` | `false` | Shows the create, edit and delete controls |
 | `NewGrantHref` | `BillingWebRoutes.GRANT_NEW` | Where "New grant" goes |
 | `GrantHref` | `BillingWebRoutes.GrantEditor` | Where a grant's edit link goes |
 | `OnDeleted` | — | Called with the deleted grant |
@@ -28,4 +27,4 @@ An account's grants, newest first, each with its balance, validity window and st
 ## Notes
 
 - Delete asks for confirmation in the row. Nothing opens a modal.
-- `CanManage` hides controls; the host's decorators still refuse the call.
+- New, Edit and Delete each go through `IGrantActionGate`, with the row's grant id for Edit and Delete. A row the caller cannot update offers View instead of Edit. The host's decorators still refuse what the gate hides.
