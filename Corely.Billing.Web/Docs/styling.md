@@ -29,4 +29,4 @@ A grant's balance meter fills with `--bs-primary`, turns `--bs-warning` when und
 ## Notes
 
 - Class names are prefixed `cbw-`.
-- Below 768px the grant list and event table become stacked cards.
+- Below 992px the grant list and event table become stacked cards.

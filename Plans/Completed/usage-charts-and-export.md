@@ -243,8 +243,8 @@ Built as decided, with these differences found while building:
 - **Burn-up reads only the limited grants' charges.** Drawn from the total, it counted usage on an
   unlimited grant (the demo's embeddings) against a limited allowance. It now reads the limited
   grants' own consumption, every provider included, like Remaining. The allowance line steps.
-- **Remaining floors at zero without naming the overdraft in the tooltip.** The grant list's meter
-  and `grants.csv` (`overdrawn_by`) carry the overdraft; the chart does not.
+- **Remaining floors at zero, and its tooltip names the overdraft.** Added in Corely.Billing.Web
+  2.1.1.
 - **The dashboard's Unit filter stays multi-select**; the unit picker lives on the chart, which
   plots one unit of whatever the filter allows.
 - **Library additions beyond the plan:** `ConsumptionEvent.CountsTowardBalance(liveFromUtc)`, so
@@ -257,8 +257,9 @@ Built as decided, with these differences found while building:
 - **Palette:** `--cbw-series-5` and `-6` added, light and dark, chosen to stay apart from the four
   existing colors. They were not put through a formal colour-vision check.
 - **Fixed on the way:** the phone event cards read "29,780tokens" (a collapsed space).
-- **Seen, not fixed:** the event table's Status column overflows its panel at about 1440px wide,
-  which predates this work.
+- **Fixed in Corely.Billing.Web 2.1.1:** the event table and the grant list overflowed their panels
+  between 768px and about 990px wide. Both now switch to cards below 992px, and the table's columns
+  can shrink.
 
 Checked: the full suite and the provider matrix on SQL Server and MySQL; the Portal demo clicked
 through every view, both units, the zip export (unpacked and read) at desktop and phone widths.

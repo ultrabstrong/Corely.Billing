@@ -7,11 +7,14 @@ using Corely.Billing.Web.Extensions;
 
 namespace Corely.Billing.Web.Components;
 
+// Overdrawn, where given, is how far past its quantity a grant stood in each period; Data floors
+// at zero, so the chart would otherwise lose it.
 internal sealed record ChartSeries(
     string Key,
     string Label,
     IReadOnlyList<long?> Data,
-    bool IsOther = false
+    bool IsOther = false,
+    IReadOnlyList<long>? Overdrawn = null
 );
 
 internal sealed record CapacitySeries(string Label, IReadOnlyList<long> Data);
@@ -218,16 +221,17 @@ internal sealed record UsageChartModel(
                 var rows = buckets.GetValueOrDefault(key) ?? [];
                 var used = rows.Where(b => b.BucketStart < starts[0]).Sum(b => b.TotalQuantity);
                 var moved = rows.ToDictionary(b => b.BucketStart, b => b.TotalQuantity);
-                var data = starts
-                    .Select(s =>
-                    {
-                        used += moved.GetValueOrDefault(s);
-                        return g.ValidFromUtc < bucket.NextBucketStart(s) && g.ValidToUtc >= s
-                            ? Math.Max(0, g.Quantity!.Value - used)
-                            : (long?)null;
-                    })
+                var usedAt = starts.Select(s => used += moved.GetValueOrDefault(s)).ToList();
+                var live = starts
+                    .Select(s => g.ValidFromUtc < bucket.NextBucketStart(s) && g.ValidToUtc >= s)
                     .ToList();
-                return new ChartSeries(key, grantLabel(g), data);
+                var quantity = g.Quantity!.Value;
+                return new ChartSeries(
+                    key,
+                    grantLabel(g),
+                    [.. usedAt.Select((u, i) => live[i] ? Math.Max(0, quantity - u) : (long?)null)],
+                    Overdrawn: [.. usedAt.Select((u, i) => live[i] ? Math.Max(0, u - quantity) : 0)]
+                );
             })
             .ToList();
 

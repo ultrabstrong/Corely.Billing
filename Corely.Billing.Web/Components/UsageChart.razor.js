@@ -104,7 +104,9 @@ function unitText(value, unit) {
 function withUnit(options, unit) {
     options.plugins.tooltip.callbacks.label = item => {
         const value = options.indexAxis === 'y' ? item.parsed.x : item.parsed.y;
-        return ` ${item.dataset.label ?? item.label}: ${unitText(value, unit)}`;
+        const over = item.dataset.overdrawn?.[item.dataIndex] ?? 0;
+        const note = over > 0 ? `, overdrawn by ${unitText(over, unit)}` : '';
+        return ` ${item.dataset.label ?? item.label}: ${unitText(value, unit)}${note}`;
     };
     return options;
 }
@@ -132,6 +134,7 @@ function lines(t, series, { stepped, dashFirst }) {
         return {
             label: s.label,
             data: s.data,
+            overdrawn: s.overdrawn,
             stepped: stepped ? 'middle' : false,
             borderColor: color,
             backgroundColor: color,

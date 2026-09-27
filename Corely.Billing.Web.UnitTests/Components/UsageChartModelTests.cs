@@ -123,6 +123,7 @@ public class UsageChartModelTests : BillingWebTestContext
         Assert.Equal(UsageChartModel.ALL_LIVE_GRANTS, total.Key);
         // 100 less 50 before the range, then 10 and 90 more; floored at zero, then gone once expired.
         Assert.Equal([40L, 0L, null], model.Series[1].Data);
+        Assert.Equal([0L, 50L, 0L], model.Series[1].Overdrawn);
         Assert.Equal([40L, 0L, null], total.Data);
     }
 

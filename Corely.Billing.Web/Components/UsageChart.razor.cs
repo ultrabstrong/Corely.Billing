@@ -335,6 +335,7 @@ public partial class UsageChart : IAsyncDisposable
                         label = s.Label,
                         data = s.Data,
                         other = s.IsOther,
+                        overdrawn = s.Overdrawn,
                     }),
                 }
             );
