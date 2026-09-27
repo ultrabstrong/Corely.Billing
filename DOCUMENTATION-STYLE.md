@@ -173,6 +173,7 @@ Keep tables clean: pipe-delimited, no excessive column widths. 2-4 columns is id
 - Use **relative markdown links**: `[Feature Name](feature-name.md)`, `[Sub-Feature](subdirectory/sub-feature.md)`
 - **Standard phrasing**: "See the [Feature Name](feature-name.md) docs for details." or "Learn more in the [Feature](feature.md) docs."
 - **Bidirectional links** between related features when practical (A links to B, B links to A)
+- **Another Corely library links on its first mention in each page**, to its GitHub repository or its docs there: [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM). A reader may arrive on any page without knowing what it is
 - **No anchor links** within documents (no `#section-name` references)
 - **No "back to index" links**: navigation relies on the reader using the index
 - **Demo/test references** use plain text method names, not links: "See demo: `RunEncryptionDemo`"

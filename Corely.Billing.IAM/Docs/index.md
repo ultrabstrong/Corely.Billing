@@ -1,6 +1,6 @@
 # Corely.Billing.IAM Documentation
 
-Corely.IAM permissions for Corely.Billing. Registers the `grant`, `consumption` and `quota` resource types with IAM, and decorates the three Billing services the way Corely.IAM decorates its own: the caller's account first, then CRUDX on the resource type.
+[Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) permissions for Corely.Billing. Registers the `grant`, `consumption` and `quota` resource types with IAM, and decorates the three Billing services the way Corely.IAM decorates its own: the caller's account first, then CRUDX on the resource type.
 
 - **One call each side**: `RegisterBillingResourceTypes()` on `IAMOptions`, `UseCorelyIamPermissions()` on `BillingOptions`
 - **IAM's own mechanisms**: `IAuthorizationProvider`, `RegisterResourceType` and `UnauthorizedError` results, nothing new

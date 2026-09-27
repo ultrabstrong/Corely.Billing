@@ -9,7 +9,7 @@ Ship only entity types and configurations, and let each host generate and keep t
 migrations in its own migration history.
 
 **Why not.** Every new host would have to regenerate and maintain the same schema, and each copy
-would drift. Corely.IAM ships its migrations in a CLI tool for exactly this reason, and billing does
+would drift. [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) ships its migrations in a CLI tool for exactly this reason, and billing does
 the same: `corely-billing-db` owns the schema, in its own history table, so it shares a database
 with IAM and the host without either touching the other's migrations.
 
@@ -21,7 +21,7 @@ not a different place to keep it.
 Corely.IAM defines `RetrieveResultCode`, `ModifyResultCode`, `ModifyResult`, `PagedResult<T>`,
 `RetrieveSingleResult<T>` and `RetrieveListResult<T>`, the same names as `Corely.Billing.Models`.
 Rename Billing's set (`BillingRetrieveResultCode`), give both a library prefix, or move them into
-Corely.Common, so a file importing both needs no alias.
+[Corely.Common](https://github.com/ultrabstrong/Corely.Common), so a file importing both needs no alias.
 
 **Why not.**
 

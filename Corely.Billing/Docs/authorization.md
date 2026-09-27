@@ -2,7 +2,7 @@
 
 Corely.Billing makes no authorization decisions. It knows accounts only as ids, and nothing about users, roles or permissions. The host decides who may call what, by decorating the three public services.
 
-A Corely.IAM host does not write these decorators: [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) ships them. What follows is for any other authorization model.
+A [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) host does not write these decorators: [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) ships them. What follows is for any other authorization model.
 
 ## Features
 

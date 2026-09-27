@@ -10,7 +10,7 @@ Corely.Billing does not require reservations, overlapping grants, or a metered p
 | Trial | A small grant with a short window | Settled per use | Has the trial run out, by time or by quantity? |
 | Seats or feature access | One grant per feature, quantity is seats | None | Does the account have this feature, and how many seats? |
 
-Runnable examples are `Corely.Billing.Demos.Portal` (metered), `Corely.Billing.Demos.Subscription`, and `Corely.Billing.Demos.WithIAM` (metered, signed in through Corely.IAM) in the repository.
+Runnable examples are `Corely.Billing.Demos.Portal` (metered), `Corely.Billing.Demos.Subscription`, and `Corely.Billing.Demos.WithIAM` (metered, signed in through [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM)) in the repository.
 
 ## Metered
 

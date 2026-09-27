@@ -70,7 +70,7 @@ for a script that is safe to run repeatedly.
 ## Migrations history table
 
 Billing records its migrations in `__CorelyBillingMigrationsHistory` rather than the default
-`__EFMigrationsHistory`, so it can share a database with Corely.IAM and your own contexts without
+`__EFMigrationsHistory`, so it can share a database with [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) and your own contexts without
 their migration records interleaving.
 
 `--history-table` overrides the table for every `db` command:

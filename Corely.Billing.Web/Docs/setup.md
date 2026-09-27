@@ -19,7 +19,7 @@ internal sealed class MyAccountAccessor(IMySession session) : IBillingAccountAcc
 }
 ```
 
-A Corely.IAM host skips this step and the next: [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md)'s `AddBillingWebIam()` registers an accessor that reads the signed-in user's account, and gates each action with IAM's `PermissionView`.
+A [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) host skips this step and the next: [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md)'s `AddBillingWebIam()` registers an accessor that reads the signed-in user's account, and gates each action with IAM's `PermissionView`.
 
 ## 3) Register Services
 

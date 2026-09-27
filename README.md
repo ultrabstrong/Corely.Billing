@@ -4,7 +4,7 @@ Grants, consumption and quota for .NET applications. Records what an account was
 
 Not only for metering: a subscription, prepaid credits, a trial, or seats use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
 
-**Try it running:** three demo apps show the web components, a subscription, and Billing inside a Corely.IAM app. See [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md).
+**Try it running:** three demo apps show the web components, a subscription, and Billing inside a [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) app. See [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md).
 
 ```mermaid
 flowchart LR
@@ -88,7 +88,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, pag
 | `Corely.Billing` | Core library: grants, the consumption ledger, quota |
 | `Corely.Billing.Web` | Blazor components and opt-in routed pages for grants and usage |
 | `Corely.Billing.IAM` | Corely.IAM resource types and authorization decorators for the Billing services |
-| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the web components: the signed-in account and per-action gates |
+| `Corely.Billing.Web.IAM` | [Corely.IAM.Web](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM.Web/Docs/index.md) for the web components: the signed-in account and per-action gates |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo: grant, reserve, settle on SQLite |
 | `Corely.Billing.Demos.Portal` | The web components against a seeded account, with simulated usage |
 | `Corely.Billing.Demos.Subscription` | The smallest host: one unlimited grant per term gates a page |

@@ -1,6 +1,6 @@
 # Architecture
 
-Layered the same way as Corely.IAM: public services over internal processors over repositories.
+Layered the same way as [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM): public services over internal processors over repositories.
 
 ```
 Services (public) → Processors (internal) → Repositories/UoW → BillingDbContext → Database
@@ -12,7 +12,7 @@ Services (public) → Processors (internal) → Repositories/UoW → BillingDbCo
 |-------|-----------|----------------|
 | Services | `public` | The host's API; the only layer a host can decorate |
 | Processors | `internal` | Validation, grant selection, the ledger |
-| Repositories | `internal` | `Corely.DataAccess` repositories and unit of work |
+| Repositories | `internal` | [`Corely.DataAccess`](https://github.com/ultrabstrong/Corely.DataAccess) repositories and unit of work |
 | `BillingDbContext` | `internal` | One context for `Grants` and `ConsumptionEvents` |
 
 ## Processors

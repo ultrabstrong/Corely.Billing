@@ -17,11 +17,11 @@ The library never applies migrations at runtime. The tool ships both providers' 
 corely-billing-db db create -p MsSql -c "Server=(localdb)\MSSQLLocalDB;Database=MyApp;Trusted_Connection=True;"
 ```
 
-Billing records its migrations in `__CorelyBillingMigrationsHistory`, so it can share a database with Corely.IAM and the host's own contexts. See the [Migration CLI](../../Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) docs for details.
+Billing records its migrations in `__CorelyBillingMigrationsHistory`, so it can share a database with [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) and the host's own contexts. See the [Migration CLI](../../Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) docs for details.
 
 ## 3) Choose a Database Provider
 
-Create an `IEFConfiguration` for your database from the `Corely.DataAccess` base classes.
+Create an `IEFConfiguration` for your database from the [`Corely.DataAccess`](https://github.com/ultrabstrong/Corely.DataAccess) base classes.
 
 ```csharp
 public class MsSqlEFConfiguration(string connectionString)

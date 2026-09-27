@@ -48,7 +48,7 @@ var grants = result.Data?.Items;
 
 Without an order, grants list newest `ValidFromUtc` first.
 
-`authorizedResourceIds` narrows the list to those grant ids, for an authorization decorator that knows which grants the caller may read; `null` leaves it unrestricted. It narrows the page and the total together, and leaves the request's own filter untouched. Corely.IAM's list processors take the same parameter.
+`authorizedResourceIds` narrows the list to those grant ids, for an authorization decorator that knows which grants the caller may read; `null` leaves it unrestricted. It narrows the page and the total together, and leaves the request's own filter untouched. [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM)'s list processors take the same parameter.
 
 ### Update
 

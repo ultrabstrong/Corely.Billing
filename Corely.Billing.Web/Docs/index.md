@@ -2,7 +2,7 @@
 
 Blazor Server components for Corely.Billing: a grant list and editor, a usage chart, and a usage event table. A host drops them into its own pages, or opts in to four routed pages that use them.
 
-- **No identity library**: the host says which account, and a gate decides which grant actions to show; [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md) wires both to Corely.IAM
+- **No identity library**: the host says which account, and a gate decides which grant actions to show; [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md) wires both to [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM)
 - **Authorization stays in the host**: an `UnauthorizedError` from a decorated service shows as a message
 - **Display names, not tokens**: every label comes from the registered usage vocabulary
 - **Unlimited and overdrawn grants**: a null quantity reads "Unlimited"; a grant used past its quantity reads overdrawn

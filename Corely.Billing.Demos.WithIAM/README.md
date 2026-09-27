@@ -1,6 +1,6 @@
 # Corely.Billing.Demos.WithIAM
 
-A metered host signed in through Corely.IAM, wired with Corely.Billing.IAM and Corely.Billing.Web.IAM. The account comes from the IAM user context, and IAM permissions decide what each user sees and may change.
+A metered host signed in through [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM), wired with [Corely.Billing.IAM](../Corely.Billing.IAM/Docs/index.md) and [Corely.Billing.Web.IAM](../Corely.Billing.Web.IAM/Docs/index.md). The account comes from the IAM user context, and IAM permissions decide what each user sees and may change.
 
 ## Run it
 

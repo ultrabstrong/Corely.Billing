@@ -36,7 +36,7 @@ If you find a bug or have a feature request, please open an issue on the [GitHub
 ## Coding Standards
 
 ### General Guidelines
-- Domain-agnostic code should be put in the `Corely.Common` project
+- Domain-agnostic code should be put in the [`Corely.Common`](https://github.com/ultrabstrong/Corely.Common) project
 - Use comments sparingly, if ever; only when necessary
 - Prefer json over xml when possible
 
@@ -62,7 +62,7 @@ If you find a bug or have a feature request, please open an issue on the [GitHub
   - Processors should be internally scoped
 - `Repo` for classes that act as a repository
   - Repositories should be internally scoped
-  - `Corely.DataAccess` interfaces and base classes should be used for repositories
+  - [`Corely.DataAccess`](https://github.com/ultrabstrong/Corely.DataAccess) interfaces and base classes should be used for repositories
 - `Model` for domain model or provider model
 - `Entity` for database-related data objects
 - `DTO` for data objects that transfer data between layers of the application
@@ -73,7 +73,7 @@ If you find a bug or have a feature request, please open an issue on the [GitHub
 - Follow DDD and SOLID principles
 
 ### Security
-- Use `Corely.Security` for encryption and hashing
+- Use [`Corely.Security`](https://github.com/ultrabstrong/Corely.Security) for encryption and hashing
 - Always use `ISymmetricEncryptedValue` or `IAsymmetricEncryptedValue` instead of storing a decrypted value in a string
 - Don't include encryption keys in code (provision with `ISymmetricKeyStoreProvider` and `IAsymmetricKeyStoreProvider`)
 

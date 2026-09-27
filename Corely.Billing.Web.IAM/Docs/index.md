@@ -1,6 +1,6 @@
 # Corely.Billing.Web.IAM Documentation
 
-Corely.IAM.Web for Corely.Billing.Web. The Billing components take the account from the signed-in user, and each grant action is gated by IAM's `PermissionView`, so a role sees exactly the controls its permissions allow.
+[Corely.IAM.Web](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM.Web/Docs/index.md) for Corely.Billing.Web. The Billing components take the account from the signed-in user, and each grant action is gated by IAM's `PermissionView`, so a role sees exactly the controls its permissions allow.
 
 ## Setup
 

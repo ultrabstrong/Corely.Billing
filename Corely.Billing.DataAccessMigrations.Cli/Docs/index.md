@@ -129,7 +129,7 @@ Prompts for confirmation. Use `-f, --force` to skip the prompt.
 
 ## Migrations History Table
 
-Billing records its migrations in `__CorelyBillingMigrationsHistory` rather than the default `__EFMigrationsHistory`, so it can share a database with Corely.IAM and a host's own contexts without every context writing to one table.
+Billing records its migrations in `__CorelyBillingMigrationsHistory` rather than the default `__EFMigrationsHistory`, so it can share a database with [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) and a host's own contexts without every context writing to one table.
 
 `--history-table` overrides the table. Pass the same value on every command against that database:
 
