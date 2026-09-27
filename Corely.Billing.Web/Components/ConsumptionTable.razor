@@ -1,6 +1,19 @@
 @inherits BillingComponentBase
 <section class="cbw-events" aria-label="@Title">
-    <div class="cbw-events-title">@Title</div>
+    <div class="cbw-events-head">
+        <div class="cbw-events-title">@Title</div>
+        @if (ShowExport && _totalCount > 0)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_exporting" @onclick="ExportAsync">
+                <i class="bi bi-download me-1" aria-hidden="true"></i>CSV
+            </button>
+        }
+    </div>
+
+    @if (_export is { Message: { } exportMessage })
+    {
+        <div class="alert @(_export.IsError ? "alert-danger" : "alert-warning") py-2" role="status">@exportMessage</div>
+    }
 
     @if (_error is not null)
     {
@@ -33,7 +46,7 @@
             {
                 <li class="cbw-event-row">
                     <span class="cbw-event-when">@item.UtcTimestamp.ToString("MMM d, yyyy HH:mm")</span>
-                    <span class="cbw-event-quantity">@item.Quantity.ToString("N0")<span class="cbw-event-quantity-unit"> @Vocabulary.DisplayName(item.Unit)@(item.Quantity == 1 ? "" : "s")</span></span>
+                    <span class="cbw-event-quantity">@item.Quantity.ToString("N0")<span class="cbw-event-quantity-unit">&nbsp;@Vocabulary.DisplayName(item.Unit)@(item.Quantity == 1 ? "" : "s")</span></span>
                     <span class="cbw-event-unit text-body-secondary">@Vocabulary.DisplayName(item.Unit)</span>
                     <span class="cbw-event-operation">@Vocabulary.DisplayName(item.Operation)</span>
                     <span class="cbw-event-provider text-body-secondary">@item.Provider</span>

@@ -31,9 +31,7 @@ internal class ConsumptionService(IConsumptionReportProcessor consumptionReportP
             )
         );
 
-    public async Task<
-        RetrieveSingleResult<List<ConsumptionTimeBucketData>>
-    > GetConsumptionTimeSeriesAsync(
+    public async Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     ) => Found(await _consumptionReportProcessor.GetConsumptionTimeSeriesAsync(request, ct));

@@ -31,6 +31,7 @@ function tokens(canvas) {
     return {
         usage: read('--cbw-series-1'),
         capacity: [read('--cbw-series-2'), read('--cbw-series-3'), read('--cbw-series-4')],
+        palette: [1, 2, 3, 4, 5, 6].map(i => read(`--cbw-series-${i}`)),
         other: read('--cbw-series-other'),
         ink: read('--cbw-ink'),
         muted: read('--cbw-ink-muted'),
@@ -96,24 +97,116 @@ async function draw(canvas, build) {
     watchTheme();
 }
 
-export function renderUsage(canvas, labels, data) {
-    return draw(canvas, t => ({
+function unitText(value, unit) {
+    return `${number.format(value)} ${unit}${value === 1 ? '' : 's'}`;
+}
+
+function withUnit(options, unit) {
+    options.plugins.tooltip.callbacks.label = item => {
+        const value = options.indexAxis === 'y' ? item.parsed.x : item.parsed.y;
+        return ` ${item.dataset.label ?? item.label}: ${unitText(value, unit)}`;
+    };
+    return options;
+}
+
+function seriesColor(t, series, i) {
+    return series.other ? t.other : t.palette[i % t.palette.length];
+}
+
+function bars(t, series, { stacked }) {
+    return series.map((s, i) => ({
+        label: s.label,
+        data: s.data,
+        backgroundColor: seriesColor(t, s, i),
+        borderRadius: stacked ? 0 : { topLeft: 4, topRight: 4 },
+        borderSkipped: 'start',
+        maxBarThickness: 24,
+        categoryPercentage: 0.9,
+        barPercentage: 0.9,
+    }));
+}
+
+function lines(t, series, { stepped, dashFirst }) {
+    return series.map((s, i) => {
+        const color = seriesColor(t, s, i);
+        return {
+            label: s.label,
+            data: s.data,
+            stepped: stepped ? 'middle' : false,
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: i === 0 && dashFirst ? 3 : 2,
+            borderDash: [],
+            spanGaps: false,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBorderWidth: 2,
+            pointHoverBorderColor: t.surface,
+            pointHoverBackgroundColor: color,
+            fill: false,
+        };
+    });
+}
+
+function share(t, spec) {
+    const options = baseOptions(t, { legend: false, stacked: false });
+    options.indexAxis = 'y';
+    options.scales.x.grid = { color: t.grid, lineWidth: 1 };
+    options.scales.x.beginAtZero = true;
+    options.scales.x.ticks.callback = value => number.format(value);
+    options.scales.y.grid = { display: false };
+    options.scales.y.ticks = { color: t.ink };
+    return {
         type: 'bar',
         data: {
-            labels,
+            labels: spec.series.map(s => s.label),
             datasets: [{
                 label: 'Used',
-                data,
-                backgroundColor: t.usage,
-                borderRadius: { topLeft: 4, topRight: 4 },
-                borderSkipped: 'start',
-                maxBarThickness: 24,
-                categoryPercentage: 0.9,
-                barPercentage: 0.9,
+                data: spec.series.map(s => s.data[0] ?? 0),
+                backgroundColor: spec.series.map((s, i) => seriesColor(t, s, i)),
+                borderRadius: 4,
+                maxBarThickness: 28,
             }],
         },
-        options: baseOptions(t, { legend: false, stacked: false }),
-    }));
+        options: withUnit(options, spec.unit),
+    };
+}
+
+export function renderChart(canvas, spec) {
+    return draw(canvas, t => {
+        switch (spec.kind) {
+            case 'share':
+                return share(t, spec);
+            case 'stacked':
+            case 'grouped': {
+                const stacked = spec.kind === 'stacked';
+                return {
+                    type: 'bar',
+                    data: { labels: spec.labels, datasets: bars(t, spec.series, { stacked }) },
+                    options: withUnit(baseOptions(t, { legend: true, stacked }), spec.unit),
+                };
+            }
+            case 'remaining':
+            case 'burnup':
+                return {
+                    type: 'line',
+                    data: {
+                        labels: spec.labels,
+                        datasets: lines(t, spec.series, {
+                            stepped: spec.kind === 'remaining',
+                            dashFirst: spec.kind === 'remaining',
+                        }).map((d, i) => (spec.kind === 'burnup' && i > 0 ? { ...d, stepped: 'middle' } : d)),
+                    },
+                    options: withUnit(baseOptions(t, { legend: true, stacked: false }), spec.unit),
+                };
+            default:
+                return {
+                    type: 'bar',
+                    data: { labels: spec.labels, datasets: bars(t, spec.series, { stacked: false }) },
+                    options: withUnit(baseOptions(t, { legend: false, stacked: false }), spec.unit),
+                };
+        }
+    });
 }
 
 export function renderCapacity(canvas, labels, series) {

@@ -1,11 +1,13 @@
 # Corely.Billing.Web Documentation
 
-Blazor Server components for Corely.Billing: a grant list and editor, a usage chart, and a usage event table. A host drops them into its own pages, or opts in to four routed pages that use them.
+Blazor Server components for Corely.Billing: a grant list and editor, a usage chart with six views, a usage event table, and CSV export of all of it. A host drops them into its own pages, or opts in to four routed pages that use them.
 
 - **No identity library**: the host says which account, and a gate decides which grant actions to show; [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md) wires both to [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM)
 - **Authorization stays in the host**: an `UnauthorizedError` from a decorated service shows as a message
 - **Display names, not tokens**: every label comes from the registered usage vocabulary
 - **Unlimited and overdrawn grants**: a null quantity reads "Unlimited"; a grant used past its quantity reads overdrawn
+- **Charts that break usage down**: stacked, side by side, remaining balance, burn-up and share, one unit at a time
+- **Raw data out**: CSV of events, grants and chart series, or one zip with a README describing every column
 - **Chart.js vendored**: the chart loads its own copy; the host adds nothing to its layout
 - **Light and dark**: styled from Bootstrap's tokens, so the host's `data-bs-theme` applies
 
@@ -18,6 +20,7 @@ Blazor Server components for Corely.Billing: a grant list and editor, a usage ch
     - [UsageChart](components/usage-chart.md)
     - [ConsumptionTable](components/consumption-table.md)
     - [UsageDashboard](components/usage-dashboard.md)
+- [Export](export.md)
 - [Routed Pages](pages.md)
 - [Styling](styling.md)
 

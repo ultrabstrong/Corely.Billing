@@ -134,7 +134,7 @@ public class GrantListTests : BillingWebTestContext
 
         var list = Render();
 
-        Assert.Empty(list.FindAll(".cbw-toolbar"));
+        Assert.Empty(list.FindAll(".cbw-toolbar a"));
         Assert.Empty(list.FindAll("button[aria-label='Delete grant']"));
         Assert.Single(list.FindAll("a[aria-label='Edit grant']"));
     }

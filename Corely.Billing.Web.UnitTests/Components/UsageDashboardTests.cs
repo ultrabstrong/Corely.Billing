@@ -48,7 +48,7 @@ public class UsageDashboardTests : BillingWebTestContext
             )
             .Returns(() =>
                 TrackAsync(
-                    new RetrieveSingleResult<List<ConsumptionTimeBucketData>>(
+                    new RetrieveSingleResult<List<ConsumptionSeries>>(
                         RetrieveResultCode.Success,
                         string.Empty,
                         []

@@ -26,7 +26,9 @@ public abstract class BillingWebTestContext : BunitContext
     protected BillingWebTestContext()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddOptions();
         Services.AddScoped<BillingCallGate>();
+        Services.AddScoped<UsageExporter>();
         Services.AddSingleton<IGrantActionGate>(ActionGate);
         Services.AddSingleton(Grants.Object);
         Services.AddSingleton(Consumption.Object);
@@ -35,6 +37,7 @@ public abstract class BillingWebTestContext : BunitContext
 
         HaveGrants();
         HaveUsed();
+        HaveSeries();
         Consumption
             .Setup(c =>
                 c.ListConsumptionEventsAsync(
@@ -82,6 +85,22 @@ public abstract class BillingWebTestContext : BunitContext
                     RetrieveResultCode.Success,
                     string.Empty,
                     [.. totals]
+                )
+            );
+
+    protected void HaveSeries(params ConsumptionSeries[] series) =>
+        Consumption
+            .Setup(c =>
+                c.GetConsumptionTimeSeriesAsync(
+                    It.IsAny<GetConsumptionTimeSeriesRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new RetrieveSingleResult<List<ConsumptionSeries>>(
+                    RetrieveResultCode.Success,
+                    string.Empty,
+                    [.. series]
                 )
             );
 

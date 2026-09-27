@@ -3,6 +3,8 @@
     --cbw-series-2: #eb6834;
     --cbw-series-3: #1baf7a;
     --cbw-series-4: #eda100;
+    --cbw-series-5: #8b5cf6;
+    --cbw-series-6: #d6457d;
     --cbw-series-other: #898781;
     --cbw-ink: var(--bs-body-color, #0b0b0b);
     --cbw-ink-muted: var(--bs-secondary-color, #52514e);
@@ -16,6 +18,17 @@
     --cbw-series-2: #d95926;
     --cbw-series-3: #199e70;
     --cbw-series-4: #c98500;
+    --cbw-series-5: #9d74f7;
+    --cbw-series-6: #e0608f;
+}
+
+.cbw-chart-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .cbw-chart-caption {
@@ -23,7 +36,20 @@
     flex-wrap: wrap;
     align-items: baseline;
     gap: 0.25rem 0.75rem;
+}
+
+.cbw-chart-caption-secondary {
     margin-bottom: 0.75rem;
+}
+
+.cbw-chart-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cbw-chart-controls .form-select {
+    width: auto;
 }
 
 .cbw-chart-title {

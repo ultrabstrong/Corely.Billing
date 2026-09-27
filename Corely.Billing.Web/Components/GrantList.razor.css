@@ -1,6 +1,7 @@
 .cbw-toolbar {
     display: flex;
     justify-content: flex-end;
+    gap: 0.5rem;
     margin-bottom: 0.75rem;
 }
 

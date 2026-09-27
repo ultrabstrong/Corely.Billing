@@ -50,21 +50,21 @@ internal class ConsumptionReportProcessorTelemetryDecorator(
         return totals;
     }
 
-    public async Task<List<ConsumptionTimeBucketData>> GetConsumptionTimeSeriesAsync(
+    public async Task<List<ConsumptionSeries>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     )
     {
-        var buckets = await _logger.ExecuteWithLoggingAsync(
+        var series = await _logger.ExecuteWithLoggingAsync(
             nameof(ConsumptionReportProcessor),
             request,
             () => _inner.GetConsumptionTimeSeriesAsync(request, ct)
         );
         _telemetry.Record(
             BillingMetricNames.Consumption.CONSUMPTION_TIMESERIES_QUERIED,
-            buckets.Count
+            series.Sum(s => s.Buckets.Count)
         );
-        return buckets;
+        return series;
     }
 
     public async Task<PagedResult<ConsumptionEvent>> ListConsumptionEventsAsync(

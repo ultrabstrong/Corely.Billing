@@ -32,9 +32,7 @@ internal sealed class ConsumptionAuthorizationDecorator(
             () => inner.GetGrantConsumptionTotalsAsync(accountId, grantIds, ct)
         );
 
-    public Task<
-        RetrieveSingleResult<List<ConsumptionTimeBucketData>>
-    > GetConsumptionTimeSeriesAsync(
+    public Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     ) =>

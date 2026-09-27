@@ -24,6 +24,9 @@ public partial class GrantList
     [Inject]
     private TimeProvider TimeProvider { get; set; } = null!;
 
+    [Inject]
+    private UsageExporter Exporter { get; set; } = null!;
+
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
 
@@ -36,6 +39,9 @@ public partial class GrantList
     [Parameter]
     public EventCallback<Grant> OnDeleted { get; set; }
 
+    [Parameter]
+    public bool ShowExport { get; set; } = true;
+
     private List<Grant> _grants = [];
     private Dictionary<Guid, long> _used = [];
     private bool _loading = true;
@@ -43,6 +49,8 @@ public partial class GrantList
     private string? _error;
     private Guid? _confirmingDelete;
     private Guid? _loadedFor;
+    private bool _exporting;
+    private ExportOutcome? _export;
 
     private DateTime Now => TimeProvider.GetUtcNow().UtcDateTime;
 
@@ -56,6 +64,14 @@ public partial class GrantList
     }
 
     public Task RefreshAsync() => SerializedAsync(LoadAsync);
+
+    private Task ExportAsync() =>
+        SerializedAsync(async () =>
+        {
+            _exporting = true;
+            _export = await Exporter.DownloadGrantsAsync(AccountId);
+            _exporting = false;
+        });
 
     private async Task LoadAsync()
     {

@@ -191,7 +191,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
         };
 
     [RequiresDockerFact]
-    public async Task TimeSeriesBucketsTranslate_ForDailyBuckets()
+    public async Task TimeSeriesBucketsTranslate_ForDailyBucketsByOperation()
     {
         await _ledger.SeedGrantAsync(quantity: 1000);
         await _ledger.ProcessAsync("job:a/step:1", 10);
@@ -207,13 +207,15 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                         AccountId,
                         now.AddDays(-3),
                         now.AddDays(1),
-                        TimeBucket.Day
+                        TimeBucket.Day,
+                        By: ConsumptionDimension.Operation
                     )
                 )
         );
 
-        Assert.Equal(30, result.Item!.Sum(b => b.TotalQuantity));
-        Assert.Equal(2, result.Item.Count(b => b.TotalQuantity > 0));
+        var buckets = Assert.Single(result.Item!).Buckets;
+        Assert.Equal(30, buckets.Sum(b => b.TotalQuantity));
+        Assert.Equal(2, buckets.Count(b => b.TotalQuantity > 0));
     }
 
     [RequiresDockerFact]

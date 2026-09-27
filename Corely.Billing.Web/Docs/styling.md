@@ -8,9 +8,9 @@ The chart reads its colors from custom properties on `.cbw-chart`. The defaults 
 
 | Property | Used for |
 |----------|----------|
-| `--cbw-series-1` | Used, per period |
+| `--cbw-series-1` to `--cbw-series-6` | The views' series in order: Used, then each operation, provider or grant |
 | `--cbw-series-2` to `--cbw-series-4` | The first three grants' capacity |
-| `--cbw-series-other` | Grants folded into "Other grants" |
+| `--cbw-series-other` | Series folded into "Other" or "Other grants" |
 | `--cbw-ink`, `--cbw-ink-muted` | Legend and axis text |
 | `--cbw-grid` | Gridlines |
 

@@ -16,7 +16,7 @@ internal interface IConsumptionReportProcessor
         CancellationToken ct = default
     );
 
-    Task<List<ConsumptionTimeBucketData>> GetConsumptionTimeSeriesAsync(
+    Task<List<ConsumptionSeries>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     );

@@ -22,6 +22,18 @@ public sealed record UsageFilter(
             Join(GrantIds?.Select(g => g.ToString()))
         );
 
+    public IEnumerable<string> Describe(IUsageVocabulary vocabulary)
+    {
+        yield return $"From {FromUtc:yyyy-MM-dd HH:mm} UTC to {ToUtc:yyyy-MM-dd HH:mm} UTC";
+        yield return $"Units: {Names(Units?.Select(vocabulary.DisplayName))}";
+        yield return $"Operations: {Names(Operations?.Select(vocabulary.DisplayName))}";
+        yield return $"Providers: {Names(Providers)}";
+        yield return $"Grants: {Names(GrantIds?.Select(g => g.ToString()))}";
+    }
+
+    private static string Names(IEnumerable<string>? values) =>
+        values is null ? "all" : string.Join(", ", values);
+
     private static string Join(IEnumerable<string>? values) =>
         values is null ? string.Empty : string.Join(',', values.Order());
 }

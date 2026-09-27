@@ -25,6 +25,9 @@ public partial class ConsumptionTable
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
+    [Inject]
+    private UsageExporter Exporter { get; set; } = null!;
+
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
 
@@ -37,6 +40,9 @@ public partial class ConsumptionTable
     [Parameter]
     public string Title { get; set; } = "Usage events";
 
+    [Parameter]
+    public bool ShowExport { get; set; } = true;
+
     private List<ConsumptionEvent> _items = [];
     private int _totalCount;
     private int _skip;
@@ -45,6 +51,8 @@ public partial class ConsumptionTable
     private bool _loading = true;
     private string? _error;
     private string? _loadedFor;
+    private bool _exporting;
+    private ExportOutcome? _export;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -58,6 +66,14 @@ public partial class ConsumptionTable
     }
 
     public Task RefreshAsync() => SerializedAsync(LoadAsync);
+
+    private Task ExportAsync() =>
+        SerializedAsync(async () =>
+        {
+            _exporting = true;
+            _export = await Exporter.DownloadEventsAsync(AccountId, Filter);
+            _exporting = false;
+        });
 
     private async Task LoadAsync()
     {

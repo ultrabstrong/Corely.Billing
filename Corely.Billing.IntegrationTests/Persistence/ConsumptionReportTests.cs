@@ -264,7 +264,7 @@ public sealed class ConsumptionReportTests : IDisposable
 
         await SeedAsync(data);
 
-        var result = await ReportAsync(r =>
+        var series = await ReportAsync(r =>
             r.GetConsumptionTimeSeriesAsync(
                 new GetConsumptionTimeSeriesRequest(
                     AccountId1,
@@ -274,6 +274,7 @@ public sealed class ConsumptionReportTests : IDisposable
                 )
             )
         );
+        var result = Assert.Single(series).Buckets;
 
         Assert.Equal(2, result.Count);
         Assert.Equal(new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc), result[0].BucketStart);
@@ -321,7 +322,7 @@ public sealed class ConsumptionReportTests : IDisposable
 
         await SeedAsync(data);
 
-        var result = await ReportAsync(r =>
+        var series = await ReportAsync(r =>
             r.GetConsumptionTimeSeriesAsync(
                 new GetConsumptionTimeSeriesRequest(
                     AccountId1,
@@ -331,6 +332,7 @@ public sealed class ConsumptionReportTests : IDisposable
                 )
             )
         );
+        var result = Assert.Single(series).Buckets;
 
         Assert.Equal(3, result.Count);
         Assert.Equal(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), result[0].BucketStart);
@@ -380,7 +382,7 @@ public sealed class ConsumptionReportTests : IDisposable
 
         await SeedAsync(data);
 
-        var result = await ReportAsync(r =>
+        var series = await ReportAsync(r =>
             r.GetConsumptionTimeSeriesAsync(
                 new GetConsumptionTimeSeriesRequest(
                     AccountId1,
@@ -390,6 +392,7 @@ public sealed class ConsumptionReportTests : IDisposable
                 )
             )
         );
+        var result = Assert.Single(series).Buckets;
 
         Assert.Equal(5, result.Count);
         Assert.Equal(4, result[0].TotalQuantity);
@@ -453,7 +456,7 @@ public sealed class ConsumptionReportTests : IDisposable
 
         await SeedAsync(data);
 
-        var result = await ReportAsync(r =>
+        var series = await ReportAsync(r =>
             r.GetConsumptionTimeSeriesAsync(
                 new GetConsumptionTimeSeriesRequest(
                     AccountId2,
@@ -465,6 +468,7 @@ public sealed class ConsumptionReportTests : IDisposable
                 )
             )
         );
+        var result = Assert.Single(series).Buckets;
 
         Assert.Single(result);
         Assert.Equal(5, result[0].TotalQuantity);
@@ -473,7 +477,7 @@ public sealed class ConsumptionReportTests : IDisposable
     [Fact]
     public async Task GetConsumptionTimeSeriesAsync_ReturnsEmptyBuckets_ForNoMatchingData()
     {
-        var result = await ReportAsync(r =>
+        var series = await ReportAsync(r =>
             r.GetConsumptionTimeSeriesAsync(
                 new GetConsumptionTimeSeriesRequest(
                     NonExistentAccountId,
@@ -483,10 +487,107 @@ public sealed class ConsumptionReportTests : IDisposable
                 )
             )
         );
+        var result = Assert.Single(series).Buckets;
 
         Assert.Equal(3, result.Count);
         Assert.All(result, b => Assert.Equal(0, b.TotalQuantity));
     }
+
+    [Fact]
+    public async Task GetConsumptionTimeSeriesAsync_ReturnsOneSeriesPerKey_ForGroupByOperation()
+    {
+        var day1 = new DateTime(2025, 5, 1, 10, 0, 0, DateTimeKind.Utc);
+        await SeedAsync([
+            Row(AccountId3, TestUsage.Extraction, "alpha", day1, 4),
+            Row(AccountId3, TestUsage.Extraction, "beta", day1.AddDays(1), 6),
+            Row(AccountId3, TestUsage.Other, "alpha", day1, 3),
+        ]);
+
+        var series = await ReportAsync(r =>
+            r.GetConsumptionTimeSeriesAsync(
+                new GetConsumptionTimeSeriesRequest(
+                    AccountId3,
+                    new DateTime(2025, 5, 1, 0, 0, 0, DateTimeKind.Utc),
+                    new DateTime(2025, 5, 3, 23, 59, 59, DateTimeKind.Utc),
+                    TimeBucket.Day,
+                    By: ConsumptionDimension.Operation
+                )
+            )
+        );
+
+        Assert.Equal(["extraction", "other"], series.Select(s => s.Key));
+        Assert.All(series, s => Assert.Equal(3, s.Buckets.Count));
+        Assert.Equal([4L, 6L, 0L], series[0].Buckets.Select(b => b.TotalQuantity));
+        Assert.Equal([3L, 0L, 0L], series[1].Buckets.Select(b => b.TotalQuantity));
+    }
+
+    [Fact]
+    public async Task GetConsumptionTimeSeriesAsync_KeysByProviderWithinFilters_ForGroupByProvider()
+    {
+        var day1 = new DateTime(2025, 6, 1, 10, 0, 0, DateTimeKind.Utc);
+        await SeedAsync([
+            Row(AccountId3, TestUsage.Extraction, "alpha", day1, 2),
+            Row(AccountId3, TestUsage.Extraction, "beta", day1, 9),
+            Row(AccountId3, TestUsage.Other, "gamma", day1, 50),
+        ]);
+
+        var series = await ReportAsync(r =>
+            r.GetConsumptionTimeSeriesAsync(
+                new GetConsumptionTimeSeriesRequest(
+                    AccountId3,
+                    new DateTime(2025, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+                    new DateTime(2025, 6, 1, 23, 59, 59, DateTimeKind.Utc),
+                    TimeBucket.Day,
+                    By: ConsumptionDimension.Provider,
+                    Operations: [TestUsage.Extraction]
+                )
+            )
+        );
+
+        Assert.Equal(["beta", "alpha"], series.Select(s => s.Key));
+        Assert.Equal([9L, 2L], series.Select(s => s.Total));
+    }
+
+    [Fact]
+    public async Task GetConsumptionTimeSeriesAsync_ReturnsNoSeries_ForGroupByWithNoData()
+    {
+        var series = await ReportAsync(r =>
+            r.GetConsumptionTimeSeriesAsync(
+                new GetConsumptionTimeSeriesRequest(
+                    NonExistentAccountId,
+                    new DateTime(2025, 3, 1, 0, 0, 0, DateTimeKind.Utc),
+                    new DateTime(2025, 3, 3, 23, 59, 59, DateTimeKind.Utc),
+                    TimeBucket.Day,
+                    By: ConsumptionDimension.Grant
+                )
+            )
+        );
+
+        Assert.Empty(series);
+    }
+
+    private static ConsumptionEventEntity Row(
+        Guid accountId,
+        Usage.UsageOperation operation,
+        string provider,
+        DateTime at,
+        long quantity
+    ) =>
+        new()
+        {
+            ConsumptionId = Guid.CreateVersion7(),
+            AccountId = accountId,
+            Unit = TestUsage.Page,
+            Operation = operation,
+            UtcTimestamp = at,
+            Quantity = quantity,
+            Provider = provider,
+            CorrelationId = Guid.CreateVersion7(),
+            IdempotencyKey = Guid.CreateVersion7().ToString(),
+            FinalizedUtc = SettledUtc,
+            Outcome = ConsumptionOutcome.Settled,
+            GrantId = Guid.CreateVersion7(),
+        };
 
     [Fact]
     public async Task ListConsumptionEventsAsync_ReturnsPaged_ForSkipAndTake()

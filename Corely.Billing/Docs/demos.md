@@ -11,13 +11,14 @@ Three runnable hosts, each showing a different way to use Corely.Billing, plus o
 
 ## Portal
 
-The web components with nothing else in the way: no sign-in, and a fixed account id from a two-line `IBillingAccountAccessor`. It plays an AI product billed in tokens. `--seed` writes five grants and six months of model usage:
+The web components with nothing else in the way: no sign-in, and a fixed account id from a two-line `IBillingAccountAccessor`. It plays an AI product billed in tokens and images. `--seed` writes five grants and six months of model usage:
 - an expired token grant that was overdrawn
 - two overlapping active grants, one expiring soon
 - an upcoming renewal
 - an unlimited grant for embeddings
+- an image grant, in a second unit
 
-- **Home**: `UsageDashboard` composed into the demo's own page, with buttons that simulate a chat reply (an estimated hold, settled to the tokens used) and an embedding request (an exact hold)
+- **Home**: `UsageDashboard` composed into the demo's own page, with buttons that simulate a chat reply (an estimated hold, settled to the tokens used) an embedding request and an image request (exact holds)
 - **`/grants`, `/usage`**: the library's routed pages, present because the host adds its assembly to the router
 - **Theme button**: switches `data-bs-theme`; the components and charts follow
 

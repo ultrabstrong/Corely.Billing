@@ -36,10 +36,14 @@ public sealed class PortalDemoTests : IDisposable
 
     [Theory]
     [InlineData("_content/Corely.Billing.Web/lib/chart.js/chart.umd.min.js", "Chart.js")]
-    [InlineData("_content/Corely.Billing.Web/Components/UsageChart.razor.js", "renderUsage")]
+    [InlineData("_content/Corely.Billing.Web/Components/UsageChart.razor.js", "renderChart")]
+    [InlineData(
+        "_content/Corely.Billing.Web/billing-download.js",
+        "export async function download"
+    )]
     [InlineData("Corely.Billing.Demos.Portal.styles.css", "@import '_content/Corely.Billing.Web/")]
     [InlineData("_content/Corely.Billing.Web/Corely.Billing.Web.bundle.scp.css", ".cbw-grant-row")]
-    public async Task StaticAssetsAreServed_ForTheChartAndTheComponentStyles(
+    public async Task StaticAssetsAreServed_ForTheChartTheDownloadAndTheComponentStyles(
         string path,
         string expected
     )

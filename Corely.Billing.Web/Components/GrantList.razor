@@ -2,10 +2,21 @@
 <div class="cbw-grants">
     @if (_grants.Count > 0)
     {
-        @ActionGate.Gate(GrantAction.Create, null,
-            @<div class="cbw-toolbar">
-                <a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>
-            </div>)
+        <div class="cbw-toolbar">
+            @if (ShowExport)
+            {
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@_exporting" @onclick="ExportAsync">
+                    <i class="bi bi-download me-1" aria-hidden="true"></i>CSV
+                </button>
+            }
+            @ActionGate.Gate(GrantAction.Create, null,
+                @<a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>)
+        </div>
+    }
+
+    @if (_export is { IsError: true, Message: { } exportMessage })
+    {
+        <div class="alert alert-danger py-2" role="status">@exportMessage</div>
     }
 
     @if (_error is not null)

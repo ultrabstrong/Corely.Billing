@@ -24,7 +24,19 @@
         <MultiSelectFilter TValue="UsageOperation" Label="Operation" Options="_operationOptions" Selected="_operations" SelectedChanged="OperationsChanged" />
         <MultiSelectFilter TValue="string" Label="Provider" Options="_providerOptions" Selected="_providers" SelectedChanged="ProvidersChanged" />
         <MultiSelectFilter TValue="Guid" Label="Grant" Options="_grantOptions" Selected="_grantIds" SelectedChanged="GrantsChanged" />
+        @if (ShowExport)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary cbw-export" disabled="@(_exporting || _filter is null)" @onclick="ExportAsync"
+                    title="Every usage event, every grant, the chart, and a README describing them, as one zip">
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Export
+            </button>
+        }
     </div>
+
+    @if (_export is { Message: { } exportMessage })
+    {
+        <div class="alert @(_export.IsError ? "alert-danger" : "alert-warning") py-2" role="status">@exportMessage</div>
+    }
 
     @if (_error is not null)
     {

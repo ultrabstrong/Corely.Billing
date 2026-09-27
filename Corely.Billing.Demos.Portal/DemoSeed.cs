@@ -31,6 +31,7 @@ internal static class DemoSeed
                 (DemoUsage.TextGeneration, DemoUsage.Token, 500_000, -30, 10),
                 (DemoUsage.TextGeneration, DemoUsage.Token, 6_000_000, 20, 385),
                 (DemoUsage.Embeddings, DemoUsage.Token, null, -120, 245),
+                (DemoUsage.ImageGeneration, DemoUsage.Image, 1_000, -HISTORY_DAYS, 185),
             ];
             foreach (var (operation, unit, quantity, fromDays, toDays) in grants)
             {
@@ -66,13 +67,21 @@ internal static class DemoSeed
         }
 
         Console.WriteLine(
-            $"Seeded 5 grants and {requests:N0} model requests over {HISTORY_DAYS} days."
+            $"Seeded 6 grants and {requests:N0} model requests over {HISTORY_DAYS} days."
         );
     }
 
     private static (int Count, Func<UsageSimulator, Task<string>> Run)[] DailyWork(Random random) =>
         [
-            (random.Next(0, 4), s => s.GenerateTextAsync(random.Next(1, 30_000))),
+            (
+                random.Next(0, 4),
+                s =>
+                    s.GenerateTextAsync(
+                        random.Next(1, 30_000),
+                        random.Next(3) == 0 ? "large-model" : "fast-model"
+                    )
+            ),
             (random.Next(0, 3), s => s.EmbedAsync(random.Next(1, 10_000))),
+            (random.Next(0, 2), s => s.GenerateImagesAsync(random.Next(1, 8))),
         ];
 }

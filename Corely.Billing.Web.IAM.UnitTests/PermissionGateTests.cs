@@ -97,6 +97,7 @@ public class PermissionGateTests : BunitContext
         vocabulary.Setup(v => v.DisplayName(It.IsAny<UsageUnit>())).Returns("page");
 
         JSInterop.Mode = JSRuntimeMode.Loose;
+        Services.AddOptions();
         Services.AddBillingWebIam();
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
         Services.AddSingleton(_grants.Object);
@@ -118,7 +119,7 @@ public class PermissionGateTests : BunitContext
 
         var list = RenderList();
 
-        Assert.Empty(list.FindAll(".cbw-toolbar"));
+        Assert.Empty(list.FindAll(".cbw-toolbar a"));
         Assert.Empty(list.FindAll("button[aria-label='Delete grant']"));
         Assert.Single(list.FindAll("a[aria-label='Edit grant']"));
         Assert.Empty(list.FindAll("a[aria-label='View grant']"));
@@ -134,7 +135,7 @@ public class PermissionGateTests : BunitContext
         Assert.Single(list.FindAll("a[aria-label='View grant']"));
         Assert.Empty(list.FindAll("a[aria-label='Edit grant']"));
         Assert.Empty(list.FindAll("button[aria-label='Delete grant']"));
-        Assert.Empty(list.FindAll(".cbw-toolbar"));
+        Assert.Empty(list.FindAll(".cbw-toolbar a"));
     }
 
     [Fact]
@@ -144,7 +145,7 @@ public class PermissionGateTests : BunitContext
 
         var list = RenderList();
 
-        Assert.Single(list.FindAll(".cbw-toolbar"));
+        Assert.Single(list.FindAll(".cbw-toolbar a"));
         Assert.Single(list.FindAll("a[aria-label='Edit grant']"));
         Assert.Single(list.FindAll("button[aria-label='Delete grant']"));
     }

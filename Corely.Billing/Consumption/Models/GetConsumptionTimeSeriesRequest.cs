@@ -7,6 +7,7 @@ public sealed record GetConsumptionTimeSeriesRequest(
     DateTime FromUtc,
     DateTime ToUtc,
     TimeBucket Bucket,
+    ConsumptionDimension? By = null,
     IReadOnlyList<UsageUnit>? Units = null,
     IReadOnlyList<UsageOperation>? Operations = null,
     IReadOnlyList<string>? Providers = null,

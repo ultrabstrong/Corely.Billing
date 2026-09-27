@@ -1,9 +1,54 @@
 @inherits BillingComponentBase
 <figure class="cbw-chart">
-    <figcaption class="cbw-chart-caption">
-        <span class="cbw-chart-title">@Title</span>
-        <span class="cbw-chart-subtitle text-body-secondary">@Subtitle</span>
+    <figcaption class="cbw-chart-head">
+        <span class="cbw-chart-caption">
+            <span class="cbw-chart-title">@Caption</span>
+            <span class="cbw-chart-subtitle text-body-secondary">@Subtitle</span>
+        </span>
+        @if (ShowControls || ShowExport)
+        {
+            <span class="cbw-chart-controls">
+                @if (ShowControls)
+                {
+                    <select class="form-select form-select-sm" aria-label="Chart" value="@_view" @onchange="ViewChangedAsync">
+                        @foreach (var view in Views)
+                        {
+                            <option value="@view">@view.Label()</option>
+                        }
+                    </select>
+                    @if (_view.BreaksDown())
+                    {
+                        <select class="form-select form-select-sm" aria-label="Break down by" value="@_by" @onchange="BreakdownChangedAsync">
+                            @foreach (var by in Breakdowns)
+                            {
+                                <option value="@by">By @by.Label()</option>
+                            }
+                        </select>
+                    }
+                    @if (_units.Count > 1)
+                    {
+                        <select class="form-select form-select-sm" aria-label="Unit" value="@_unit?.Value" @onchange="UnitChangedAsync">
+                            @foreach (var unit in _units)
+                            {
+                                <option value="@unit.Value">@(Vocabulary.DisplayName(unit))s</option>
+                            }
+                        </select>
+                    }
+                }
+                @if (ShowExport)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@(!ShowCharts || _exporting)" @onclick="ExportAsync">
+                        <i class="bi bi-download me-1" aria-hidden="true"></i>CSV
+                    </button>
+                }
+            </span>
+        }
     </figcaption>
+
+    @if (_export is { Message: { } exportMessage })
+    {
+        <div class="alert @(_export.IsError ? "alert-danger" : "alert-warning") py-2" role="status">@exportMessage</div>
+    }
 
     @if (_error is not null)
     {
@@ -15,13 +60,11 @@
     }
     else if (_model is { IsEmpty: true })
     {
-        <div class="cbw-chart-placeholder text-body-secondary">
-            Nothing was used in this range, and no limited grant covers it.
-        </div>
+        <div class="cbw-chart-placeholder text-body-secondary">@EmptyText</div>
     }
 
     <div class="cbw-chart-canvas" hidden="@(!ShowCharts)">
-        <canvas @ref="_usageCanvas" role="img" aria-label="@UsageLabel"></canvas>
+        <canvas @ref="_usageCanvas" role="img" aria-label="@ChartLabel"></canvas>
     </div>
 
     <div hidden="@(!ShowCharts || _model?.Capacity.Count == 0)">
@@ -34,11 +77,11 @@
         </div>
     </div>
 
-    @if (_model is { HasUnlimitedGrant: true, IsEmpty: false })
+    @if (_model is { HasUnlimitedGrant: true, IsEmpty: false } && _view != UsageChartView.Share)
     {
         <p class="cbw-chart-note text-body-secondary">
             <i class="bi bi-infinity" aria-hidden="true"></i>
-            An unlimited grant covers this range, so it has no capacity to draw.
+            An unlimited grant covers this range, so it has no capacity or balance to draw.
         </p>
     }
 </figure>

@@ -33,11 +33,17 @@ public partial class UsageDashboard
     [Inject]
     private TimeProvider TimeProvider { get; set; } = null!;
 
+    [Inject]
+    private UsageExporter Exporter { get; set; } = null!;
+
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
 
     [Parameter]
     public string DefaultRange { get; set; } = "30d";
+
+    [Parameter]
+    public bool ShowExport { get; set; } = true;
 
     private UsageChart? _chart;
     private ConsumptionTable? _table;
@@ -48,6 +54,8 @@ public partial class UsageDashboard
     private DateTime _to;
     private DateTime? _earliest;
     private Guid? _loadedFor;
+    private bool _exporting;
+    private ExportOutcome? _export;
 
     private IReadOnlySet<UsageUnit> _units = new HashSet<UsageUnit>();
     private IReadOnlySet<UsageOperation> _operations = new HashSet<UsageOperation>();
@@ -84,6 +92,21 @@ public partial class UsageDashboard
         if (_table is not null)
             await _table.RefreshAsync();
     }
+
+    private Task ExportAsync() =>
+        SerializedAsync(async () =>
+        {
+            if (_filter is null)
+                return;
+            _exporting = true;
+            _export = await Exporter.DownloadAllAsync(
+                AccountId,
+                _filter,
+                _chart?.Model,
+                _chart?.Caption
+            );
+            _exporting = false;
+        });
 
     private async Task LoadReferenceDataAsync()
     {

@@ -90,13 +90,14 @@ internal class ConsumptionReportProcessor(
         );
     }
 
-    public async Task<List<ConsumptionTimeBucketData>> GetConsumptionTimeSeriesAsync(
+    public async Task<List<ConsumptionSeries>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     )
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
-        var (accountId, fromUtc, toUtc, bucket, units, operations, providers, grantIds) = request;
+        var (accountId, fromUtc, toUtc, bucket, by, units, operations, providers, grantIds) =
+            request;
         var liveFromUtc = LiveReservationsFromUtc;
 
         var raw = await _consumptionEventRepo.EvaluateAsync(
@@ -107,31 +108,58 @@ internal class ConsumptionReportProcessor(
                 );
                 q = ApplyOptionalFilters(q, units, operations, providers, grantIds);
                 return WhereCounted(q, liveFromUtc)
-                    .Select(e => new { e.UtcTimestamp, e.Quantity })
+                    .Select(e => new
+                    {
+                        e.UtcTimestamp,
+                        e.Quantity,
+                        e.Operation,
+                        e.Unit,
+                        e.Provider,
+                        e.GrantId,
+                    })
                     .ToListAsync(token);
             },
             ct
         );
 
-        var buckets = raw.GroupBy(e => bucket.BucketStart(e.UtcTimestamp))
-            .ToDictionary(g => g.Key, g => g.Sum(e => e.Quantity));
-
-        var allBuckets = new List<ConsumptionTimeBucketData>();
+        List<DateTime> starts = [];
         for (
             var bucketStart = bucket.BucketStart(fromUtc);
             bucketStart <= toUtc;
             bucketStart = bucket.NextBucketStart(bucketStart)
         )
         {
-            allBuckets.Add(
-                new ConsumptionTimeBucketData(
-                    bucketStart,
-                    buckets.GetValueOrDefault(bucketStart, 0L)
-                )
+            starts.Add(bucketStart);
+        }
+
+        ConsumptionSeries ToSeries(string? key, IEnumerable<(DateTime At, long Quantity)> rows)
+        {
+            var sums = rows.GroupBy(r => bucket.BucketStart(r.At))
+                .ToDictionary(g => g.Key, g => g.Sum(r => r.Quantity));
+            return new ConsumptionSeries(
+                key,
+                [.. starts.Select(s => new ConsumptionTimeBucketData(s, sums.GetValueOrDefault(s)))]
             );
         }
 
-        return allBuckets;
+        if (by is null)
+            return [ToSeries(null, raw.Select(e => (e.UtcTimestamp, e.Quantity)))];
+
+        return
+        [
+            .. raw.GroupBy(e =>
+                    by switch
+                    {
+                        ConsumptionDimension.Operation => e.Operation.Value,
+                        ConsumptionDimension.Unit => e.Unit.Value,
+                        ConsumptionDimension.Provider => e.Provider,
+                        _ => e.GrantId.ToString(),
+                    }
+                )
+                .Select(g => ToSeries(g.Key, g.Select(e => (e.UtcTimestamp, e.Quantity))))
+                .OrderByDescending(s => s.Total)
+                .ThenBy(s => s.Key, StringComparer.Ordinal),
+        ];
     }
 
     public async Task<PagedResult<ConsumptionEvent>> ListConsumptionEventsAsync(

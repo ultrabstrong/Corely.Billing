@@ -51,4 +51,29 @@ public class GrantExtensionsTests : BillingWebTestContext
         );
 
     private IUsageVocabulary Vocabulary => Services.GetRequiredService<IUsageVocabulary>();
+
+    [Fact]
+    public void ToCsvRow_ReportsBalanceAndOverdraft_ForAnOverdrawnGrant()
+    {
+        var grant = Grant(100, -5, 30);
+        var vocabulary = Services.GetRequiredService<IUsageVocabulary>();
+
+        var cells = grant.ToCsvRow(vocabulary, used: 130, Now).Split(',');
+
+        Assert.Equal(GrantExtensions.CSV_HEADER.Split(',').Length, cells.Length);
+        Assert.Equal(
+            ["100", "false", "active", "130", "0", "30", ""],
+            [cells[5], cells[6], cells[9], cells[10], cells[11], cells[12], cells[13]]
+        );
+    }
+
+    [Fact]
+    public void ToCsvRow_LeavesQuantityAndRemainingEmpty_ForAnUnlimitedGrant()
+    {
+        var vocabulary = Services.GetRequiredService<IUsageVocabulary>();
+
+        var cells = Grant(null).ToCsvRow(vocabulary, used: 7, Now).Split(',');
+
+        Assert.Equal(["", "true", "7", ""], [cells[5], cells[6], cells[10], cells[11]]);
+    }
 }

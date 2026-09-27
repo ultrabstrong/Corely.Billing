@@ -1,8 +1,7 @@
 # Usage charts that break usage down, and CSV export
 
-**Status: decided, ready to build.** The owner settled every decision; the answers are under "Owner
-decisions" at the end and are written into the body below. If something here turns out not to work,
-stop and ask rather than choose.
+**Status: done.** Released as Corely.Billing and Corely.Billing.Web 2.1.0, Corely.Billing.IAM and
+Corely.Billing.Web.IAM 1.1.0. What happened is under "Outcome" at the end.
 
 ## Starting cold
 
@@ -206,10 +205,11 @@ How:
 
 ### 7. Release
 
-All of it at once (decision 5). The time series change breaks its signature, so by semver:
-Corely.Billing 3.0.0, Corely.Billing.Web 3.0.0, Corely.Billing.IAM 2.0.0. Corely.Billing.Web.IAM and
-the CLI move only if their own code changes; there is no schema change. DocsToData takes the new
-versions afterwards, in its own repository, and fixes whatever the time series change breaks there.
+All of it at once (decision 5), as minor versions although the time series change breaks its
+signature (decision 6): Corely.Billing 2.1.0, Corely.Billing.Web 2.1.0, Corely.Billing.IAM 1.1.0.
+Corely.Billing.Web.IAM and the CLI move only if their own code changes; there is no schema change.
+DocsToData takes the new versions afterwards, in its own repository, and fixes whatever the time
+series change breaks there.
 
 ## Out of scope
 
@@ -233,3 +233,34 @@ Settled with the owner; the body above is written to match.
 4. **Cap exports at 100,000 events, and say so.** The capped file still downloads, and the UI tells
    the user it was capped and how to get the rest.
 5. **Ship everything at once.** No separate fix release.
+6. **Minor versions, 2.1.0.** The time series change breaks its signature, but there are no users
+   outside this repository and DocsToData yet.
+
+## Outcome
+
+Built as decided, with these differences found while building:
+
+- **Burn-up reads only the limited grants' charges.** Drawn from the total, it counted usage on an
+  unlimited grant (the demo's embeddings) against a limited allowance. It now reads the limited
+  grants' own consumption, every provider included, like Remaining. The allowance line steps.
+- **Remaining floors at zero without naming the overdraft in the tooltip.** The grant list's meter
+  and `grants.csv` (`overdrawn_by`) carry the overdraft; the chart does not.
+- **The dashboard's Unit filter stays multi-select**; the unit picker lives on the chart, which
+  plots one unit of whatever the filter allows.
+- **Library additions beyond the plan:** `ConsumptionEvent.CountsTowardBalance(liveFromUtc)`, so
+  the export's status does not restate the ledger's TTL rule, and `ConsumptionEvent.IdempotencyScope`,
+  read back from the key (every part after the scope is known, so the parse is exact). It feeds
+  `work_id`. `ConsumptionSeries.Total` ranks series.
+- **Two bugs caught in the browser, each now under a test:** capacity labelled grants through the
+  breakdown's labeller, which read a grant id as an operation and threw; and the unit rule, proven by
+  breaking it (the chart plotting the filter's units) and watching its test fail.
+- **Palette:** `--cbw-series-5` and `-6` added, light and dark, chosen to stay apart from the four
+  existing colors. They were not put through a formal colour-vision check.
+- **Fixed on the way:** the phone event cards read "29,780tokens" (a collapsed space).
+- **Seen, not fixed:** the event table's Status column overflows its panel at about 1440px wide,
+  which predates this work.
+
+Checked: the full suite and the provider matrix on SQL Server and MySQL; the Portal demo clicked
+through every view, both units, the zip export (unpacked and read) at desktop and phone widths.
+Corely.Billing.Web.IAM moved to 1.1.0 for its dependency floors; its code did not change. The CLI
+did not move: its only change since 2.0.0 is a README link.

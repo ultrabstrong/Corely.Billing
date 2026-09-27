@@ -76,7 +76,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, tok
 |------|-------------|
 | **[Corely.Billing](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/index.md)** | Core library: setup, services, reservations, architecture |
 | [Migration CLI](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.DataAccessMigrations.Cli/Docs/index.md) | Database creation, migrations, and scripting |
-| [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components: grant list and editor, usage chart, usage events |
+| [Corely.Billing.Web](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web/Docs/index.md) | Blazor components: grant list and editor, usage charts, usage events, CSV export |
 | [Corely.Billing.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.IAM/Docs/index.md) | Corely.IAM permissions for grants, consumption and quota |
 | [Corely.Billing.Web.IAM](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web.IAM/Docs/index.md) | Each grant action in the web components gated by IAM's `PermissionView` |
 | [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md) | The three demo apps, what each shows, and how to run them |

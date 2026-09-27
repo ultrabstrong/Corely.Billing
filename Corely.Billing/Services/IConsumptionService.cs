@@ -16,7 +16,7 @@ public interface IConsumptionService
         CancellationToken ct = default
     );
 
-    Task<RetrieveSingleResult<List<ConsumptionTimeBucketData>>> GetConsumptionTimeSeriesAsync(
+    Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
     );
