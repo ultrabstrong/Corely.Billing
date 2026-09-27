@@ -29,7 +29,7 @@ if (availability == QuotaAvailability.Exhausted)
 using var scope = accessor.BeginScope(new OperationContext(correlationId, scopeName));
 
 var reserved = await quotaService.ReserveAsync(
-    new ReserveQuotaRequest(accountId, op, unit, Quantity: 1, Provider: "mistral", UserId: userId));
+    new ReserveQuotaRequest(accountId, op, unit, Quantity: maxTokens, Provider: "large-model", UserId: userId));
 
 try
 {

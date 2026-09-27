@@ -14,8 +14,8 @@ internal class OpenTelemetryBillingTelemetry(Meter meter) : IBillingTelemetry
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page")
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token")
     .UseTelemetry(sp => new OpenTelemetryBillingTelemetry(sp.GetRequiredService<Meter>()));
 ```
 

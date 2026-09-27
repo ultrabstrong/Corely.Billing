@@ -23,7 +23,7 @@ public sealed class WithIamDemoTests : IDisposable
     {
         var html = await _client.GetStringAsync("/signin", TestContext.Current.CancellationToken);
 
-        Assert.Contains("Acme Extraction", html);
+        Assert.Contains("Acme AI", html);
         Assert.Contains("_content/Corely.IAM.Web/js/form-busy.js", html);
     }
 

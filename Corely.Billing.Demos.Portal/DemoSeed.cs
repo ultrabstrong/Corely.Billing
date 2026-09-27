@@ -24,21 +24,21 @@ internal static class DemoSeed
                 return;
             }
 
-            (UsageOperation, long?, int, int)[] grants =
+            (UsageOperation, UsageUnit, long?, int, int)[] grants =
             [
-                (DemoUsage.Extraction, 1_500, -HISTORY_DAYS, -90),
-                (DemoUsage.Extraction, 6_000, -90, 275),
-                (DemoUsage.Extraction, 500, -30, 10),
-                (DemoUsage.Extraction, 6_000, 20, 385),
-                (DemoUsage.Summaries, null, -120, 245),
+                (DemoUsage.TextGeneration, DemoUsage.Token, 1_500_000, -HISTORY_DAYS, -90),
+                (DemoUsage.TextGeneration, DemoUsage.Token, 6_000_000, -90, 275),
+                (DemoUsage.TextGeneration, DemoUsage.Token, 500_000, -30, 10),
+                (DemoUsage.TextGeneration, DemoUsage.Token, 6_000_000, 20, 385),
+                (DemoUsage.Embeddings, DemoUsage.Token, null, -120, 245),
             ];
-            foreach (var (operation, quantity, fromDays, toDays) in grants)
+            foreach (var (operation, unit, quantity, fromDays, toDays) in grants)
             {
                 await grantService.CreateGrantAsync(
                     new CreateGrantRequest(
                         DemoUsage.AccountId,
                         operation,
-                        DemoUsage.Page,
+                        unit,
                         quantity,
                         today.AddDays(fromDays),
                         today.AddDays(toDays)
@@ -48,10 +48,10 @@ internal static class DemoSeed
         }
 
         var random = new Random(42);
-        var jobs = 0;
+        var requests = 0;
         for (var day = -HISTORY_DAYS; day < 0; day++)
         {
-            foreach (var (operation, count, maxPages) in DailyWork(random))
+            foreach (var (count, run) in DailyWork(random))
             {
                 for (var i = 0; i < count; i++)
                 {
@@ -59,20 +59,20 @@ internal static class DemoSeed
                         today.AddDays(day).AddHours(8 + random.Next(10)).AddMinutes(random.Next(60))
                     );
                     using var scope = services.CreateScope();
-                    await scope
-                        .ServiceProvider.GetRequiredService<UsageSimulator>()
-                        .RunAsync(operation, random.Next(1, maxPages));
-                    jobs++;
+                    await run(scope.ServiceProvider.GetRequiredService<UsageSimulator>());
+                    requests++;
                 }
             }
         }
 
-        Console.WriteLine($"Seeded 5 grants and {jobs:N0} units of work over {HISTORY_DAYS} days.");
+        Console.WriteLine(
+            $"Seeded 5 grants and {requests:N0} model requests over {HISTORY_DAYS} days."
+        );
     }
 
-    private static (UsageOperation, int, int)[] DailyWork(Random random) =>
+    private static (int Count, Func<UsageSimulator, Task<string>> Run)[] DailyWork(Random random) =>
         [
-            (DemoUsage.Extraction, random.Next(0, 4), 30),
-            (DemoUsage.Summaries, random.Next(0, 3), 10),
+            (random.Next(0, 4), s => s.GenerateTextAsync(random.Next(1, 30_000))),
+            (random.Next(0, 3), s => s.EmbedAsync(random.Next(1, 10_000))),
         ];
 }

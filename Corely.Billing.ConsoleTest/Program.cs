@@ -12,8 +12,8 @@ services.AddLogging();
 services.AddBillingServices(
     BillingOptions
         .Create(new ConfigurationBuilder().Build())
-        .RegisterOperation("document_extraction", "Document Extraction")
-        .RegisterUnit("page", "page")
+        .RegisterOperation("text_generation", "Text Generation")
+        .RegisterUnit("token", "token")
 );
 using var provider = services.BuildServiceProvider();
 using var scope = provider.CreateScope();
@@ -23,28 +23,37 @@ var quota = scope.ServiceProvider.GetRequiredService<IQuotaService>();
 var consumption = scope.ServiceProvider.GetRequiredService<IConsumptionService>();
 var accessor = scope.ServiceProvider.GetRequiredService<IOperationContextAccessor>();
 
-var extraction = UsageOperation.From("document_extraction");
-var page = UsageUnit.From("page");
+var generation = UsageOperation.From("text_generation");
+var token = UsageUnit.From("token");
 var accountId = Guid.CreateVersion7();
 var now = DateTime.UtcNow;
 
 await grants.CreateGrantAsync(
-    new CreateGrantRequest(accountId, extraction, page, 100, now.AddDays(-1), now.AddDays(2))
+    new CreateGrantRequest(accountId, generation, token, 100_000, now.AddDays(-1), now.AddDays(2))
 );
 await grants.CreateGrantAsync(
-    new CreateGrantRequest(accountId, extraction, page, 1000, now.AddDays(-1), now.AddDays(30))
+    new CreateGrantRequest(
+        accountId,
+        generation,
+        token,
+        1_000_000,
+        now.AddDays(-1),
+        now.AddDays(30)
+    )
 );
 
-using (accessor.BeginScope(new OperationContext(Guid.CreateVersion7(), "job:demo/step:extract")))
+using (accessor.BeginScope(new OperationContext(Guid.CreateVersion7(), "batch:demo")))
 {
     var reserved = await quota.ReserveAsync(
-        new ReserveQuotaRequest(accountId, extraction, page, 1, "demo")
+        new ReserveQuotaRequest(accountId, generation, token, 4_000, "text-model")
     );
-    Console.WriteLine($"Reserve 1 page: {reserved.ResultCode}");
+    Console.WriteLine($"Reserve 4,000 tokens: {reserved.ResultCode}");
 
-    var settled = await quota.SettleAsync(new SettleQuotaRequest(accountId, extraction, page, 500));
+    var settled = await quota.SettleAsync(
+        new SettleQuotaRequest(accountId, generation, token, 500_000)
+    );
     Console.WriteLine(
-        $"Settle at 500 pages: {settled.ResultCode}, {settled.RemainingRatio:P0} of quota left"
+        $"Settle at 500,000 tokens: {settled.ResultCode}, {settled.RemainingRatio:P0} of quota left"
     );
 }
 
@@ -58,5 +67,7 @@ foreach (var grant in list.Data.Items.OrderBy(g => g.ValidToUtc))
 {
     var used =
         totals.Item!.SingleOrDefault(t => t.GrantId == grant.GrantId)?.TotalConsumedQuantity ?? 0;
-    Console.WriteLine($"Grant of {grant.Quantity}, expiring {grant.ValidToUtc:d}: {used} used");
+    Console.WriteLine(
+        $"Grant of {grant.Quantity:N0}, expiring {grant.ValidToUtc:d}: {used:N0} used"
+    );
 }

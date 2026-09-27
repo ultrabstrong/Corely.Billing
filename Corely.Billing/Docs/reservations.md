@@ -18,12 +18,14 @@ Quota is held before work starts and settled to what the work actually cost. The
 3. `SettleAsync` re-splits the actual quantity across the grants live now, settles each held row, and writes a settled row for any grant it newly draws on.
 4. Or `ReleaseAsync` marks every held row released, leaving its quantity as it was.
 
-Reserve the floor when the real size is unknown (`Quantity: 1`) and let settlement correct it.
+When the real size is unknown, reserve an estimate and let settlement correct it. The most the work can
+cost, such as a model request's token limit, refuses work the account could not pay for at worst.
+`Quantity: 1` refuses only an account with nothing left.
 
 ```csharp
-await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, op, unit, 1, "mistral"));
-var pages = await ExtractAsync(document);
-await quotaService.SettleAsync(new SettleQuotaRequest(accountId, op, unit, pages));
+await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, op, unit, maxTokens, "large-model"));
+var reply = await GenerateAsync(prompt, maxTokens);
+await quotaService.SettleAsync(new SettleQuotaRequest(accountId, op, unit, reply.TotalTokens));
 ```
 
 ## What Counts Against a Grant

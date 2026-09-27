@@ -64,17 +64,17 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token");
 services.AddBillingServices(options);
 
-using var operation = accessor.BeginScope(new OperationContext(correlationId, "job:42/step:extract"));
+using var operation = accessor.BeginScope(new OperationContext(correlationId, "chat:42/turn:3"));
 
 var reserved = await quotaService.ReserveAsync(
-    new ReserveQuotaRequest(accountId, extraction, page, Quantity: 1, Provider: "mistral"));
-// ... do the work ...
+    new ReserveQuotaRequest(accountId, generation, token, Quantity: 4_000, Provider: "large-model"));
+// ... call the model ...
 var settled = await quotaService.SettleAsync(
-    new SettleQuotaRequest(accountId, extraction, page, ActualQuantity: 37));
+    new SettleQuotaRequest(accountId, generation, token, ActualQuantity: 1_284));
 ```
 
 ## Database Providers

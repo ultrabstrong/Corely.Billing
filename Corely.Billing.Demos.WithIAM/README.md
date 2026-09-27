@@ -30,5 +30,5 @@ The seed creates account Acme with three users, password `Test1234`, two grants,
 
 - `Program.cs`: three calls: `RegisterBillingResourceTypes()`, `UseCorelyIamPermissions()` and `AddBillingWebIam()`. No accessor or decorators of its own.
 - `DemoSeed.cs`: `carla`'s role, built from IAM's own registration service.
-- "Extract a document" reserves and settles quota as the signed-in user, so it needs Execute on `quota`: `olivia` has it, `carla` does not.
+- "Ask the assistant" holds an estimated 1,000 tokens and settles what the reply used, as the signed-in user, so it needs Execute on `quota`: `olivia` has it, `carla` does not.
 - `Components/Layout/DemoLayout.razor`: guards the library's routed pages, which carry no `[Authorize]` of their own.

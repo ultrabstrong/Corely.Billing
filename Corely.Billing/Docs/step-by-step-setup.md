@@ -47,8 +47,8 @@ Register every operation and unit the host bills for. Nothing can be granted or 
 ```csharp
 var options = BillingOptions
     .Create(builder.Configuration, _ => new MsSqlEFConfiguration(connectionString))
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token");
 ```
 
 ## 5) Register Services
@@ -61,7 +61,7 @@ builder.Services.AddBillingServices(options);
 
 ```csharp
 var result = await grantService.CreateGrantAsync(new CreateGrantRequest(
-    accountId, extraction, page, Quantity: 500,
+    accountId, generation, token, Quantity: 1_000_000,
     ValidFromUtc: now, ValidToUtc: now.AddMonths(1)));
 ```
 
@@ -70,15 +70,15 @@ var result = await grantService.CreateGrantAsync(new CreateGrantRequest(
 Every quota call runs inside an operation scope. The scope names the unit of work and must be the same on every retry of it.
 
 ```csharp
-using var scope = accessor.BeginScope(new OperationContext(correlationId, $"job:{jobId}/step:extract"));
+using var scope = accessor.BeginScope(new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));
 
 var reserved = await quotaService.ReserveAsync(
-    new ReserveQuotaRequest(accountId, extraction, page, Quantity: 1, Provider: "mistral"));
+    new ReserveQuotaRequest(accountId, generation, token, Quantity: maxTokens, Provider: "large-model"));
 if (reserved.ResultCode != ReserveQuotaResultCode.Success)
     return;
 
-var pages = await ExtractAsync(document);
-await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, page, pages));
+var reply = await GenerateAsync(prompt, maxTokens);
+await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, token, reply.TotalTokens));
 ```
 
 On a terminal failure, give the hold back with `ReleaseAsync` instead of settling. See the [Reservations](reservations.md) docs for the full lifecycle.

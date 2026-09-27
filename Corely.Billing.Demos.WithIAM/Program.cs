@@ -30,8 +30,8 @@ builder.Services.AddIAMServices(
 builder.Services.AddBillingServices(
     BillingOptions
         .Create(builder.Configuration, _ => new SqlServerConfiguration(connectionString))
-        .RegisterOperation(DemoUsage.Extraction.Value, "Document extraction")
-        .RegisterUnit(DemoUsage.Page.Value, "page")
+        .RegisterOperation(DemoUsage.TextGeneration.Value, "Text generation")
+        .RegisterUnit(DemoUsage.Token.Value, "token")
         .UseCorelyIamPermissions()
 );
 builder.Services.AddBillingWebIam();

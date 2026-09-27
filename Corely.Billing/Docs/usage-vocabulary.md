@@ -1,6 +1,6 @@
 # Usage Vocabulary
 
-Operations and units are host-defined tokens. `UsageOperation` names what was done (`document_extraction`); `UsageUnit` names what it was measured in (`page`). Every grant and consumption row carries one of each.
+Operations and units are host-defined tokens. `UsageOperation` names what was done (`text_generation`); `UsageUnit` names what it was measured in (`token`). Every grant and consumption row carries one of each.
 
 ## Features
 
@@ -13,10 +13,10 @@ Operations and units are host-defined tokens. `UsageOperation` names what was do
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterOperation("translation", "Translation")
-    .RegisterUnit("page", "page")
-    .RegisterUnit("character", "character");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterOperation("image_generation", "Image Generation")
+    .RegisterUnit("token", "token")
+    .RegisterUnit("image", "image");
 ```
 
 Keep the tokens in one static class so the host never repeats a string:
@@ -24,8 +24,8 @@ Keep the tokens in one static class so the host never repeats a string:
 ```csharp
 public static class MyUsage
 {
-    public static UsageOperation DocumentExtraction { get; } = UsageOperation.From("document_extraction");
-    public static UsageUnit Page { get; } = UsageUnit.From("page");
+    public static UsageOperation TextGeneration { get; } = UsageOperation.From("text_generation");
+    public static UsageUnit Token { get; } = UsageUnit.From("token");
 }
 ```
 
@@ -41,8 +41,8 @@ public static class MyUsage
 
 ```csharp
 var vocabulary = serviceProvider.GetRequiredService<IUsageVocabulary>();
-var known = vocabulary.Knows(MyUsage.Page);
-var label = vocabulary.DisplayName(MyUsage.DocumentExtraction); // "Document Extraction"
+var known = vocabulary.Knows(MyUsage.Token);
+var label = vocabulary.DisplayName(MyUsage.TextGeneration); // "Text Generation"
 ```
 
 ## Notes

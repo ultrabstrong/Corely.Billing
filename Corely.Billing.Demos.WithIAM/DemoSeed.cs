@@ -53,9 +53,9 @@ internal static class DemoSeed
             await grants.CreateGrantAsync(
                 new CreateGrantRequest(
                     accountId,
-                    DemoUsage.Extraction,
-                    DemoUsage.Page,
-                    2_000,
+                    DemoUsage.TextGeneration,
+                    DemoUsage.Token,
+                    2_000_000,
                     today.AddDays(-30),
                     today.AddDays(335)
                 )
@@ -63,9 +63,9 @@ internal static class DemoSeed
             await grants.CreateGrantAsync(
                 new CreateGrantRequest(
                     accountId,
-                    DemoUsage.Extraction,
-                    DemoUsage.Page,
-                    250,
+                    DemoUsage.TextGeneration,
+                    DemoUsage.Token,
+                    250_000,
                     today.AddDays(-5),
                     today.AddDays(9)
                 )
@@ -74,7 +74,7 @@ internal static class DemoSeed
             var simulator = scope.ServiceProvider.GetRequiredService<UsageSimulator>();
             var random = new Random(7);
             for (var i = 0; i < 12; i++)
-                await simulator.RunAsync(accountId, random.Next(5, 40));
+                await simulator.GenerateTextAsync(accountId, random.Next(5_000, 40_000));
         }
 
         Console.WriteLine(

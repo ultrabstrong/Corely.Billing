@@ -11,13 +11,13 @@ Three runnable hosts, each showing a different way to use Corely.Billing, plus o
 
 ## Portal
 
-The web components with nothing else in the way: no sign-in, and a fixed account id from a two-line `IBillingAccountAccessor`. `--seed` writes five grants and six months of usage:
-- an expired grant that was overdrawn
+The web components with nothing else in the way: no sign-in, and a fixed account id from a two-line `IBillingAccountAccessor`. It plays an AI product billed in tokens. `--seed` writes five grants and six months of model usage:
+- an expired token grant that was overdrawn
 - two overlapping active grants, one expiring soon
 - an upcoming renewal
-- an unlimited grant
+- an unlimited grant for embeddings
 
-- **Home**: `UsageDashboard` composed into the demo's own page, with buttons that reserve and settle a random quantity
+- **Home**: `UsageDashboard` composed into the demo's own page, with buttons that simulate a chat reply (an estimated hold, settled to the tokens used) and an embedding request (an exact hold)
 - **`/grants`, `/usage`**: the library's routed pages, present because the host adds its assembly to the router
 - **Theme button**: switches `data-bs-theme`; the components and charts follow
 
@@ -33,7 +33,7 @@ It uses no reservations beyond that, no limited quantities, and no reports. See 
 
 ## WithIAM
 
-Billing inside a Corely.IAM app, wired with [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) and [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md). The account comes from the signed-in user's context, and IAM permissions decide what each user sees and may change, one action at a time. Both libraries' schemas share one database, each created by its own tool.
+An AI assistant billed in tokens, inside a Corely.IAM app, wired with [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) and [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md). The account comes from the signed-in user's context, and IAM permissions decide what each user sees and may change, one action at a time. Both libraries' schemas share one database, each created by its own tool.
 
 - **`olivia`** owns the account: she sees usage and manages grants
 - **`carla`** may read and update grants and read consumption: no New grant, no Delete, and Edit on each row

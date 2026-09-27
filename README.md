@@ -59,15 +59,15 @@ scripting, environment-variable configuration, and running against MySQL.
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token");
 services.AddBillingServices(options);
 
-using var scope = accessor.BeginScope(new OperationContext(correlationId, $"job:{jobId}/step:extract"));
+using var scope = accessor.BeginScope(new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));
 
-await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, extraction, page, 1, "mistral"));
-var pages = await ExtractAsync(document);
-await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, page, pages));
+await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, generation, token, maxTokens, "large-model"));
+var reply = await GenerateAsync(prompt, maxTokens);
+await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, token, reply.TotalTokens));
 ```
 
 ## Documentation

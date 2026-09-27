@@ -13,7 +13,7 @@
 
 ```csharp
 using var scope = accessor.BeginScope(
-    new OperationContext(correlationId, $"job:{jobId}/step:{stepName}"));
+    new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));
 
 await quotaService.ReserveAsync(request);
 ```
@@ -34,7 +34,7 @@ A unique index on `(AccountId, IdempotencyKey)` is what turns a retry into a no-
 | New value per attempt (a fresh `Guid`) | Charged on every retry |
 | Same value for two different units of work | The second is never charged |
 
-Build the scope from identifiers the work already has (a job id and step name, a message id), never from the time or a random value.
+Build the scope from identifiers the work already has (a chat id and turn number, a job id and step name, a message id), never from the time or a random value.
 
 ## Notes
 

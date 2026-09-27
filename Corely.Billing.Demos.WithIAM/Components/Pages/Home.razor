@@ -3,14 +3,14 @@
 @inject IBillingAccountAccessor AccountAccessor
 @inject UsageSimulator Simulator
 
-<PageTitle>Acme Extraction</PageTitle>
+<PageTitle>Acme AI</PageTitle>
 
 @if (_accountId is { } accountId)
 {
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h3 mb-0">Usage</h1>
         <button type="button" class="btn btn-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(accountId)">
-            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Extract a document
+            <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>Ask the assistant
         </button>
     </div>
 
@@ -42,7 +42,7 @@ else if (_loaded)
     private async Task SimulateAsync(Guid accountId)
     {
         _running = true;
-        _message = await Simulator.RunAsync(accountId, Random.Shared.Next(5, 40));
+        _message = await Simulator.GenerateTextAsync(accountId, Random.Shared.Next(200, 4_000));
         _running = false;
         if (_dashboard is not null)
             await _dashboard.RefreshAsync();

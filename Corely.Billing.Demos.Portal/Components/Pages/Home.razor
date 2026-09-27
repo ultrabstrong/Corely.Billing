@@ -6,11 +6,11 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0">Demo account</h1>
     <div class="d-flex flex-wrap gap-2">
-        <button type="button" class="btn btn-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(DemoUsage.Extraction, 40)">
-            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Simulate extraction
+        <button type="button" class="btn btn-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(s => s.GenerateTextAsync(Random.Shared.Next(1, 40_001)))">
+            <i class="bi bi-chat-dots me-1" aria-hidden="true"></i>Simulate a chat reply
         </button>
-        <button type="button" class="btn btn-outline-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(DemoUsage.Summaries, 10)">
-            Simulate summaries
+        <button type="button" class="btn btn-outline-primary btn-sm" disabled="@_running" @onclick="() => SimulateAsync(s => s.EmbedAsync(Random.Shared.Next(1, 10_001)))">
+            <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Simulate embeddings
         </button>
     </div>
 </div>
@@ -27,10 +27,10 @@
     private string? _message;
     private bool _running;
 
-    private async Task SimulateAsync(Corely.Billing.Usage.UsageOperation operation, int maxPages)
+    private async Task SimulateAsync(Func<UsageSimulator, Task<string>> request)
     {
         _running = true;
-        _message = await Simulator.RunAsync(operation, Random.Shared.Next(1, maxPages + 1));
+        _message = await request(Simulator);
         _running = false;
         if (_dashboard is not null)
             await _dashboard.RefreshAsync();

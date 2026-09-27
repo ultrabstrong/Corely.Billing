@@ -18,7 +18,7 @@ Manages grants: an account's allowance of one unit for one operation, valid betw
 
 ```csharp
 var result = await grantService.CreateGrantAsync(new CreateGrantRequest(
-    accountId, MyUsage.DocumentExtraction, MyUsage.Page, Quantity: 500,
+    accountId, MyUsage.TextGeneration, MyUsage.Token, Quantity: 1_000_000,
     ValidFromUtc: periodStart, ValidToUtc: periodStart.AddMonths(1),
     Tags: new() { ["plan"] = "growth" }));
 
@@ -31,7 +31,7 @@ A null `Quantity` is an unlimited grant. Quota draws on it before any limited gr
 
 ```csharp
 await grantService.CreateGrantAsync(new CreateGrantRequest(
-    accountId, MyUsage.DocumentExtraction, MyUsage.Page, Quantity: null, termStart, termStart.AddYears(1)));
+    accountId, MyUsage.TextGeneration, MyUsage.Token, Quantity: null, termStart, termStart.AddYears(1)));
 ```
 
 ### List with Filtering and Pagination
@@ -54,7 +54,7 @@ Without an order, grants list newest `ValidFromUtc` first.
 
 ```csharp
 await grantService.UpdateGrantAsync(new UpdateGrantRequest(
-    accountId, grantId, MyUsage.Page, Quantity: 750, periodStart, periodEnd));
+    accountId, grantId, MyUsage.Token, Quantity: 1_500_000, periodStart, periodEnd));
 ```
 
 ## Validation

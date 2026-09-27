@@ -17,10 +17,10 @@ Runnable examples are `Corely.Billing.Demos.Portal` (metered), `Corely.Billing.D
 Every part of the library. See the [Reservations](reservations.md) docs.
 
 ```csharp
-using var scope = accessor.BeginScope(new OperationContext(correlationId, $"job:{jobId}/step:extract"));
-await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, extraction, page, 1, "mistral"));
-var pages = await ExtractAsync(document);
-await quotaService.SettleAsync(new SettleQuotaRequest(accountId, extraction, page, pages));
+using var scope = accessor.BeginScope(new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));
+await quotaService.ReserveAsync(new ReserveQuotaRequest(accountId, generation, token, maxTokens, "large-model"));
+var reply = await GenerateAsync(prompt, maxTokens);
+await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, token, reply.TotalTokens));
 ```
 
 ## Subscription

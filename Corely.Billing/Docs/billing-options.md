@@ -17,8 +17,8 @@
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token");
 services.AddBillingServices(options);
 ```
 
@@ -30,8 +30,8 @@ their own.
 
 ```csharp
 var options = BillingOptions.Create(configuration)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page");
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token");
 services.AddBillingServices(options);
 ```
 
@@ -41,8 +41,8 @@ The `Create()` overload without `efConfigurationFactory` registers in-memory moc
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("document_extraction", "Document Extraction")
-    .RegisterUnit("page", "page")
+    .RegisterOperation("text_generation", "Text Generation")
+    .RegisterUnit("token", "token")
     .UseTelemetry(sp => sp.GetRequiredService<MyBillingTelemetry>())
     .DecorateServices(s => s.Decorate<IQuotaService, QuotaAuthorizationDecorator>());
 ```

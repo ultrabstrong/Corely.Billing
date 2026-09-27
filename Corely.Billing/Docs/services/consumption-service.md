@@ -27,7 +27,7 @@ var used = result.Item?.SingleOrDefault()?.TotalConsumedQuantity ?? 0;
 
 ```csharp
 var result = await consumptionService.GetConsumptionTimeSeriesAsync(
-    new GetConsumptionTimeSeriesRequest(accountId, from, to, TimeBucket.Day, Units: [MyUsage.Page]));
+    new GetConsumptionTimeSeriesRequest(accountId, from, to, TimeBucket.Day, Units: [MyUsage.Token]));
 ```
 
 Buckets are `Day`, `Week` and `Month`, in UTC.
@@ -36,7 +36,7 @@ Buckets are `Day`, `Week` and `Month`, in UTC.
 
 ```csharp
 var result = await consumptionService.ListConsumptionEventsAsync(new ListConsumptionEventsRequest(
-    accountId, FromUtc: from, Providers: ["mistral"],
+    accountId, FromUtc: from, Providers: ["large-model"],
     SortBy: ConsumptionEventSortField.Quantity, SortDirection: SortDirection.Descending,
     Skip: 0, Take: 50));
 ```
