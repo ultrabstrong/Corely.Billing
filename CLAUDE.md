@@ -101,6 +101,26 @@ CSharpier enforced via MSBuild integration. Files are auto-formatted on build.
 
 Billing records migrations in `__CorelyBillingMigrationsHistory`, so it shares a database with Corely.IAM and a host's own contexts.
 
+## Running a demo locally
+
+One command, from the repository root, in PowerShell 7:
+
+```powershell
+.\Start-LocalStack.ps1 -Demo Portal      # or Subscription, WithIAM
+```
+
+It starts LocalDB, builds, applies the schema with the migration CLI (and, for WithIAM, Corely.IAM's
+schema first with `corely-iam-db` 2.x, installed or updated as a global tool), runs the demo's
+`--seed`, which does nothing once its data is there, then runs the demo and opens the browser.
+Ctrl+C stops it.
+
+| Switch | Does |
+|--------|------|
+| `-Reset` | Drops the demo's database first, so it is recreated and reseeded |
+| `-NoSeed` | Skips the seed |
+| `-NoRun` | Stops once the database is ready |
+| `-ConnectionString` | Uses another SQL Server instead of the LocalDB database in the demo's `appsettings.Development.json`, for the schema, the seed and the app |
+
 ## Releasing
 
 One tag releases one package: `<PackageId>-v<Version>`, where the version is exactly the

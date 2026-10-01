@@ -4,6 +4,8 @@ A metered host signed in through [Corely.IAM](https://github.com/ultrabstrong/Co
 
 ## Run it
 
+`.\Start-LocalStack.ps1 -Demo WithIAM` from the repository root does every step below and opens the browser. By hand:
+
 Needs SQL Server LocalDB. Both libraries' schemas go into one database, each from its own tool. From the repository root:
 
 ```powershell

@@ -4,6 +4,8 @@ The smallest host: a year's subscription is one unlimited grant, and a members p
 
 ## Run it
 
+`.\Start-LocalStack.ps1 -Demo Subscription` from the repository root does every step below and opens the browser. By hand:
+
 Needs SQL Server LocalDB. From the repository root:
 
 ```powershell

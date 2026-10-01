@@ -4,6 +4,8 @@ The `Corely.Billing.Web` components against one demo account, with nothing else 
 
 ## Run it
 
+`.\Start-LocalStack.ps1 -Demo Portal` from the repository root does every step below and opens the browser. By hand:
+
 Needs SQL Server LocalDB (installed with Visual Studio). From the repository root:
 
 ```powershell
