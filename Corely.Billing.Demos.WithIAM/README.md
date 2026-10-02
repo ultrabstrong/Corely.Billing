@@ -20,17 +20,17 @@ The seed creates account Acme with three users, password `Test1234`, two grants,
 
 | User | Permissions | Sees |
 |------|-------------|------|
-| `olivia` | Owner, every permission | Usage, and New grant, Edit and Delete |
+| `olivia` | Owner: Read on `grant` and `consumption`, Read and Execute on `quota` | Usage and grants, read-only |
 | `carla` | Read and Update on `grant`, Read on `consumption` | Usage, and Edit on each row; no New grant, no Delete |
 | `bobby` | A member with no roles | "You are not allowed to…" on every panel |
 
-`carla` is the proof that each grant action is gated on its own permission, not on one "can manage" flag.
+`carla` is the proof that each grant action is gated on its own permission, not on one "can manage" flag. Her `grant` permission is created by the seed under system context: an owner holds only Read on `grant`, and IAM refuses to hand out what the caller does not hold, so nobody signed in can give it to her. That is also why `olivia` sees no New grant, Edit or Delete.
 
 `appsettings.Development.json` holds a committed system key. It protects nothing but local demo data.
 
 ## What to look at
 
 - `Program.cs`: three calls: `RegisterBillingResourceTypes()`, `UseCorelyIamPermissions()` and `AddBillingWebIam()`. No accessor or decorators of its own.
-- `DemoSeed.cs`: `carla`'s role, built from IAM's own registration service.
+- `DemoSeed.cs`: `carla`'s role and the two grants, created under `AuthenticateAsSystem`, the way a host provisions what its users cannot.
 - "Ask the assistant" holds an estimated 1,000 tokens and settles what the reply used, as the signed-in user, so it needs Execute on `quota`: `olivia` has it, `carla` does not.
 - `Components/Layout/DemoLayout.razor`: guards the library's routed pages, which carry no `[Authorize]` of their own.

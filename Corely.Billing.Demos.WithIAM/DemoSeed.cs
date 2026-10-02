@@ -2,6 +2,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM;
 using Corely.Billing.Services;
 using Corely.IAM.Models;
+using Corely.IAM.Permissions.Models;
 using Corely.IAM.Services;
 
 namespace Corely.Billing.Demos.WithIAM;
@@ -43,7 +44,14 @@ internal static class DemoSeed
             await registration.RegisterUserWithAccountAsync(
                 new RegisterUserWithAccountRequest(editor!.Value, accountId)
             );
-            await RegisterGrantEditorAsync(registration, accountId, editor.Value);
+        }
+
+        using (var scope = services.CreateScope())
+        {
+            scope
+                .ServiceProvider.GetRequiredService<IAuthenticationService>()
+                .AuthenticateAsSystem(DEVICE_ID);
+            await RegisterGrantEditorAsync(scope.ServiceProvider, accountId, editor.Value);
 
             var grants = scope.ServiceProvider.GetRequiredService<IGrantService>();
             var today = scope
@@ -70,7 +78,11 @@ internal static class DemoSeed
                     today.AddDays(9)
                 )
             );
+        }
 
+        using (var scope = services.CreateScope())
+        {
+            await SignInAsync(scope.ServiceProvider, "olivia", accountId);
             var simulator = scope.ServiceProvider.GetRequiredService<UsageSimulator>();
             var random = new Random(7);
             for (var i = 0; i < 12; i++)
@@ -78,18 +90,19 @@ internal static class DemoSeed
         }
 
         Console.WriteLine(
-            "Seeded account Acme: owner olivia, carla who may read and update grants, "
+            "Seeded account Acme: owner olivia who may read grants, carla who may read and update them, "
                 + "and bobby with no roles"
         );
         Console.WriteLine($"Password for all three: {PASSWORD}");
     }
 
     private static async Task RegisterGrantEditorAsync(
-        IRegistrationService registration,
+        IServiceProvider scoped,
         Guid accountId,
         Guid userId
     )
     {
+        var registration = scoped.GetRequiredService<IRegistrationService>();
         var grants = await registration.RegisterPermissionAsync(
             new RegisterPermissionRequest(
                 accountId,
@@ -100,21 +113,18 @@ internal static class DemoSeed
                 Description: "Read and update every grant"
             )
         );
-        var consumption = await registration.RegisterPermissionAsync(
-            new RegisterPermissionRequest(
-                accountId,
-                BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE,
-                Guid.Empty,
-                Read: true,
-                Description: "Read consumption"
-            )
+        var permissions = await scoped
+            .GetRequiredService<IRetrievalService>()
+            .ListPermissionsAsync(new ListPermissionsRequest(accountId, Take: 100));
+        var ownerConsumption = permissions.Data!.Items.Single(p =>
+            p.IsSystemDefined && p.ResourceType == BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
         );
         var role = await registration.RegisterRoleAsync(
             new RegisterRoleRequest("Grant editor", accountId)
         );
         await registration.RegisterPermissionsWithRoleAsync(
             new RegisterPermissionsWithRoleRequest(
-                [grants.CreatedPermissionId, consumption.CreatedPermissionId],
+                [grants.CreatedPermissionId, ownerConsumption.Id],
                 role.CreatedRoleId,
                 accountId
             )

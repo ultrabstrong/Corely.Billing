@@ -36,7 +36,7 @@ It uses no reservations beyond that, no limited quantities, and no reports. See 
 
 An AI assistant billed in tokens, inside a Corely.IAM app, wired with [Corely.Billing.IAM](../../Corely.Billing.IAM/Docs/index.md) and [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md). The account comes from the signed-in user's context, and IAM permissions decide what each user sees and may change, one action at a time. Both libraries' schemas share one database, each created by its own tool.
 
-- **`olivia`** owns the account: she sees usage and manages grants
+- **`olivia`** owns the account: she sees usage and grants, and runs the assistant, but cannot create or change grants. The seed provisions those under system context
 - **`carla`** may read and update grants and read consumption: no New grant, no Delete, and Edit on each row
 - **`bobby`** is a member with no roles: every panel says he is not allowed
 

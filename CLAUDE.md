@@ -110,7 +110,7 @@ One command, from the repository root, in PowerShell 7:
 ```
 
 It starts LocalDB, builds, applies the schema with the migration CLI (and, for WithIAM, Corely.IAM's
-schema first with `corely-iam-db` 2.x, installed or updated as a global tool), runs the demo's
+schema first with `corely-iam-db` 3.x, installed or updated as a global tool), runs the demo's
 `--seed`, which does nothing once its data is there, then runs the demo and opens the browser.
 Ctrl+C stops it.
 
