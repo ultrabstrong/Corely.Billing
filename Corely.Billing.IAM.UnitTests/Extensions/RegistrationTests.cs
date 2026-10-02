@@ -50,6 +50,31 @@ public class RegistrationTests
         );
     }
 
+    [Theory]
+    [InlineData(BillingResourceTypes.GRANT_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(
+        BillingResourceTypes.QUOTA_RESOURCE_TYPE,
+        new[] { AuthAction.Read, AuthAction.Execute }
+    )]
+    public void RegisterBillingResourceTypes_GivesOwnersOnlyTheseActions_ForEachType(
+        string resourceType,
+        AuthAction[] ownerActions
+    )
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddIAMServices(
+            IAMOptions
+                .Create(Configuration, Mock.Of<ISecurityConfigurationProvider>())
+                .RegisterBillingResourceTypes()
+        );
+
+        var registry = services.BuildServiceProvider().GetRequiredService<IResourceTypeRegistry>();
+
+        Assert.Equal(ownerActions, registry.Get(resourceType)!.OwnerActions);
+    }
+
     [Fact]
     public void UseCorelyIamPermissions_Throws_ForAHostWithoutIam()
     {

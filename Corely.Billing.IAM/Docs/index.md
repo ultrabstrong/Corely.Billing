@@ -29,6 +29,21 @@ A host with Blazor adds [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Do
 
 Registered, they appear in the IAM.Web permission form's resource type list.
 
+## What Account Owners Get
+
+`RegisterBillingResourceTypes()` declares these as the Owner role's actions, so every new account's
+owner holds them:
+
+| Type | Owner actions | Why |
+|------|---------------|-----|
+| `grant` | Read | Owners see their quota but cannot give themselves more. Grants are provisioned by the host, under system context |
+| `consumption` | Read | Owners see their usage |
+| `quota` | Read, Execute | Owners can run work that consumes their own quota |
+
+Because IAM refuses to hand out what the caller does not hold, an owner also cannot create a
+`grant: Create` permission or give it to anyone through a role. A person who provisions grants for
+other accounts is the host's own concern: a host operation that runs under system context.
+
 ## Permissions
 
 Every method first checks `HasAccountContext` for the account it names. The system context passes both checks, so a pipeline running as the system is unaffected.
