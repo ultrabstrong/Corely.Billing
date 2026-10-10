@@ -1,9 +1,11 @@
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Extensions;
+using Corely.Billing.IAM.UnitTests.Auditing;
 using Corely.Billing.Models;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Services;
 using Corely.IAM;
+using Corely.IAM.Audits.Providers;
 using Corely.IAM.Permissions.Providers;
 using Corely.IAM.Security.Constants;
 using Corely.IAM.Security.Providers;
@@ -101,6 +103,7 @@ public class RegistrationTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddScoped(_ => authorization.Object);
+        services.AddScoped<IAuditProvider, CapturingAuditProvider>();
         services.AddBillingServices(Billing().UseCorelyIamPermissions());
 
         using var scope = services.BuildServiceProvider().CreateScope();

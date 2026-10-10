@@ -1,3 +1,4 @@
+using Corely.Billing.IAM.Auditing;
 using Corely.Billing.IAM.Authorization;
 using Corely.Billing.Services;
 using Corely.IAM.Security.Providers;
@@ -23,6 +24,10 @@ public static class BillingOptionsExtensions
                 services.Decorate<IGrantService, GrantAuthorizationDecorator>();
                 services.Decorate<IConsumptionService, ConsumptionAuthorizationDecorator>();
                 services.Decorate<IQuotaService, QuotaAuthorizationDecorator>();
+
+                services.Decorate<IGrantService, GrantAuditDecorator>();
+                services.Decorate<IConsumptionService, ConsumptionAuditDecorator>();
+                services.Decorate<IQuotaService, QuotaAuditDecorator>();
             });
     }
 }

@@ -61,6 +61,24 @@ Every method first checks `HasAccountContext` for the account it names. The syst
 
 A denial returns the service's `UnauthorizedError` result, worded as IAM words its own: `Unauthorized to delete grant {grantId}`. A denied `GetAvailabilityAsync` returns `QuotaAvailability.Unauthorized`.
 
+## Auditing
+
+`UseCorelyIamPermissions()` also gives each service an audit decorator, so every call is recorded in
+[Corely.IAM's audit log](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM/Docs/auditing.md)
+with the same action and resource type its permission uses, in the account it names. What is actually
+written follows the platform's and the account's audit settings. Grant changes (Create, Update,
+Delete) are recorded by default; reads and quota calls (Read, Execute) only where an account turns them
+on, which keeps busy consumption paths free of writes.
+
+| Service | Recorded as |
+|---------|-------------|
+| `IGrantService` | The action above on `grant`, with the grant's id (a created grant's id comes from the result) |
+| `IConsumptionService` | Read on `consumption` |
+| `IQuotaService` | Read (availability) or Execute (reserve, settle, release) on `quota` |
+
+Order: Billing's telemetry, then audit, then authorization, then the service, so a refused call is
+recorded with its refusal code.
+
 ## Notes
 
 - The decorators sit inside Billing's telemetry decorators, so a denied call is still logged.
