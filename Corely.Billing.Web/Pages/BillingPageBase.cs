@@ -1,19 +1,19 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Pages;
 
-public abstract class BillingPageBase : ComponentBase
+public abstract class BillingPageBase : OwningComponentBase
 {
-    [Inject]
-    private IBillingAccountAccessor AccountAccessor { get; set; } = null!;
-
     protected Guid? AccountId { get; private set; }
 
     protected bool Loaded { get; private set; }
 
     protected override async Task OnInitializedAsync()
     {
-        AccountId = await AccountAccessor.GetAccountIdAsync();
+        AccountId = await ScopedServices
+            .GetRequiredService<IBillingAccountAccessor>()
+            .GetAccountIdAsync();
         Loaded = true;
     }
 }

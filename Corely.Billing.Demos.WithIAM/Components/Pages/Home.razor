@@ -1,7 +1,6 @@
 @page "/"
 @attribute [Authorize]
-@inject IBillingAccountAccessor AccountAccessor
-@inject UsageSimulator Simulator
+@inherits OwningComponentBase
 
 <PageTitle>Acme AI</PageTitle>
 
@@ -27,6 +26,9 @@ else if (_loaded)
 }
 
 @code {
+    private IBillingAccountAccessor AccountAccessor => ScopedServices.GetRequiredService<IBillingAccountAccessor>();
+    private UsageSimulator Simulator => ScopedServices.GetRequiredService<UsageSimulator>();
+
     private UsageDashboard? _dashboard;
     private Guid? _accountId;
     private bool _loaded;

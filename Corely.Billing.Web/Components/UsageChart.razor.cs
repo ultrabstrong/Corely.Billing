@@ -5,11 +5,12 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 
 namespace Corely.Billing.Web.Components;
 
-public partial class UsageChart : IAsyncDisposable
+public partial class UsageChart
 {
     private const string MODULE_PATH =
         "./_content/Corely.Billing.Web/Components/UsageChart.razor.js";
@@ -17,17 +18,13 @@ public partial class UsageChart : IAsyncDisposable
     internal static readonly UsageChartView[] Views = Enum.GetValues<UsageChartView>();
     internal static readonly UsageBreakdown[] Breakdowns = Enum.GetValues<UsageBreakdown>();
 
-    [Inject]
-    private IConsumptionService ConsumptionService { get; set; } = null!;
+    private IConsumptionService ConsumptionService =>
+        ScopedServices.GetRequiredService<IConsumptionService>();
 
-    [Inject]
-    private IGrantService GrantService { get; set; } = null!;
+    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
-
-    [Inject]
-    private UsageExporter Exporter { get; set; } = null!;
 
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
@@ -114,7 +111,7 @@ public partial class UsageChart : IAsyncDisposable
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => SerializedAsync(LoadAsync);
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task ViewChangedAsync(ChangeEventArgs e)
     {
@@ -140,15 +137,14 @@ public partial class UsageChart : IAsyncDisposable
         await RefreshAsync();
     }
 
-    private Task ExportAsync() =>
-        SerializedAsync(async () =>
-        {
-            if (_model is null)
-                return;
-            _exporting = true;
-            _export = await Exporter.DownloadChartAsync(_model);
-            _exporting = false;
-        });
+    private async Task ExportAsync()
+    {
+        if (_model is null)
+            return;
+        _exporting = true;
+        _export = await Exporter.DownloadChartAsync(_model);
+        _exporting = false;
+    }
 
     private async Task LoadAsync()
     {
@@ -357,17 +353,18 @@ public partial class UsageChart : IAsyncDisposable
         catch (JSDisconnectedException) { }
     }
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeAsyncCore()
     {
-        if (_module is null)
-            return;
-
-        try
+        if (_module is not null)
         {
-            await _module.InvokeVoidAsync("destroyChart", _usageCanvas);
-            await _module.InvokeVoidAsync("destroyChart", _capacityCanvas);
-            await _module.DisposeAsync();
+            try
+            {
+                await _module.InvokeVoidAsync("destroyChart", _usageCanvas);
+                await _module.InvokeVoidAsync("destroyChart", _capacityCanvas);
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
         }
-        catch (JSDisconnectedException) { }
+        await base.DisposeAsyncCore();
     }
 }

@@ -5,6 +5,7 @@ using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Corely.Common.Filtering.Ordering;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Components;
 
@@ -19,14 +20,11 @@ public partial class ConsumptionTable
         (ConsumptionEventSortField.Provider, "Provider"),
     ];
 
-    [Inject]
-    private IConsumptionService ConsumptionService { get; set; } = null!;
+    private IConsumptionService ConsumptionService =>
+        ScopedServices.GetRequiredService<IConsumptionService>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
-
-    [Inject]
-    private UsageExporter Exporter { get; set; } = null!;
 
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
@@ -65,15 +63,14 @@ public partial class ConsumptionTable
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => SerializedAsync(LoadAsync);
+    public Task RefreshAsync() => LoadAsync();
 
-    private Task ExportAsync() =>
-        SerializedAsync(async () =>
-        {
-            _exporting = true;
-            _export = await Exporter.DownloadEventsAsync(AccountId, Filter);
-            _exporting = false;
-        });
+    private async Task ExportAsync()
+    {
+        _exporting = true;
+        _export = await Exporter.DownloadEventsAsync(AccountId, Filter);
+        _exporting = false;
+    }
 
     private async Task LoadAsync()
     {

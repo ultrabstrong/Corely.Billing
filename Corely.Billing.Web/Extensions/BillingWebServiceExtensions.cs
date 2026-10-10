@@ -13,8 +13,6 @@ public static class BillingWebServiceExtensions
         {
             services.TryAddSingleton(TimeProvider.System);
             services.AddScoped<IBillingAccountAccessor, TAccountAccessor>();
-            services.TryAddScoped<BillingCallGate>();
-            services.TryAddScoped<UsageExporter>();
             services.TryAddScoped<IGrantActionGate, OpenGrantActionGate>();
             return services;
         }

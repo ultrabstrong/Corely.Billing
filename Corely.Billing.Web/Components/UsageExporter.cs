@@ -14,8 +14,6 @@ internal sealed record ExportOutcome(string? Message, bool IsError)
     public static ExportOutcome Done { get; } = new(null, false);
 }
 
-// Reads what an export holds and hands the file to the browser. Callers run it through the
-// component's call gate, like any other Billing read.
 internal sealed class UsageExporter(
     IConsumptionService consumptionService,
     IGrantService grantService,

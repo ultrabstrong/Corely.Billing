@@ -27,8 +27,12 @@ public abstract class BillingWebTestContext : BunitContext
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddOptions();
-        Services.AddScoped<BillingCallGate>();
         Services.AddScoped<UsageExporter>();
+        Services.AddSingleton(
+            Mock.Of<IBillingAccountAccessor>(a =>
+                a.GetAccountIdAsync() == Task.FromResult<Guid?>(AccountId)
+            )
+        );
         Services.AddSingleton<IGrantActionGate>(ActionGate);
         Services.AddSingleton(Grants.Object);
         Services.AddSingleton(Consumption.Object);

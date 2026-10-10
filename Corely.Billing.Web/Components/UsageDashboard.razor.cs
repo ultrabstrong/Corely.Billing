@@ -4,6 +4,7 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Components;
 
@@ -21,20 +22,16 @@ public partial class UsageDashboard
         (ALL, "All", null),
     ];
 
-    [Inject]
-    private IConsumptionService ConsumptionService { get; set; } = null!;
+    private IConsumptionService ConsumptionService =>
+        ScopedServices.GetRequiredService<IConsumptionService>();
 
-    [Inject]
-    private IGrantService GrantService { get; set; } = null!;
+    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
     [Inject]
     private TimeProvider TimeProvider { get; set; } = null!;
-
-    [Inject]
-    private UsageExporter Exporter { get; set; } = null!;
 
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
@@ -78,13 +75,13 @@ public partial class UsageDashboard
         _unitOptions = [.. Vocabulary.Units.Select(u => (u.Unit, u.DisplayName))];
         _operationOptions = [.. Vocabulary.Operations.Select(o => (o.Operation, o.DisplayName))];
         _preset = DefaultRange;
-        await SerializedAsync(LoadReferenceDataAsync);
+        await LoadReferenceDataAsync();
         ApplyPreset();
     }
 
     public async Task RefreshAsync()
     {
-        await SerializedAsync(LoadReferenceDataAsync);
+        await LoadReferenceDataAsync();
         ApplyPreset();
         StateHasChanged();
         if (_chart is not null)
@@ -93,20 +90,19 @@ public partial class UsageDashboard
             await _table.RefreshAsync();
     }
 
-    private Task ExportAsync() =>
-        SerializedAsync(async () =>
-        {
-            if (_filter is null)
-                return;
-            _exporting = true;
-            _export = await Exporter.DownloadAllAsync(
-                AccountId,
-                _filter,
-                _chart?.Model,
-                _chart?.Caption
-            );
-            _exporting = false;
-        });
+    private async Task ExportAsync()
+    {
+        if (_filter is null)
+            return;
+        _exporting = true;
+        _export = await Exporter.DownloadAllAsync(
+            AccountId,
+            _filter,
+            _chart?.Model,
+            _chart?.Caption
+        );
+        _exporting = false;
+    }
 
     private async Task LoadReferenceDataAsync()
     {

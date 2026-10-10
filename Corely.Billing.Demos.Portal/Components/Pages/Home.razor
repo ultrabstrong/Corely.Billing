@@ -1,5 +1,5 @@
 @page "/"
-@inject UsageSimulator Simulator
+@inherits OwningComponentBase
 
 <PageTitle>Billing portal</PageTitle>
 
@@ -26,6 +26,8 @@
 <UsageDashboard @ref="_dashboard" AccountId="DemoUsage.AccountId" DefaultRange="90d" />
 
 @code {
+    private UsageSimulator Simulator => ScopedServices.GetRequiredService<UsageSimulator>();
+
     private UsageDashboard? _dashboard;
     private string? _message;
     private bool _running;

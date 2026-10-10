@@ -34,7 +34,7 @@ Edit and Delete check the row's grant id, so a permission on one grant shows its
 
 ## Notes
 
-- The gate and `PermissionView` read the user from the circuit's scope. Billing's components share that scope; a component resolving services in a scope of its own would see no user and hide everything.
+- Every Billing component owns its DI scope. The accessor signs that scope in through `IBlazorUserContextAccessor` before reading the account, so the decorators from Corely.Billing.IAM see the user; `PermissionView` signs in its own scope the same way.
 - Hiding a control is presentation. The decorators from Corely.Billing.IAM refuse the call whatever the screen shows.
 
 Working example: `Corely.Billing.Demos.WithIAM`.

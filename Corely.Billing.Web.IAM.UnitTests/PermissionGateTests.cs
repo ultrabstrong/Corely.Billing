@@ -10,6 +10,7 @@ using Corely.IAM.Security.Constants;
 using Corely.IAM.Security.Providers;
 using Corely.IAM.Users.Models;
 using Corely.IAM.Users.Providers;
+using Corely.IAM.Web.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
 
@@ -78,17 +79,16 @@ public class PermissionGateTests : BunitContext
             .Setup(p => p.IsAuthorizedAsync(It.IsAny<AuthAction>(), GRANT, It.IsAny<Guid[]>()))
             .ReturnsAsync((AuthAction action, string _, Guid[] _) => _allowed.Contains(action));
 
+        var userContext = new UserContext(
+            new User { Id = Guid.CreateVersion7(), Username = "reader" },
+            null,
+            "device",
+            []
+        );
         var userContextProvider = new Mock<IUserContextProvider>();
-        userContextProvider
-            .Setup(p => p.GetUserContext())
-            .Returns(
-                new UserContext(
-                    new User { Id = Guid.CreateVersion7(), Username = "reader" },
-                    null,
-                    "device",
-                    []
-                )
-            );
+        userContextProvider.Setup(p => p.GetUserContext()).Returns(userContext);
+        var userContextAccessor = new Mock<IBlazorUserContextAccessor>();
+        userContextAccessor.Setup(a => a.GetUserContextAsync()).ReturnsAsync(userContext);
 
         var vocabulary = new Mock<IUsageVocabulary>();
         vocabulary.Setup(v => v.Operations).Returns([new(Extraction, "Extraction")]);
@@ -105,6 +105,7 @@ public class PermissionGateTests : BunitContext
         Services.AddSingleton(vocabulary.Object);
         Services.AddSingleton(_authorization.Object);
         Services.AddSingleton(userContextProvider.Object);
+        Services.AddSingleton(userContextAccessor.Object);
     }
 
     private void Allow(params AuthAction[] actions) => _allowed.UnionWith(actions);

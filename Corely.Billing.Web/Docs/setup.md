@@ -33,7 +33,6 @@ builder.Services.AddBillingWeb<MyAccountAccessor>();
 |------------|----------|---------|
 | `IBillingAccountAccessor` | Scoped | The host's accessor |
 | `IGrantActionGate` | Scoped | Shows every grant action, unless the host registered its own gate |
-| Call gate | Scoped | Queues the components' service calls so one circuit never runs two at once |
 | `TimeProvider` | Singleton | `TimeProvider.System`, unless the host registered one |
 
 ## 4) Gate Grant Actions
@@ -69,5 +68,6 @@ Bootstrap 5.3 and Bootstrap Icons come from the host.
 
 - Components render in the host's render mode. They need interactivity: use `InteractiveServer`.
 - Authorization belongs in the host's service decorators, through `BillingOptions.DecorateServices`. See the [Authorization](../../Corely.Billing/Docs/authorization.md) docs.
-- The components share the circuit's DI scope, so scoped state such as a signed-in user reaches the host's decorators.
+- Each component owns its DI scope (`OwningComponentBase`), so components loading together never share a `DbContext`. A component calls `IBillingAccountAccessor.GetAccountIdAsync()` in its own scope before anything else, which is where an accessor signs that scope in when the host's decorators need a user: IAM's does.
+- A host's own component that calls Billing services follows the same two rules: inherit `OwningComponentBase` and take scoped services from `ScopedServices`, never `@inject` or `[Inject]`, which resolve from the circuit's scope.
 - For the routed pages, see [Routed Pages](pages.md).

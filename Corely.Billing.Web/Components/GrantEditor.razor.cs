@@ -4,16 +4,15 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Components;
 
 public partial class GrantEditor
 {
-    [Inject]
-    private IGrantActionGate ActionGate { get; set; } = null!;
+    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
 
-    [Inject]
-    private IGrantService GrantService { get; set; } = null!;
+    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -60,7 +59,7 @@ public partial class GrantEditor
         set => _unit = UsageUnit.From(value);
     }
 
-    protected override Task OnParametersSetAsync() => SerializedAsync(LoadAsync);
+    protected override Task OnParametersSetAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {
@@ -104,9 +103,7 @@ public partial class GrantEditor
         _loading = false;
     }
 
-    private Task SaveAsync() => SerializedAsync(SaveCoreAsync);
-
-    private async Task SaveCoreAsync()
+    private async Task SaveAsync()
     {
         _error = Validate();
         if (_error is not null)

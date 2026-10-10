@@ -4,28 +4,24 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Components;
 
 public partial class GrantList
 {
-    [Inject]
-    private IGrantActionGate ActionGate { get; set; } = null!;
+    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
 
-    [Inject]
-    private IGrantService GrantService { get; set; } = null!;
+    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
 
-    [Inject]
-    private IConsumptionService ConsumptionService { get; set; } = null!;
+    private IConsumptionService ConsumptionService =>
+        ScopedServices.GetRequiredService<IConsumptionService>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
     [Inject]
     private TimeProvider TimeProvider { get; set; } = null!;
-
-    [Inject]
-    private UsageExporter Exporter { get; set; } = null!;
 
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
@@ -63,15 +59,14 @@ public partial class GrantList
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => SerializedAsync(LoadAsync);
+    public Task RefreshAsync() => LoadAsync();
 
-    private Task ExportAsync() =>
-        SerializedAsync(async () =>
-        {
-            _exporting = true;
-            _export = await Exporter.DownloadGrantsAsync(AccountId);
-            _exporting = false;
-        });
+    private async Task ExportAsync()
+    {
+        _exporting = true;
+        _export = await Exporter.DownloadGrantsAsync(AccountId);
+        _exporting = false;
+    }
 
     private async Task LoadAsync()
     {
@@ -113,9 +108,7 @@ public partial class GrantList
 
     private void CancelDelete() => _confirmingDelete = null;
 
-    private Task DeleteAsync(Grant grant) => SerializedAsync(() => DeleteCoreAsync(grant));
-
-    private async Task DeleteCoreAsync(Grant grant)
+    private async Task DeleteAsync(Grant grant)
     {
         _deleting = true;
         var result = await GrantService.DeleteGrantAsync(grant.AccountId, grant.GrantId);

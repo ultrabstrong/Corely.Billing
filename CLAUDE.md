@@ -189,7 +189,7 @@ Domain/
 
 - **No vocabulary.** Operations and units are tokens a host registers on `BillingOptions`. Nothing in this repository may name a consumer's operation or unit outside a test.
 - **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too. Only the opt-in `Corely.Billing.IAM` and `Corely.Billing.Web.IAM` reference IAM, and they follow Corely.IAM's own patterns exactly: where IAM does something for roles, they do the same for grants.
-- **Web components share the circuit's scope.** They queue their calls through one scoped gate instead of owning scopes, because a host's authorization decorators read scoped user state that a fresh scope would not have.
+- **Web components own their scopes.** `BillingComponentBase` and `BillingPageBase` inherit `OwningComponentBase`, take scoped services from `ScopedServices`, and call `IBillingAccountAccessor` first so an IAM host's accessor signs the new scope in. Never `[Inject]` a scoped service into one: property injection resolves from the circuit's scope and brings back the shared `DbContext`. `OwningComponentInjectionTests` fails when one does.
 - **No telemetry backend.** Metrics go through `IBillingTelemetry` with unprefixed names; the host prefixes and exports them.
 - **Ledger writes go through quota.** `IConsumptionService` only reads. Every consumption row is tied to a reservation against a grant.
 
