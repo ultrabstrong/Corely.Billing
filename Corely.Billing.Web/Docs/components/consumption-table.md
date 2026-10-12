@@ -17,6 +17,7 @@ Usage events for a range, newest first, with sortable columns and paging.
 | `PageSize` | `25` | Rows per page |
 | `Title` | `"Usage events"` | The heading |
 | `ShowExport` | `true` | Show the CSV button |
+| `ShowGrants` | `true` | Show the Grant column |
 
 ## Notes
 

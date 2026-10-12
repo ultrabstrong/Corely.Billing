@@ -5,7 +5,7 @@ The raw usage behind the components, as CSV, for analysis anywhere else. The das
 | File | From | One row per |
 |---|---|---|
 | `usage-events.csv` | `ConsumptionTable`, the dashboard | Ledger row matching the filter, holds and released rows included |
-| `grants.csv` | `GrantList`, the dashboard | Grant of the account |
+| `grants.csv` | `GrantList`, the dashboard (only for a caller who can read grants) | Grant of the account |
 | `chart-series.csv` | `UsageChart`, the dashboard | Period and series, as the chart draws them |
 | `README.md` | The dashboard | What every file and column means, the filter, and whether the export was capped |
 

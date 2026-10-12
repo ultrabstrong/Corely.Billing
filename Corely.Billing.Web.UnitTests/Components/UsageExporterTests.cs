@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Web.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,6 +59,27 @@ public class UsageExporterTests : BillingWebTestContext
 
         Assert.True(outcome.IsError);
         Assert.DoesNotContain(JSInterop.Invocations, i => i.Identifier == "download");
+    }
+
+    [Fact]
+    public async Task DownloadAllAsync_DownloadsWithoutReadingGrants_ForAnExportWithoutGrants()
+    {
+        HaveEvents(matched: 3);
+
+        var outcome = await Exporter()
+            .DownloadAllAsync(AccountId, new UsageFilter(Now.AddDays(-7), Now), null, null, false);
+
+        Assert.Equal(ExportOutcome.Done, outcome);
+        Assert.Single(JSInterop.Invocations, i => i.Identifier == "download");
+        Grants.Verify(
+            g =>
+                g.ListGrantsAsync(
+                    It.IsAny<ListGrantsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 
     private UsageExporter Exporter() => Services.GetRequiredService<UsageExporter>();

@@ -1,5 +1,5 @@
 @inherits BillingComponentBase
-<section class="cbw-events" aria-label="@Title">
+<section class="cbw-events @(ShowGrants ? null : "cbw-events-no-grant")" aria-label="@Title">
     <div class="cbw-events-head">
         <div class="cbw-events-title">@Title</div>
         @if (ShowExport && _totalCount > 0)
@@ -39,7 +39,10 @@
                 </button>
             }
             <span>Status</span>
-            <span>Grant</span>
+            @if (ShowGrants)
+            {
+                <span>Grant</span>
+            }
         </div>
         <ul class="cbw-event-rows">
             @foreach (var item in _items)
@@ -51,7 +54,10 @@
                     <span class="cbw-event-operation">@Vocabulary.DisplayName(item.Operation)</span>
                     <span class="cbw-event-provider text-body-secondary">@item.Provider</span>
                     <span class="cbw-event-status"><OutcomeBadge Outcome="item.Outcome" /></span>
-                    <span class="cbw-event-grant text-body-secondary"><CopyableId Value="item.GrantId" Short="true" /></span>
+                    @if (ShowGrants)
+                    {
+                        <span class="cbw-event-grant text-body-secondary"><CopyableId Value="item.GrantId" Short="true" /></span>
+                    }
                     @if (item.Tags is { Count: > 0 })
                     {
                         <span class="cbw-event-tags">

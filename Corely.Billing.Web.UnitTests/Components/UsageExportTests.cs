@@ -37,6 +37,23 @@ public class UsageExportTests : BillingWebTestContext
     }
 
     [Fact]
+    public void ToZip_LeavesOutTheGrantsAndSaysSo_ForAnExportWithoutGrants()
+    {
+        var export = Export(included: 3, matched: 3, chartCsv: null) with { GrantsCsv = null };
+
+        using var zip = new ZipArchive(new MemoryStream(export.ToZip(Vocabulary())));
+        var readme = export.Readme(Vocabulary());
+
+        Assert.Equal(
+            [UsageExport.README_FILE, UsageExport.EVENTS_FILE],
+            zip.Entries.Select(e => e.FullName)
+        );
+        Assert.Contains($"`{UsageExport.GRANTS_FILE}` is not included", readme);
+        Assert.DoesNotContain($"## {UsageExport.GRANTS_FILE}", readme);
+        Assert.DoesNotContain($"joins to `{UsageExport.GRANTS_FILE}`", readme);
+    }
+
+    [Fact]
     public void Readme_SaysSoAndHow_ForACappedExport()
     {
         var export = Export(included: 100_000, matched: 134_210, chartCsv: null);

@@ -15,7 +15,7 @@ internal sealed record UsageExport(
     string EventsCsv,
     int EventsIncluded,
     int EventsMatched,
-    string GrantsCsv,
+    string? GrantsCsv,
     string? ChartCsv,
     string? ChartCaption
 )
@@ -46,7 +46,8 @@ internal sealed record UsageExport(
         {
             Add(zip, README_FILE, Encoding.UTF8.GetBytes(Readme(vocabulary)));
             Add(zip, EVENTS_FILE, CsvBytes(EventsCsv));
-            Add(zip, GRANTS_FILE, CsvBytes(GrantsCsv));
+            if (GrantsCsv is not null)
+                Add(zip, GRANTS_FILE, CsvBytes(GrantsCsv));
             if (ChartCsv is not null)
                 Add(zip, CHART_FILE, CsvBytes(ChartCsv));
         }
@@ -90,7 +91,9 @@ internal sealed record UsageExport(
             | `counts_toward_balance` | `true` for settled rows and holds still within the TTL. Sum `quantity` over these rows to get what a grant has used |
             | `finalized_utc` | When a hold was settled or released; empty while it is held |
             | `provider` | Who performed the work |
-            | `grant_id` | The grant the row drew on; joins to `{GRANTS_FILE}` |
+            | `grant_id` | The grant the row drew on{(
+                GrantsCsv is null ? "" : $"; joins to `{GRANTS_FILE}`"
+            )} |
             | `work_id` | The unit of work the row was charged under. Rows with one `work_id` are one charge |
             | `correlation_id` | Joins to the application's logs |
             | `user_id` | Who asked for the work, when the application recorded it |
@@ -98,25 +101,31 @@ internal sealed record UsageExport(
 
             A released row keeps its original quantity, so what was held stays visible; it does not
             count toward any balance.
-
-            ## {GRANTS_FILE}
-
-            Every grant of the account: what it may use, and when.
-
-            | Column | Meaning |
-            |---|---|
-            | `grant_id` | The grant |
-            | `operation`, `operation_name`, `unit`, `unit_name` | What the grant covers |
-            | `quantity` | The allowance; empty when `unlimited` is `true` |
-            | `valid_from_utc`, `valid_to_utc` | The window the grant can be drawn on |
-            | `status` | `upcoming`, `active` or `expired` when the export was taken |
-            | `used` | Everything counted against the grant, in any date range, when the export was taken |
-            | `remaining` | `quantity` minus `used`, never below zero; empty when unlimited |
-            | `overdrawn_by` | How far `used` went past `quantity`. Work already done is always recorded, so a grant can end up overdrawn |
-            | `tags` | Free-form labels, as a JSON object |
-
-            Work draws on unlimited grants first, then on limited grants soonest-expiring first.
             """
+        );
+        text.AppendLine();
+        text.AppendLine(
+            GrantsCsv is null
+                ? $"`{GRANTS_FILE}` is not included: this export was taken without access to the grants."
+                : $"""
+                ## {GRANTS_FILE}
+
+                Every grant of the account: what it may use, and when.
+
+                | Column | Meaning |
+                |---|---|
+                | `grant_id` | The grant |
+                | `operation`, `operation_name`, `unit`, `unit_name` | What the grant covers |
+                | `quantity` | The allowance; empty when `unlimited` is `true` |
+                | `valid_from_utc`, `valid_to_utc` | The window the grant can be drawn on |
+                | `status` | `upcoming`, `active` or `expired` when the export was taken |
+                | `used` | Everything counted against the grant, in any date range, when the export was taken |
+                | `remaining` | `quantity` minus `used`, never below zero; empty when unlimited |
+                | `overdrawn_by` | How far `used` went past `quantity`. Work already done is always recorded, so a grant can end up overdrawn |
+                | `tags` | Free-form labels, as a JSON object |
+
+                Work draws on unlimited grants first, then on limited grants soonest-expiring first.
+                """
         );
 
         if (ChartCsv is not null)

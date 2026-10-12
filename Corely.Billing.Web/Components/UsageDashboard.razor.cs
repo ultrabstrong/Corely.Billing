@@ -45,13 +45,13 @@ public partial class UsageDashboard
     private UsageChart? _chart;
     private ConsumptionTable? _table;
     private UsageFilter? _filter;
-    private string? _error;
     private string _preset = "30d";
     private DateTime _from;
     private DateTime _to;
     private DateTime? _earliest;
     private Guid? _loadedFor;
     private bool _exporting;
+    private bool _showGrants = true;
     private ExportOutcome? _export;
 
     private IReadOnlySet<UsageUnit> _units = new HashSet<UsageUnit>();
@@ -99,7 +99,8 @@ public partial class UsageDashboard
             AccountId,
             _filter,
             _chart?.Model,
-            _chart?.Caption
+            _chart?.Caption,
+            _showGrants
         );
         _exporting = false;
     }
@@ -109,11 +110,9 @@ public partial class UsageDashboard
         var grants = await GrantService.ListGrantsAsync(
             new ListGrantsRequest(AccountId, Take: int.MaxValue)
         );
-        if (grants.ResultCode == RetrieveResultCode.UnauthorizedError)
-        {
-            _error = grants.ResultCode.ErrorMessage("view usage", grants.Message);
-            return;
-        }
+        _showGrants = grants.ResultCode != RetrieveResultCode.UnauthorizedError;
+        if (!_showGrants)
+            _grantIds = new HashSet<Guid>();
 
         var grantList = grants.Data?.Items ?? [];
         _grantOptions = [.. grantList.Select(g => (g.GrantId, g.AllowanceAndWindow(Vocabulary)))];

@@ -64,13 +64,16 @@ internal sealed class UsageExporter(
         Guid accountId,
         UsageFilter filter,
         UsageChartModel? chart,
-        string? chartCaption
+        string? chartCaption,
+        bool includeGrants
     )
     {
         var events = await ReadEventsAsync(accountId, filter);
         if (events.Error is not null)
             return new(events.Error, true);
-        var grants = await ReadGrantsAsync(accountId);
+        (string? Csv, string? Error) grants = includeGrants
+            ? await ReadGrantsAsync(accountId)
+            : (null, null);
         if (grants.Error is not null)
             return new(grants.Error, true);
 

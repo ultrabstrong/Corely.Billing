@@ -50,6 +50,9 @@ public partial class UsageChart
     [Parameter]
     public bool ShowExport { get; set; } = true;
 
+    [Parameter]
+    public bool ShowGrants { get; set; } = true;
+
     private ElementReference _usageCanvas;
     private ElementReference _capacityCanvas;
     private IJSObjectReference? _module;
@@ -65,7 +68,7 @@ public partial class UsageChart
     private string? _error;
     private ExportOutcome? _export;
     private string? _loadedFor;
-    private (UsageChartView, UsageBreakdown)? _parametersFor;
+    private (UsageChartView, UsageBreakdown, bool)? _parametersFor;
 
     internal UsageChartModel? Model => _model;
 
@@ -81,6 +84,12 @@ public partial class UsageChart
                 _ => "Per day",
             };
 
+    private IEnumerable<UsageChartView> OfferedViews =>
+        Views.Where(v => ShowGrants || !v.ReadsGrants());
+
+    private IEnumerable<UsageBreakdown> OfferedBreakdowns =>
+        Breakdowns.Where(b => ShowGrants || !b.ReadsGrants());
+
     private bool ShowCharts => _model is { IsEmpty: false } && _error is null;
 
     private string ChartLabel =>
@@ -89,17 +98,18 @@ public partial class UsageChart
             : $"{Caption}: {UsageText.Count(_model.Total, _model.UnitName)} across {_model.Labels.Count} periods";
 
     private string EmptyText =>
-        _view == UsageChartView.Remaining
+        !ShowGrants ? "Nothing was used in this range."
+        : _view == UsageChartView.Remaining
             ? "No limited grant covers this range, so there is no balance to draw."
-            : "Nothing was used in this range, and no limited grant covers it.";
+        : "Nothing was used in this range, and no limited grant covers it.";
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_parametersFor != (View, BreakDownBy))
+        if (_parametersFor != (View, BreakDownBy, ShowGrants))
         {
-            _parametersFor = (View, BreakDownBy);
-            _view = View;
-            _by = BreakDownBy;
+            _parametersFor = (View, BreakDownBy, ShowGrants);
+            _view = ShowGrants || !View.ReadsGrants() ? View : UsageChartView.Used;
+            _by = ShowGrants || !BreakDownBy.ReadsGrants() ? BreakDownBy : UsageBreakdown.Operation;
             _loadedFor = null;
         }
 
@@ -153,13 +163,7 @@ public partial class UsageChart
         _export = null;
         _bucket = UsageChartModel.BucketFor(Filter.FromUtc, Filter.ToUtc);
 
-        var grantsResult = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest(AccountId, Take: int.MaxValue)
-        );
-        List<Grant> grants =
-            grantsResult.ResultCode == RetrieveResultCode.Success
-                ? grantsResult.Data?.Items ?? []
-                : [];
+        var grants = ShowGrants ? await GrantsAsync() : [];
 
         var byUnit = await SeriesAsync(Request(ConsumptionDimension.Unit, Filter.Units));
         if (byUnit is null)
@@ -194,6 +198,14 @@ public partial class UsageChart
                 grant => grant.AllowanceAndExpiry(Vocabulary)
             )
         );
+    }
+
+    private async Task<List<Grant>> GrantsAsync()
+    {
+        var result = await GrantService.ListGrantsAsync(
+            new ListGrantsRequest(AccountId, Take: int.MaxValue)
+        );
+        return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
 
     private async Task<IReadOnlyList<ConsumptionSeries>?> SeriesForViewAsync(

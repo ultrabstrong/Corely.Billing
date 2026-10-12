@@ -58,10 +58,28 @@ public class ConsumptionTableTests : BillingWebTestContext
         GrantIds: [Guid.Parse("22222222-2222-2222-2222-222222222222")]
     );
 
-    private IRenderedComponent<ConsumptionTable> Render() =>
+    private IRenderedComponent<ConsumptionTable> Render(bool showGrants = true) =>
         Render<ConsumptionTable>(p =>
-            p.Add(c => c.AccountId, AccountId).Add(c => c.Filter, Filter).Add(c => c.PageSize, 10)
+            p.Add(c => c.AccountId, AccountId)
+                .Add(c => c.Filter, Filter)
+                .Add(c => c.PageSize, 10)
+                .Add(c => c.ShowGrants, showGrants)
         );
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Render_ShowsTheGrantColumnOnlyWhenAsked_ForShowGrants(bool showGrants)
+    {
+        var table = Render(showGrants);
+
+        Assert.Equal(showGrants, table.Find(".cbw-event-head").TextContent.Contains("Grant"));
+        Assert.Equal(showGrants ? 10 : 0, table.FindAll(".cbw-event-grant").Count);
+        Assert.Equal(
+            !showGrants,
+            table.Find(".cbw-events").ClassList.Contains("cbw-events-no-grant")
+        );
+    }
 
     [Fact]
     public void Render_PassesEveryFilter_ForTheFirstPage()

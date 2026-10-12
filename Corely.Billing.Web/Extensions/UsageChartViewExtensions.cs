@@ -20,6 +20,8 @@ internal static class UsageChartViewExtensions
         public bool BreaksDown() =>
             view is UsageChartView.Stacked or UsageChartView.SideBySide or UsageChartView.Share;
 
+        public bool ReadsGrants() => view is UsageChartView.Remaining or UsageChartView.BurnUp;
+
         public string Caption(UsageBreakdown by) =>
             view switch
             {

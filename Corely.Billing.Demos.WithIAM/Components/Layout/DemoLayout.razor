@@ -7,7 +7,11 @@
         <AuthorizeView>
             <Authorized>
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.GRANTS">Grants</NavLink></li>
+                    <PermissionView Action="AuthAction.Read" Resource="@BillingResourceTypes.GRANT_RESOURCE_TYPE">
+                        <Authorized>
+                            <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.GRANTS">Grants</NavLink></li>
+                        </Authorized>
+                    </PermissionView>
                     <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.USAGE">Usage</NavLink></li>
                 </ul>
                 <ul class="navbar-nav ms-auto">

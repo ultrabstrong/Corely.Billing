@@ -75,6 +75,19 @@ public abstract class BillingWebTestContext : BunitContext
                 )
             );
 
+    protected void DenyGrants() =>
+        Grants
+            .Setup(g =>
+                g.ListGrantsAsync(
+                    It.IsAny<ListGrantsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new RetrieveListResult<Grant>(RetrieveResultCode.UnauthorizedError, "no", null)
+            );
+
     protected void HaveUsed(params GrantTotalConsumptions[] totals) =>
         Consumption
             .Setup(c =>

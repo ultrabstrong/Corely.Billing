@@ -25,3 +25,14 @@
 ## Export
 
 **Export** downloads one zip for the current filter: every usage event, every grant, the chart's series, and a README describing each column and the rules behind them. It is meant to be handed to a spreadsheet, an analyst or an AI as it is. See [Export](../export.md).
+
+## Without grant access
+
+When `IGrantService.ListGrantsAsync` returns `UnauthorizedError`, the dashboard shows usage alone. Reading consumption is enough.
+
+- **No Grant filter**, and **All** starts from the earliest usage
+- **Chart**: `ShowGrants="false"`, so only Used, Stacked, Side by side and Share, never broken down by grant, and no capacity chart
+- **Table**: `ShowGrants="false"`, so no Grant column
+- **Export**: leaves out `grants.csv`, and the README says so
+
+Callers who can read grants see the full dashboard.

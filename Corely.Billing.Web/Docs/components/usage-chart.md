@@ -21,6 +21,7 @@ Usage over a range, drawn one of six ways, one unit at a time. Under the time-ba
 | `BreakDownBy` | `Operation` | What Stacked, Side by side and Share split by: `Operation`, `Provider` or `Grant` |
 | `ShowControls` | `true` | Show the view, breakdown and unit pickers |
 | `ShowExport` | `true` | Show the CSV button |
+| `ShowGrants` | `true` | `false` reads no grants: Remaining, Burn-up and the grant breakdown are not offered, and no capacity chart is drawn. A `View` or `BreakDownBy` that needs grants opens as Used, by operation |
 | `Title` | `"Used"` | The Used view's title |
 
 ## Views

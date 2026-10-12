@@ -11,7 +11,7 @@
                 @if (ShowControls)
                 {
                     <select class="form-select form-select-sm" aria-label="Chart" value="@_view" @onchange="ViewChangedAsync">
-                        @foreach (var view in Views)
+                        @foreach (var view in OfferedViews)
                         {
                             <option value="@view">@view.Label()</option>
                         }
@@ -19,7 +19,7 @@
                     @if (_view.BreaksDown())
                     {
                         <select class="form-select form-select-sm" aria-label="Break down by" value="@_by" @onchange="BreakdownChangedAsync">
-                            @foreach (var by in Breakdowns)
+                            @foreach (var by in OfferedBreakdowns)
                             {
                                 <option value="@by">By @by.Label()</option>
                             }

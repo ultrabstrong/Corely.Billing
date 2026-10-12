@@ -22,6 +22,7 @@ internal static class DemoSeed
         }
         var member = await RegisterUserAsync(services, "bobby", "bobby@example.com");
         var editor = await RegisterUserAsync(services, "carla", "carla@example.com");
+        var client = await RegisterUserAsync(services, "chloe", "chloe@example.com");
 
         Guid accountId;
         using (var scope = services.CreateScope())
@@ -44,6 +45,9 @@ internal static class DemoSeed
             await registration.RegisterUserWithAccountAsync(
                 new RegisterUserWithAccountRequest(editor!.Value, accountId)
             );
+            await registration.RegisterUserWithAccountAsync(
+                new RegisterUserWithAccountRequest(client!.Value, accountId)
+            );
         }
 
         using (var scope = services.CreateScope())
@@ -52,6 +56,7 @@ internal static class DemoSeed
                 .ServiceProvider.GetRequiredService<IAuthenticationService>()
                 .AuthenticateAsSystem(DEVICE_ID);
             await RegisterGrantEditorAsync(scope.ServiceProvider, accountId, editor.Value);
+            await RegisterClientAsync(scope.ServiceProvider, accountId, client.Value);
 
             var grants = scope.ServiceProvider.GetRequiredService<IGrantService>();
             var today = scope
@@ -91,9 +96,9 @@ internal static class DemoSeed
 
         Console.WriteLine(
             "Seeded account Acme: owner olivia who may read grants, carla who may read and update them, "
-                + "and bobby with no roles"
+                + "chloe, a client who sees usage and no grants, and bobby with no roles"
         );
-        Console.WriteLine($"Password for all three: {PASSWORD}");
+        Console.WriteLine($"Password for all four: {PASSWORD}");
     }
 
     private static async Task RegisterGrantEditorAsync(
@@ -128,6 +133,36 @@ internal static class DemoSeed
                 role.CreatedRoleId,
                 accountId
             )
+        );
+        await registration.RegisterRolesWithUserAsync(
+            new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)
+        );
+    }
+
+    private static async Task RegisterClientAsync(
+        IServiceProvider scoped,
+        Guid accountId,
+        Guid userId
+    )
+    {
+        var registration = scoped.GetRequiredService<IRegistrationService>();
+        var permissions = await scoped
+            .GetRequiredService<IRetrievalService>()
+            .ListPermissionsAsync(new ListPermissionsRequest(accountId, Take: 100));
+        var ownerUsage = permissions
+            .Data!.Items.Where(p =>
+                p.IsSystemDefined
+                && p.ResourceType
+                    is BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
+                        or BillingResourceTypes.QUOTA_RESOURCE_TYPE
+            )
+            .Select(p => p.Id)
+            .ToList();
+        var role = await registration.RegisterRoleAsync(
+            new RegisterRoleRequest("Client", accountId)
+        );
+        await registration.RegisterPermissionsWithRoleAsync(
+            new RegisterPermissionsWithRoleRequest(ownerUsage, role.CreatedRoleId, accountId)
         );
         await registration.RegisterRolesWithUserAsync(
             new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)

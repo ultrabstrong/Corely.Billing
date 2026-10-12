@@ -22,5 +22,7 @@ internal static class UsageBreakdownExtensions
                 UsageBreakdown.Grant => ConsumptionDimension.Grant,
                 _ => ConsumptionDimension.Operation,
             };
+
+        public bool ReadsGrants() => by == UsageBreakdown.Grant;
     }
 }

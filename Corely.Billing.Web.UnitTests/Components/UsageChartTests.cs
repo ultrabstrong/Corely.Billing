@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
@@ -87,15 +88,52 @@ public class UsageChartTests : BillingWebTestContext
         Assert.Null(request.Providers);
     }
 
+    [Fact]
+    public void Render_OffersOnlyViewsWithoutGrants_ForAChartWithoutGrants()
+    {
+        var chart = Render(UsageChartView.Stacked, showGrants: false);
+
+        Assert.Equal(
+            ["Used", "Stacked", "SideBySide", "Share"],
+            chart.FindAll("select[aria-label='Chart'] option").Select(o => o.GetAttribute("value"))
+        );
+        Assert.Equal(
+            ["Operation", "Provider"],
+            chart
+                .FindAll("select[aria-label='Break down by'] option")
+                .Select(o => o.GetAttribute("value"))
+        );
+        Grants.Verify(
+            g =>
+                g.ListGrantsAsync(
+                    It.IsAny<ListGrantsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public void Render_FallsBackToUsedByOperation_ForGrantViewsOnAChartWithoutGrants()
+    {
+        Render(UsageChartView.Remaining, UsageBreakdown.Grant, showGrants: false);
+
+        Assert.DoesNotContain(_requests, r => r.By == ConsumptionDimension.Grant);
+        Assert.Contains(_requests, r => r.By is null);
+    }
+
     private IRenderedComponent<UsageChart> Render(
         UsageChartView view = UsageChartView.Used,
-        UsageBreakdown by = UsageBreakdown.Operation
+        UsageBreakdown by = UsageBreakdown.Operation,
+        bool showGrants = true
     ) =>
         Render<UsageChart>(p =>
             p.Add(c => c.AccountId, AccountId)
                 .Add(c => c.Filter, new UsageFilter(Now.AddDays(-7), Now))
                 .Add(c => c.View, view)
                 .Add(c => c.BreakDownBy, by)
+                .Add(c => c.ShowGrants, showGrants)
         );
 
     private static ConsumptionSeries Series(string? key, long total) =>

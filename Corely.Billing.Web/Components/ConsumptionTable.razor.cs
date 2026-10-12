@@ -41,6 +41,9 @@ public partial class ConsumptionTable
     [Parameter]
     public bool ShowExport { get; set; } = true;
 
+    [Parameter]
+    public bool ShowGrants { get; set; } = true;
+
     private List<ConsumptionEvent> _items = [];
     private int _totalCount;
     private int _skip;
