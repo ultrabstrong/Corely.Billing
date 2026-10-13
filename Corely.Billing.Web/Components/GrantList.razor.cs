@@ -39,7 +39,7 @@ public partial class GrantList
     public bool ShowExport { get; set; } = true;
 
     private List<Grant> _grants = [];
-    private Dictionary<Guid, long> _used = [];
+    private Dictionary<Guid, long>? _used;
     private bool _loading = true;
     private bool _deleting;
     private string? _error;
@@ -85,24 +85,12 @@ public partial class GrantList
         }
 
         _grants = result.Data?.Items ?? [];
-        _used = await LoadUsedAsync();
+        _used = await ConsumptionService.UsedByGrantAsync(AccountId, _grants);
         _loading = false;
     }
 
-    private async Task<Dictionary<Guid, long>> LoadUsedAsync()
-    {
-        if (_grants.Count == 0)
-            return [];
-
-        var totals = await ConsumptionService.GetGrantConsumptionTotalsAsync(
-            AccountId,
-            [.. _grants.Select(g => g.GrantId)]
-        );
-        return (totals.Item ?? []).ToDictionary(t => t.GrantId, t => t.TotalConsumedQuantity);
-    }
-
-    private GrantBalance BalanceOf(Grant grant) =>
-        GrantBalance.For(grant, _used.GetValueOrDefault(grant.GrantId));
+    private GrantBalance? BalanceOf(Grant grant) =>
+        _used is null ? null : GrantBalance.For(grant, _used.GetValueOrDefault(grant.GrantId));
 
     private void ConfirmDelete(Grant grant) => _confirmingDelete = grant.GrantId;
 

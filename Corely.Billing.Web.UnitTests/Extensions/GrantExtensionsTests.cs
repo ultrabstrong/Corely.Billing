@@ -76,4 +76,15 @@ public class GrantExtensionsTests : BillingWebTestContext
 
         Assert.Equal(["", "true", "7", ""], [cells[5], cells[6], cells[10], cells[11]]);
     }
+
+    [Fact]
+    public void ToCsvRow_LeavesTheBalanceEmpty_ForUnknownUse()
+    {
+        var cells = Grant(100).ToCsvRow(Vocabulary, used: null, Now).Split(',');
+
+        Assert.Equal(
+            ["100", "false", "", "", ""],
+            [cells[5], cells[6], cells[10], cells[11], cells[12]]
+        );
+    }
 }

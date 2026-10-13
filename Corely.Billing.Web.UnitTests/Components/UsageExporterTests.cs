@@ -1,8 +1,10 @@
+using System.Text;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Web.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.JSInterop;
 
 namespace Corely.Billing.Web.UnitTests.Components;
 
@@ -80,6 +82,29 @@ public class UsageExporterTests : BillingWebTestContext
                 ),
             Times.Never
         );
+    }
+
+    [Fact]
+    public async Task DownloadGrantsAsync_LeavesTheBalanceBlank_ForARefusedConsumptionRead()
+    {
+        var grant = Grant(5_000);
+        HaveGrants(grant);
+        DenyUsed();
+
+        await Exporter().DownloadGrantsAsync(AccountId);
+
+        var row = DownloadedCsv().Split("\r\n")[1].Split(',');
+        Assert.Equal(grant.GrantId.ToString(), row[0]);
+        Assert.Equal(["", "", ""], row[10..13]);
+    }
+
+    private string DownloadedCsv()
+    {
+        var download = Assert.Single(JSInterop.Invocations, i => i.Identifier == "download");
+        var stream = Assert.IsType<DotNetStreamReference>(download.Arguments[1]).Stream;
+        return Encoding
+            .UTF8.GetString(Assert.IsType<MemoryStream>(stream).ToArray())
+            .TrimStart('﻿');
     }
 
     private UsageExporter Exporter() => Services.GetRequiredService<UsageExporter>();

@@ -146,15 +146,7 @@ internal sealed class UsageExporter(
             return (string.Empty, result.ResultCode.ErrorMessage("export grants", result.Message));
 
         List<Grant> grants = result.Data?.Items ?? [];
-        var used = new Dictionary<Guid, long>();
-        if (grants.Count > 0)
-        {
-            var totals = await consumptionService.GetGrantConsumptionTotalsAsync(
-                accountId,
-                [.. grants.Select(g => g.GrantId)]
-            );
-            used = (totals.Item ?? []).ToDictionary(t => t.GrantId, t => t.TotalConsumedQuantity);
-        }
+        var used = await consumptionService.UsedByGrantAsync(accountId, grants);
 
         var now = Now;
         return (
@@ -162,7 +154,7 @@ internal sealed class UsageExporter(
                 GrantExtensions.CSV_HEADER,
                 .. grants
                     .OrderBy(g => g.ValidFromUtc)
-                    .Select(g => g.ToCsvRow(vocabulary, used.GetValueOrDefault(g.GrantId), now)),
+                    .Select(g => g.ToCsvRow(vocabulary, used?.GetValueOrDefault(g.GrantId), now)),
             ]),
             null
         );

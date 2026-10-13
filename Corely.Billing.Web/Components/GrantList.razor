@@ -59,7 +59,14 @@
                         <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(grant.Operation)</span>
                     </div>
                     <div class="cbw-grant-balance">
-                        <BalanceMeter Balance="BalanceOf(grant)" UnitDisplayName="@Vocabulary.DisplayName(grant.Unit)" />
+                        @if (BalanceOf(grant) is { } balance)
+                        {
+                            <BalanceMeter Balance="balance" UnitDisplayName="@Vocabulary.DisplayName(grant.Unit)" />
+                        }
+                        else
+                        {
+                            <span class="text-body-secondary">Balance unavailable</span>
+                        }
                     </div>
                     <div class="cbw-grant-window">
                         <span>@grant.ValidFromUtc.ToString("MMM d, yyyy") – @grant.ValidToUtc.ToString("MMM d, yyyy")</span>

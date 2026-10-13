@@ -105,6 +105,23 @@ public abstract class BillingWebTestContext : BunitContext
                 )
             );
 
+    protected void DenyUsed() =>
+        Consumption
+            .Setup(c =>
+                c.GetGrantConsumptionTotalsAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<IReadOnlyList<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new RetrieveSingleResult<List<GrantTotalConsumptions>>(
+                    RetrieveResultCode.UnauthorizedError,
+                    "no",
+                    null
+                )
+            );
+
     protected void HaveSeries(params ConsumptionSeries[] series) =>
         Consumption
             .Setup(c =>

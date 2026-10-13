@@ -14,9 +14,9 @@ internal static class GrantExtensions
 
     extension(Grant grant)
     {
-        public string ToCsvRow(IUsageVocabulary vocabulary, long used, DateTime utcNow)
+        public string ToCsvRow(IUsageVocabulary vocabulary, long? used, DateTime utcNow)
         {
-            var balance = GrantBalance.For(grant, used);
+            var balance = used is { } known ? GrantBalance.For(grant, known) : null;
             return new[]
             {
                 grant.GrantId.ToString(),
@@ -25,15 +25,15 @@ internal static class GrantExtensions
                 grant.Unit.Value,
                 vocabulary.DisplayName(grant.Unit),
                 grant.Quantity?.ToString(CultureInfo.InvariantCulture),
-                balance.IsUnlimited ? "true" : "false",
+                grant.Quantity is null ? "true" : "false",
                 grant.ValidFromUtc.IsoUtc(),
                 grant.ValidToUtc.IsoUtc(),
                 grant.Status(utcNow).ToString().ToLowerInvariant(),
-                used.ToString(CultureInfo.InvariantCulture),
-                balance.IsUnlimited
+                used?.ToString(CultureInfo.InvariantCulture),
+                balance is null or { IsUnlimited: true }
                     ? null
                     : balance.Remaining.ToString(CultureInfo.InvariantCulture),
-                balance.Overdraft.ToString(CultureInfo.InvariantCulture),
+                balance?.Overdraft.ToString(CultureInfo.InvariantCulture),
                 grant.Tags is { Count: > 0 } ? JsonSerializer.Serialize(grant.Tags) : null,
             }.ToCsvRow();
         }

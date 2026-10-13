@@ -109,6 +109,19 @@ public class GrantListTests : BillingWebTestContext
     }
 
     [Fact]
+    public void Render_ShowsNoBalance_ForARefusedConsumptionRead()
+    {
+        HaveGrants(Grant(5_000));
+        DenyUsed();
+
+        var row = Render().Find(".cbw-grant-row");
+
+        Assert.DoesNotContain("left of", row.TextContent);
+        Assert.Empty(row.QuerySelectorAll("[role=meter]"));
+        Assert.Contains("Balance unavailable", row.TextContent);
+    }
+
+    [Fact]
     public void Render_AsksTheGateForEachAction_ForARow()
     {
         var grant = Grant(10);

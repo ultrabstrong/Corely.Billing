@@ -39,9 +39,9 @@ The raw usage behind the components, as CSV, for analysis anywhere else. The das
 | `unlimited` | `true` for a null quantity |
 | `valid_from_utc`, `valid_to_utc` | The window |
 | `status` | `upcoming`, `active` or `expired` when exported |
-| `used` | Everything counted against the grant when exported |
-| `remaining` | Never below zero; empty when unlimited |
-| `overdrawn_by` | How far `used` went past `quantity` |
+| `used` | Everything counted against the grant when exported; empty when the caller cannot read consumption |
+| `remaining` | Never below zero; empty when unlimited or `used` is empty |
+| `overdrawn_by` | How far `used` went past `quantity`; empty when `used` is empty |
 | `tags` | A JSON object |
 
 ## Format

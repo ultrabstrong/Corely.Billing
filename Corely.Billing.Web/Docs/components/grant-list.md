@@ -21,7 +21,7 @@ An account's grants, newest first, each with its balance, validity window and st
 ## What Each Row Shows
 
 - **Allowance**: "1,000,000 tokens", or "Unlimited tokens" for a null quantity
-- **Balance**: a meter of used against quantity; running low under a tenth left, overdrawn past the quantity
+- **Balance**: a meter of used against quantity; running low under a tenth left, overdrawn past the quantity. "Balance unavailable" when the caller cannot read consumption
 - **Validity**: the window, with "Starts in", "Expires in" or "Expired … ago"
 - **Status**: Upcoming, Active or Expired
 
