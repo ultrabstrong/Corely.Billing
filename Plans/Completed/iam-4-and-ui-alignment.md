@@ -13,8 +13,8 @@
 - The short grant ID is `Guid.ShortText()` in Billing.Web's extensions, tested directly.
 - The tags for Web 2.3.0, IAM 2.3.0, Web.IAM 2.2.0 and CLI 2.0.2 were pushed in one `git push`.
   GitHub creates no tag events when more than three tags are pushed at once, so no release ran and
-  nothing was published under those versions. The tags stay; the packages released one patch later,
-  each tag pushed on its own.
+  nothing was published under those versions. Those tags were deleted; the packages released one
+  patch later, each tag pushed on its own.
 
 Corely.IAM 4.0.1 and Corely.IAM.Web 4.1.0 reworked the look of tables, status pills and IDs, and
 moved IAM to a new major. Billing's components should read as part of the same product when a host
