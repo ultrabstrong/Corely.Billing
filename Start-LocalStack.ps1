@@ -13,6 +13,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     throw 'Run this with PowerShell 7 (pwsh), not Windows PowerShell.'
 }
 $ProgressPreference = 'SilentlyContinue'
+$env:MSBUILDDISABLENODEREUSE = '1'
 
 $demos = @{
     Portal = @{ ConnectionKey = 'Billing'; Port = 7110; Seeds = $true; SignIn = 'No sign in; the demo account is fixed' }
