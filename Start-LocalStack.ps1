@@ -99,8 +99,8 @@ if ($Reset) {
 }
 
 if ($Demo -eq 'WithIAM') {
-    Write-Step 'Installing or updating the IAM migration tool (corely-iam-db 3.x)'
-    Invoke-Checked 'Installing corely-iam-db' { dotnet tool update --global Corely.IAM.DataAccessMigrations.Cli --version '3.*' } | Out-Null
+    Write-Step 'Installing or updating the IAM migration tool (corely-iam-db 4.x)'
+    Invoke-Checked 'Installing corely-iam-db' { dotnet tool update --global Corely.IAM.DataAccessMigrations.Cli --version '4.*' } | Out-Null
 
     Write-Step 'Applying the IAM schema'
     $historyArguments = @()
