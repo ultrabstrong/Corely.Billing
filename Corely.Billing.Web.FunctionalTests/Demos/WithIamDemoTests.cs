@@ -27,6 +27,16 @@ public sealed class WithIamDemoTests : IDisposable
         Assert.Contains("_content/Corely.IAM.Web/js/form-busy.js", html);
     }
 
+    [Fact]
+    public async Task SignInPageOffersTheSeededUsers_InDevelopment()
+    {
+        var html = await _client.GetStringAsync("/signin", TestContext.Current.CancellationToken);
+
+        Assert.Contains("id=\"demo-quick-sign-in\"", html);
+        Assert.Contains("value=\"olivia\"", html);
+        Assert.Contains("value=\"chloe\"", html);
+    }
+
     [Theory]
     [InlineData("_content/Corely.Billing.Web/lib/chart.js/chart.umd.min.js")]
     [InlineData("_content/Corely.IAM.Web/css/iam-web.css")]

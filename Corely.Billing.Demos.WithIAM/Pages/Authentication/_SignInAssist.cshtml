@@ -1,0 +1,18 @@
+@using Corely.Billing.Demos.WithIAM
+@using Microsoft.Extensions.Hosting
+@inject IHostEnvironment HostEnvironment
+@if (HostEnvironment.IsDevelopment())
+{
+    <div class="border border-warning rounded p-3 mb-4">
+        <label for="demo-quick-sign-in" class="form-label fw-semibold">Demo only: quick sign in</label>
+        <select id="demo-quick-sign-in" class="form-select"
+                onchange="if (this.value) { const u = document.getElementById('username'); u.value = this.value; document.getElementById('password').value = '@DemoSeed.PASSWORD'; u.form.requestSubmit(); }">
+            <option value="" selected>Pick a seeded user</option>
+            <option value="olivia">olivia: owner, usage and grants read only</option>
+            <option value="carla">carla: grant editor, can edit grants but not create or delete them</option>
+            <option value="chloe">chloe: client, sees usage alone</option>
+            <option value="bobby">bobby: member with no roles, refused on every panel</option>
+        </select>
+        <div class="form-text">Every demo user's password is @DemoSeed.PASSWORD.</div>
+    </div>
+}

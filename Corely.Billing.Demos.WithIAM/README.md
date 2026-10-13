@@ -16,7 +16,7 @@ dotnet run --project Corely.Billing.Demos.WithIAM -- --seed
 dotnet run --project Corely.Billing.Demos.WithIAM
 ```
 
-The seed creates account Acme with four users, password `Test1234`, two grants, and some usage. Open https://localhost:7112.
+The seed creates account Acme with four users, password `Test1234`, two grants, and some usage. Open https://localhost:7112. In Development the sign-in page has a "Demo only: quick sign in" dropdown of the four, from `Pages/Authentication/_SignInAssist.cshtml`; picking one signs in as them.
 
 | User | Permissions | Sees |
 |------|-------------|------|
