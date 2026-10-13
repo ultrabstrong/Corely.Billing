@@ -35,10 +35,17 @@
 .cbw-grant-head {
     font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--bs-secondary-color);
-    border-bottom: 1px solid var(--bs-border-color);
+    color: #6b6b6b;
+    background-color: #ebebeb;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+[data-bs-theme="dark"] .cbw-grant-head {
+    color: #adb5bd;
+    background-color: #343a40;
+    border-bottom-color: #495057;
 }
 
 .cbw-grant-row {

@@ -1,13 +1,13 @@
 @switch (Status)
 {
     case GrantStatus.Active:
-        <span class="badge rounded-pill text-bg-success"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
+        <span class="badge rounded-pill bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>Active</span>
         break;
     case GrantStatus.Upcoming:
-        <span class="badge rounded-pill text-bg-info"><i class="bi bi-clock me-1" aria-hidden="true"></i>Upcoming</span>
+        <span class="badge rounded-pill bg-info-subtle text-info-emphasis"><i class="bi bi-clock me-1" aria-hidden="true"></i>Upcoming</span>
         break;
     default:
-        <span class="badge rounded-pill text-bg-secondary"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Expired</span>
+        <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis"><i class="bi bi-slash-circle me-1" aria-hidden="true"></i>Expired</span>
         break;
 }
 

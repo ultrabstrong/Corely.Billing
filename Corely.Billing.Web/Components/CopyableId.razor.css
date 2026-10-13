@@ -1,0 +1,31 @@
+.cbw-copyable-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    max-width: 100%;
+}
+
+.cbw-id-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.cbw-copy-btn {
+    padding: 0 0.2rem;
+    border: 0;
+    border-radius: 0.2rem;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: 0.8em;
+    line-height: 1;
+}
+
+.cbw-copy-btn:hover,
+.cbw-copy-btn:focus-visible {
+    color: var(--bs-primary);
+    background-color: var(--bs-tertiary-bg);
+}
+
+.cbw-copy-btn .bi-check2 {
+    color: var(--bs-success);
+}

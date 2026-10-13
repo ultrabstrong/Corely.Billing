@@ -51,7 +51,7 @@
                     <span class="cbw-event-operation">@Vocabulary.DisplayName(item.Operation)</span>
                     <span class="cbw-event-provider text-body-secondary">@item.Provider</span>
                     <span class="cbw-event-status"><OutcomeBadge Outcome="item.Outcome" /></span>
-                    <span class="cbw-event-grant font-monospace text-body-secondary" title="@item.GrantId">@item.GrantId.ToString()[^8..]</span>
+                    <span class="cbw-event-grant text-body-secondary"><CopyableId Value="item.GrantId" Short="true" /></span>
                     @if (item.Tags is { Count: > 0 })
                     {
                         <span class="cbw-event-tags">
