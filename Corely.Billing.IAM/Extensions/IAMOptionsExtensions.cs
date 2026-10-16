@@ -1,5 +1,5 @@
 using Corely.IAM;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 
 namespace Corely.Billing.IAM.Extensions;
 

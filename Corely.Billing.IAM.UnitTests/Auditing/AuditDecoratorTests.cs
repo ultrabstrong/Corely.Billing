@@ -2,7 +2,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Auditing;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Services;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
 
 namespace Corely.Billing.IAM.UnitTests.Auditing;

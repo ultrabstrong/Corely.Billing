@@ -15,7 +15,7 @@
     <PackageProjectUrl>https://github.com/ultrabstrong/Corely.Billing</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>2.0.3</Version>
+    <Version>2.0.4</Version>
 
     <!-- Single-file publishing options. Applied only when publishing: a self-contained
          executable cannot be referenced by a non-self-contained one, which would block a test
@@ -39,9 +39,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Corely.Common" Version="2.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
-    <PackageReference Include="System.CommandLine" Version="2.0.12" />
+    <PackageReference Include="Corely.Common" Version="2.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
+    <PackageReference Include="System.CommandLine" Version="2.0.13" />
   </ItemGroup>
 
   <ItemGroup>

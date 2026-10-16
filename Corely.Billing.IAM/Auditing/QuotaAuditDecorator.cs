@@ -3,7 +3,7 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.IAM.Audits.Models;
 using Corely.IAM.Audits.Providers;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 
 namespace Corely.Billing.IAM.Auditing;
 

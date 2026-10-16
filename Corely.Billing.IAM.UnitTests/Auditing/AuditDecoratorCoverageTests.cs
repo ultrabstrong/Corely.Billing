@@ -3,7 +3,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Extensions;
 using Corely.Billing.Services;
 using Corely.IAM.Audits.Providers;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

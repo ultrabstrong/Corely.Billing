@@ -6,7 +6,7 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
 using Corely.Billing.Web.IAM.Extensions;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
 using Corely.IAM.Users.Models;
 using Corely.IAM.Users.Providers;

@@ -2,7 +2,7 @@ using Corely.Billing.Consumption.Models;
 using Corely.Billing.IAM.Authorization;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
 

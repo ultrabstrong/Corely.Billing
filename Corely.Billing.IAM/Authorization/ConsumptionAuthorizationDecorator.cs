@@ -1,7 +1,7 @@
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
 
 namespace Corely.Billing.IAM.Authorization;

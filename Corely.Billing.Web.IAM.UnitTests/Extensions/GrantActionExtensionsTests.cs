@@ -1,5 +1,5 @@
 using Corely.Billing.Web.IAM.Extensions;
-using Corely.IAM.Security.Constants;
+using Corely.IAM.Security.Enums;
 
 namespace Corely.Billing.Web.IAM.UnitTests.Extensions;
 
