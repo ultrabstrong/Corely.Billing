@@ -10,15 +10,17 @@
                 </button>
             }
         </div>
-        <label class="cbw-date">
-            <span class="visually-hidden">From</span>
-            <input type="date" class="form-control form-control-sm" value="@_from.ToString("yyyy-MM-dd")" @onchange="FromChanged" />
-        </label>
-        <span class="text-body-secondary" aria-hidden="true">–</span>
-        <label class="cbw-date">
-            <span class="visually-hidden">To</span>
-            <input type="date" class="form-control form-control-sm" value="@_to.ToString("yyyy-MM-dd")" @onchange="ToChanged" />
-        </label>
+        <div class="cbw-daterange">
+            <label class="cbw-date">
+                <span class="visually-hidden">From</span>
+                <input type="date" class="form-control form-control-sm" value="@_from.ToString("yyyy-MM-dd")" @onchange="FromChanged" />
+            </label>
+            <span class="text-body-secondary" aria-hidden="true">–</span>
+            <label class="cbw-date">
+                <span class="visually-hidden">To</span>
+                <input type="date" class="form-control form-control-sm" value="@_to.ToString("yyyy-MM-dd")" @onchange="ToChanged" />
+            </label>
+        </div>
 
         <MultiSelectFilter TValue="UsageUnit" Label="Unit" Options="_unitOptions" Selected="_units" SelectedChanged="UnitsChanged" />
         <MultiSelectFilter TValue="UsageOperation" Label="Operation" Options="_operationOptions" Selected="_operations" SelectedChanged="OperationsChanged" />

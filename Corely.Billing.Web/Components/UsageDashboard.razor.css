@@ -7,6 +7,13 @@
     position: relative;
 }
 
+.cbw-daterange {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
 .cbw-date input {
     width: 9.5rem;
 }
