@@ -43,8 +43,8 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #6b6b6b;
-    background-color: #ebebeb;
-    border-bottom: 1px solid #d4d4d4;
+    background-color: #f5f6f7;
+    border-bottom: 1px solid #e3e5e8;
 }
 
 [data-bs-theme="dark"] .cbw-event-head {
