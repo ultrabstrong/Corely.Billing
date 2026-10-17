@@ -124,3 +124,13 @@
         text-align: left;
     }
 }
+
+@media (max-width: 575.98px) {
+    .cbw-grant-row {
+        margin-left: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        border-left-width: 0;
+        border-right-width: 0;
+        border-radius: 0;
+    }
+}

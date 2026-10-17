@@ -24,3 +24,15 @@
     border-radius: var(--bs-border-radius);
     box-shadow: var(--bs-box-shadow-sm);
 }
+
+@media (max-width: 575.98px) {
+    .cbw-filter {
+        position: static;
+    }
+
+    .cbw-filter-menu {
+        left: 0;
+        right: 0;
+        min-width: 0;
+    }
+}

@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Members Club</title>
     <link rel="stylesheet" href="~/_content/Corely.Billing.Demos.Bootstrap/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        @@media (max-width: 575.98px) {
+            main > .card {
+                margin-left: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+                margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+                border-left-width: 0;
+                border-right-width: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar border-bottom">
