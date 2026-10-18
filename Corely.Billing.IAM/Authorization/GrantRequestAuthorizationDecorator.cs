@@ -1,16 +1,22 @@
 using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.IAM.Extensions;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
+using Corely.IAM.Users.Providers;
 
 namespace Corely.Billing.IAM.Authorization;
 
 internal sealed class GrantRequestAuthorizationDecorator(
     IGrantRequestService inner,
-    IAuthorizationProvider authorizationProvider
+    IAuthorizationProvider authorizationProvider,
+    IUserContextProvider userContextProvider
 ) : IGrantRequestService
 {
+    private Guid? ActingUserId(Guid? claimed) =>
+        userContextProvider.GetUserContext().ActingUserId(claimed);
+
     public async Task<RequestGrantResult> RequestGrantAsync(
         RequestGrantRequest request,
         CancellationToken ct = default
@@ -20,7 +26,13 @@ internal sealed class GrantRequestAuthorizationDecorator(
             AuthAction.Create,
             BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE
         )
-            ? await inner.RequestGrantAsync(request, ct)
+            ? await inner.RequestGrantAsync(
+                request with
+                {
+                    RequestedByUserId = ActingUserId(request.RequestedByUserId),
+                },
+                ct
+            )
             : new RequestGrantResult(
                 RequestGrantResultCode.UnauthorizedError,
                 "Unauthorized to request a grant",
@@ -90,7 +102,13 @@ internal sealed class GrantRequestAuthorizationDecorator(
             AuthAction.Create,
             BillingResourceTypes.GRANT_RESOURCE_TYPE
         )
-            ? await inner.ApproveGrantRequestAsync(request, ct)
+            ? await inner.ApproveGrantRequestAsync(
+                request with
+                {
+                    DecidedByUserId = ActingUserId(request.DecidedByUserId),
+                },
+                ct
+            )
             : new ApproveGrantRequestResult(
                 DecideGrantRequestResultCode.UnauthorizedError,
                 $"Unauthorized to approve grant request {request.GrantRequestId}",
@@ -107,7 +125,13 @@ internal sealed class GrantRequestAuthorizationDecorator(
             BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
             request.GrantRequestId
         )
-            ? await inner.DeclineGrantRequestAsync(request, ct)
+            ? await inner.DeclineGrantRequestAsync(
+                request with
+                {
+                    DecidedByUserId = ActingUserId(request.DecidedByUserId),
+                },
+                ct
+            )
             : new DeclineGrantRequestResult(
                 DecideGrantRequestResultCode.UnauthorizedError,
                 $"Unauthorized to decline grant request {request.GrantRequestId}"

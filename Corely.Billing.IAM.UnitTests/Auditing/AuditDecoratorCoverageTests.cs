@@ -5,6 +5,7 @@ using Corely.Billing.Services;
 using Corely.IAM.Audits.Providers;
 using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
+using Corely.IAM.Users.Providers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
@@ -87,6 +88,7 @@ public class AuditDecoratorCoverageTests
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddScoped(_ => authorization.Object);
+        services.AddScoped(_ => Mock.Of<IUserContextProvider>());
         services.AddScoped(_ => auditProvider);
         services.AddBillingServices(
             BillingOptions

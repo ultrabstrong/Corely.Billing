@@ -70,6 +70,8 @@ Every method first checks `HasAccountContext` for the account it names. The syst
 | `GetAvailabilityAsync` | Read on `quota` |
 | `ReserveAsync`, `SettleAsync`, `ReleaseAsync` | Execute on `quota` |
 
+A request's `RequestedByUserId` and a decision's `DecidedByUserId` are replaced with the signed-in user's id, whatever the caller passed, so nobody can record a request or decision as someone else's. Only the system context keeps the id it was given, so a host's background work can act for a named user.
+
 Approving creates a grant, so it also needs what creating one needs; otherwise a role that cannot create grants could create them by approving.
 
 A denial returns the service's `UnauthorizedError` result, worded as IAM words its own: `Unauthorized to delete grant {grantId}`. A denied `GetAvailabilityAsync` returns `QuotaAvailability.Unauthorized`.

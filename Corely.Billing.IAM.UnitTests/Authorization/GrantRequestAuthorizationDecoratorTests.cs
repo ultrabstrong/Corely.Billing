@@ -4,6 +4,8 @@ using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
+using Corely.IAM.Users.Models;
+using Corely.IAM.Users.Providers;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
 
 namespace Corely.Billing.IAM.UnitTests.Authorization;
@@ -46,8 +48,81 @@ public class GrantRequestAuthorizationDecoratorTests
             .ReturnsAsync(new DeclineGrantRequestResult(DecideGrantRequestResultCode.Success, ""));
     }
 
+    private UserContext? _userContext;
+
     private GrantRequestAuthorizationDecorator Decorator() =>
-        new(_inner.Object, _authorization.Object);
+        new(
+            _inner.Object,
+            _authorization.Object,
+            Mock.Of<IUserContextProvider>(p => p.GetUserContext() == _userContext)
+        );
+
+    private static readonly Guid SignedInUserId = Guid.Parse(
+        "55555555-5555-5555-5555-555555555555"
+    );
+
+    private void SignIn() =>
+        _userContext = new UserContext(
+            new User { Id = SignedInUserId, Username = "priya" },
+            null,
+            "device",
+            []
+        );
+
+    [Fact]
+    public async Task ApproveGrantRequestAsync_RecordsTheSignedInUser_ForAClaimedDecider()
+    {
+        SignIn();
+
+        await Decorator()
+            .ApproveGrantRequestAsync(Approval with { DecidedByUserId = Guid.CreateVersion7() });
+
+        _inner.Verify(s =>
+            s.ApproveGrantRequestAsync(
+                It.Is<ApproveGrantRequestRequest>(r => r.DecidedByUserId == SignedInUserId),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Fact]
+    public async Task DeclineGrantRequestAsync_RecordsTheSignedInUser_ForAClaimedDecider()
+    {
+        SignIn();
+
+        await Decorator()
+            .DeclineGrantRequestAsync(Decline with { DecidedByUserId = Guid.CreateVersion7() });
+
+        _inner.Verify(s =>
+            s.DeclineGrantRequestAsync(
+                It.Is<DeclineGrantRequestRequest>(r => r.DecidedByUserId == SignedInUserId),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Fact]
+    public async Task RequestGrantAsync_RecordsTheSignedInUser_ForAClaimedRequester()
+    {
+        SignIn();
+        _inner
+            .Setup(s =>
+                s.RequestGrantAsync(It.IsAny<RequestGrantRequest>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(new RequestGrantResult(RequestGrantResultCode.Success, "", RequestId));
+
+        await Decorator()
+            .RequestGrantAsync(
+                new(AccountId, Extraction, Page, 10, RequestedByUserId: Guid.CreateVersion7())
+            );
+
+        _inner.Verify(s =>
+            s.RequestGrantAsync(
+                It.Is<RequestGrantRequest>(r => r.RequestedByUserId == SignedInUserId),
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
 
     private void Deny(AuthAction action, string resource) =>
         _authorization

@@ -307,6 +307,10 @@ Built as planned, with these differences:
   characters. `carla` was given nothing on `grant_request`, so she sees no requests.
 - **Corely.IAM already backfills owner defaults** for a newly registered resource type on existing
   accounts, so accounts made before `grant_request` existed gain Read and Create on it at startup.
+- **Who asked and who decided come from IAM, not the caller.** A security review of the first push
+  found `RequestedByUserId` and `DecidedByUserId` were taken as given, so a caller could attribute a
+  request or decision to someone else. `GrantRequestAuthorizationDecorator` now replaces both with
+  the signed-in user's id; only the system context keeps the id it was passed. Fixed before tagging.
 - **The request form's quantity starts empty,** not at a red zero, found clicking through.
 - **Regression proofs:** dropping the `Pending` condition from the claim failed the late approval
   test (two grants instead of one); dropping Create on `grant` from the `Decide` mapping failed two
