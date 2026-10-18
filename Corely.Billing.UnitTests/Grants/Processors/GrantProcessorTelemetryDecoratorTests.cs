@@ -45,6 +45,35 @@ public class GrantProcessorTelemetryDecoratorTests
         );
     }
 
+    [Theory]
+    [InlineData(true, BillingMetricNames.Grants.GRANT_DISABLED)]
+    [InlineData(false, BillingMetricNames.Grants.GRANT_ENABLED)]
+    public async Task SetGrantDisabledAsync_CountsTheChange_ForEachDirection(
+        bool disabled,
+        string metric
+    )
+    {
+        _inner
+            .Setup(p => p.SetGrantDisabledAsync(It.IsAny<SetGrantDisabledRequest>(), default))
+            .ReturnsAsync(new ModifyResult(ModifyResultCode.Success, ""));
+
+        await _decorator.SetGrantDisabledAsync(new(AccountId, GrantId, disabled));
+
+        _telemetry.Verify(t => t.Increment(metric), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetGrantDisabledAsync_CountsNothing_ForAMissingGrant()
+    {
+        _inner
+            .Setup(p => p.SetGrantDisabledAsync(It.IsAny<SetGrantDisabledRequest>(), default))
+            .ReturnsAsync(new ModifyResult(ModifyResultCode.NotFoundError, ""));
+
+        await _decorator.SetGrantDisabledAsync(new(AccountId, GrantId, true));
+
+        _telemetry.Verify(t => t.Increment(It.IsAny<string>()), Times.Never);
+    }
+
     [Fact]
     public async Task CreateGrantAsync_RecordsNoQuantity_ForAnUnlimitedGrant()
     {

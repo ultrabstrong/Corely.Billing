@@ -1,12 +1,13 @@
 # Services
 
-Three public services form the API surface of Corely.Billing. All are registered as scoped and wrapped with telemetry decorators.
+Four public services form the API surface of Corely.Billing. All are registered as scoped and wrapped with telemetry decorators.
 
 ## Service Overview
 
 | Service | Purpose | Methods |
 |---------|---------|---------|
 | `IGrantService` | Create, read, update, delete and list grants | 5 |
+| `IGrantRequestService` | Ask for a grant, approve or decline the request | 5 |
 | `IQuotaService` | Availability, reserve, settle, release | 4 |
 | `IConsumptionService` | Totals, time series, event listing, ledger health | 7 |
 
@@ -45,5 +46,6 @@ See the [Result Codes](../result-codes.md) docs for every code.
 ## Topics
 
 - [Grant Service](grant-service.md)
+- [Grant Request Service](grant-request-service.md)
 - [Quota Service](quota-service.md)
 - [Consumption Service](consumption-service.md)

@@ -39,6 +39,29 @@ Complete reference of all result code enums across Corely.Billing. `Unauthorized
 | `NotFoundError` | Not found for this account |
 | `UnauthorizedError` | Refused by a host decorator |
 
+## Grant Request Result Codes
+
+### RequestGrantResultCode
+
+| Code | Meaning |
+|------|---------|
+| `Success` | Request recorded as pending |
+| `ValidationError` | Input validation failed |
+| `AlreadyPendingError` | The account already has a pending request for this operation and unit |
+| `UnauthorizedError` | Refused by a host decorator |
+
+### DecideGrantRequestResultCode
+
+Returned by both `ApproveGrantRequestAsync` and `DeclineGrantRequestAsync`.
+
+| Code | Meaning |
+|------|---------|
+| `Success` | Decided; an approval's `GrantId` names the new grant |
+| `NotFoundError` | Not found for this account |
+| `AlreadyDecidedError` | Approved or declined already; nothing changed |
+| `ValidationError` | A decline's reason is too long, or an approval's window fails grant validation; nothing changed |
+| `UnauthorizedError` | Refused by a host decorator |
+
 ## Quota Result Codes
 
 ### ReserveQuotaResultCode

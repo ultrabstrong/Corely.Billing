@@ -124,6 +124,26 @@ public partial class GrantEditor
             await OnSaved.InvokeAsync(grantId);
     }
 
+    private async Task ToggleDisabledAsync()
+    {
+        var grant = _grant!;
+        _saving = true;
+        var result = await GrantService.SetGrantDisabledAsync(
+            new SetGrantDisabledRequest(AccountId, grant.GrantId, !grant.Disabled)
+        );
+        _saving = false;
+
+        _error = result.ResultCode switch
+        {
+            ModifyResultCode.Success => null,
+            ModifyResultCode.UnauthorizedError => "You are not allowed to change grants.",
+            ModifyResultCode.NotFoundError => "This grant no longer exists.",
+            _ => result.Message,
+        };
+        if (_error is null)
+            grant.Disabled = !grant.Disabled;
+    }
+
     private string? Validate() =>
         !_unlimited && _quantity < 0 ? "Quantity must be zero or more."
         : _validToUtc <= _validFromUtc ? "Valid to must be after valid from."

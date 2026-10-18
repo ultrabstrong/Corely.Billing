@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
@@ -20,6 +21,7 @@ public abstract class BillingWebTestContext : BunitContext
     protected static readonly UsageUnit Page = UsageUnit.From("page");
 
     protected Mock<IGrantService> Grants { get; } = new();
+    protected Mock<IGrantRequestService> GrantRequests { get; } = new();
     protected Mock<IConsumptionService> Consumption { get; } = new();
     protected RecordingGrantActionGate ActionGate { get; } = new();
 
@@ -35,11 +37,13 @@ public abstract class BillingWebTestContext : BunitContext
         );
         Services.AddSingleton<IGrantActionGate>(ActionGate);
         Services.AddSingleton(Grants.Object);
+        Services.AddSingleton(GrantRequests.Object);
         Services.AddSingleton(Consumption.Object);
         Services.AddSingleton<IUsageVocabulary>(new TestVocabulary());
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
 
         HaveGrants();
+        HaveRequests();
         HaveUsed();
         HaveSeries();
         Consumption
@@ -87,6 +91,53 @@ public abstract class BillingWebTestContext : BunitContext
             .ReturnsAsync(
                 new RetrieveListResult<Grant>(RetrieveResultCode.UnauthorizedError, "no", null)
             );
+
+    protected void HaveRequests(params GrantRequest[] requests) =>
+        GrantRequests
+            .Setup(g =>
+                g.ListGrantRequestsAsync(
+                    It.IsAny<ListGrantRequestsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new RetrieveListResult<GrantRequest>(
+                    RetrieveResultCode.Success,
+                    string.Empty,
+                    new PagedResult<GrantRequest>([.. requests], requests.Length, 1, false)
+                )
+            );
+
+    protected void DenyRequests() =>
+        GrantRequests
+            .Setup(g =>
+                g.ListGrantRequestsAsync(
+                    It.IsAny<ListGrantRequestsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new RetrieveListResult<GrantRequest>(
+                    RetrieveResultCode.UnauthorizedError,
+                    "no",
+                    null
+                )
+            );
+
+    protected static GrantRequest Request(long quantity, string? note = null, int daysAgo = 2) =>
+        new()
+        {
+            GrantRequestId = Guid.CreateVersion7(),
+            AccountId = AccountId,
+            Operation = Extraction,
+            Unit = Page,
+            Quantity = quantity,
+            Note = note,
+            RequestedUtc = Now.AddDays(-daysAgo),
+            Status = GrantRequestStatus.Pending,
+        };
 
     protected void HaveUsed(params GrantTotalConsumptions[] totals) =>
         Consumption

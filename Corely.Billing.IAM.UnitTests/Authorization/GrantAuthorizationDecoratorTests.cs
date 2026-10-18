@@ -154,6 +154,45 @@ public class GrantAuthorizationDecoratorTests
     }
 
     [Fact]
+    public async Task SetGrantDisabledAsync_ChecksUpdateOnThatGrant_ForAGrantId()
+    {
+        _inner
+            .Setup(s =>
+                s.SetGrantDisabledAsync(
+                    It.IsAny<SetGrantDisabledRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new ModifyResult(ModifyResultCode.Success, ""));
+
+        var result = await Decorator().SetGrantDisabledAsync(new(AccountId, GrantId, true));
+
+        Assert.Equal(ModifyResultCode.Success, result.ResultCode);
+        _authorization.Verify(
+            p => p.IsAuthorizedAsync(AuthAction.Update, GRANT, GrantId),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task SetGrantDisabledAsync_ReturnsUnauthorized_ForNoUpdatePermission()
+    {
+        Deny(AuthAction.Update);
+
+        var result = await Decorator().SetGrantDisabledAsync(new(AccountId, GrantId, true));
+
+        Assert.Equal(ModifyResultCode.UnauthorizedError, result.ResultCode);
+        _inner.Verify(
+            s =>
+                s.SetGrantDisabledAsync(
+                    It.IsAny<SetGrantDisabledRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
     public async Task DeleteGrantAsync_ChecksDeleteOnThatGrant_ForAGrantId()
     {
         _inner

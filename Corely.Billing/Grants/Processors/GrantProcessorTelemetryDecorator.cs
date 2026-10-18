@@ -111,18 +111,39 @@ internal class GrantProcessorTelemetryDecorator(
         return result;
     }
 
+    public async Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    )
+    {
+        var result = await _logger.ExecuteWithLoggingAsync(
+            nameof(GrantProcessor),
+            request,
+            () => _inner.SetGrantDisabledAsync(request, ct),
+            logResult: true
+        );
+        if (result.ResultCode == ModifyResultCode.Success)
+            _telemetry.Increment(
+                request.Disabled
+                    ? BillingMetricNames.Grants.GRANT_DISABLED
+                    : BillingMetricNames.Grants.GRANT_ENABLED
+            );
+        return result;
+    }
+
     public async Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
         DateTime atUtc,
+        IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default
     )
     {
         var grants = await _logger.ExecuteWithLoggingAsync(
             nameof(GrantProcessor),
             accountId,
-            () => _inner.ListActiveGrantsAsync(accountId, operation, unit, atUtc, ct)
+            () => _inner.ListActiveGrantsAsync(accountId, operation, unit, atUtc, heldGrantIds, ct)
         );
         _telemetry.Record(BillingMetricNames.Grants.GRANT_ACTIVE_COUNT, grants.Count);
         return grants;

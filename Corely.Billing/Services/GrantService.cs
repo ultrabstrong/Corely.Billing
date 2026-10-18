@@ -33,6 +33,11 @@ internal class GrantService(IGrantProcessor grantProcessor) : IGrantService
         CancellationToken ct = default
     ) => _grantProcessor.UpdateGrantAsync(request, ct);
 
+    public Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    ) => _grantProcessor.SetGrantDisabledAsync(request, ct);
+
     public Task<DeleteGrantResult> DeleteGrantAsync(
         Guid accountId,
         Guid grantId,

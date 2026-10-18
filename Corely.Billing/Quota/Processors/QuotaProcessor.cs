@@ -176,7 +176,13 @@ internal class QuotaProcessor(
         }
 
         var context = (
-            await LoadAsync(request.AccountId, request.Operation, request.Unit, ct)
+            await LoadAsync(
+                request.AccountId,
+                request.Operation,
+                request.Unit,
+                ct,
+                [.. outstanding.Select(h => h.GrantId)]
+            )
         ).WithoutHolds(outstanding);
         var split = _grantSelectionPolicy.Split(
             context.Grants,
@@ -254,7 +260,8 @@ internal class QuotaProcessor(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
-        CancellationToken ct
+        CancellationToken ct,
+        IReadOnlyCollection<Guid>? heldGrantIds = null
     )
     {
         var grants = await _grantProcessor.ListActiveGrantsAsync(
@@ -262,6 +269,7 @@ internal class QuotaProcessor(
             operation,
             unit,
             _timeProvider.GetUtcNow().UtcDateTime,
+            heldGrantIds,
             ct
         );
         if (grants.Count == 0)

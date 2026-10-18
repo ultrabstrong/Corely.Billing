@@ -26,6 +26,10 @@
 @code {
     private RenderFragment Form(bool editable) =>
         @<form @onsubmit="SaveAsync" novalidate>
+            @if (_grant is { Disabled: true })
+            {
+                <div class="alert alert-warning" role="status">This grant is disabled. Work already holding it finishes; nothing new can draw on it.</div>
+            }
             <fieldset disabled="@(!editable || _saving)">
                 <div class="mb-3">
                     <label for="cbw-operation" class="form-label">Operation</label>
@@ -88,6 +92,12 @@
                         }
                         @(IsNew ? "Create grant" : "Save changes")
                     </button>
+                    @if (_grant is { } grant)
+                    {
+                        <button type="button" class="btn @(grant.Disabled ? "btn-outline-success" : "btn-outline-danger") cbw-toggle-disabled" disabled="@_saving" @onclick="ToggleDisabledAsync">
+                            @(grant.Disabled ? "Enable grant" : "Disable grant")
+                        </button>
+                    }
                 }
                 @if (OnCancel.HasDelegate)
                 {

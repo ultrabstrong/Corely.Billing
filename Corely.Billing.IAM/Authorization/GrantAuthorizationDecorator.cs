@@ -92,6 +92,22 @@ internal sealed class GrantAuthorizationDecorator(
                 $"Unauthorized to update grant {request.GrantId}"
             );
 
+    public async Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    ) =>
+        authorizationProvider.HasAccountContext(request.AccountId)
+        && await authorizationProvider.IsAuthorizedAsync(
+            AuthAction.Update,
+            BillingResourceTypes.GRANT_RESOURCE_TYPE,
+            request.GrantId
+        )
+            ? await inner.SetGrantDisabledAsync(request, ct)
+            : new ModifyResult(
+                ModifyResultCode.UnauthorizedError,
+                $"Unauthorized to update grant {request.GrantId}"
+            );
+
     public async Task<DeleteGrantResult> DeleteGrantAsync(
         Guid accountId,
         Guid grantId,

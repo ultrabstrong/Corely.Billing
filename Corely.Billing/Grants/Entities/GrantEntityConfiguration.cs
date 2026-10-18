@@ -27,6 +27,7 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.Quantity);
         builder.Property(e => e.ValidFromUtc).IsRequired();
         builder.Property(e => e.ValidToUtc);
+        builder.Property(e => e.Disabled).IsRequired();
 
         builder.HasIndex(e => e.AccountId);
     }

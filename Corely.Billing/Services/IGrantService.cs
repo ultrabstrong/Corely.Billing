@@ -24,6 +24,11 @@ public interface IGrantService
 
     Task<ModifyResult> UpdateGrantAsync(UpdateGrantRequest request, CancellationToken ct = default);
 
+    Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    );
+
     Task<DeleteGrantResult> DeleteGrantAsync(
         Guid accountId,
         Guid grantId,

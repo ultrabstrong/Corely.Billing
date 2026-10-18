@@ -14,5 +14,6 @@ internal class GrantEntity : IHasCreatedUtc
     public UsageOperation Operation { get; set; }
     public DateTime ValidFromUtc { get; set; }
     public DateTime ValidToUtc { get; set; }
+    public bool Disabled { get; set; }
     public string? TagsJson { get; set; }
 }

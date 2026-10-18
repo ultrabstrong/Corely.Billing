@@ -1,13 +1,18 @@
 @inherits BillingComponentBase
 <div class="cbw-grants">
-    @if (_grants.Count > 0)
+    @if (_grants.Count > 0 || _requests.Count > 0)
     {
         <div class="cbw-toolbar">
-            @if (ShowExport)
+            @if (ShowExport && _grants.Count > 0)
             {
                 <button type="button" class="btn btn-outline-secondary btn-sm" disabled="@_exporting" @onclick="ExportAsync">
                     <i class="bi bi-download me-1" aria-hidden="true"></i>CSV
                 </button>
+            }
+            @if (CanRequestMore)
+            {
+                @ActionGate.Gate(GrantAction.Request, null,
+                    @<a class="btn btn-outline-primary btn-sm" href="@RequestGrantHref"><i class="bi bi-envelope-plus me-1" aria-hidden="true"></i>Request a grant</a>)
             }
             @ActionGate.Gate(GrantAction.Create, null,
                 @<a class="btn btn-primary btn-sm" href="@NewGrantHref"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>New grant</a>)
@@ -28,7 +33,7 @@
     {
         <div class="cbw-empty text-body-secondary" role="status">Loading grants…</div>
     }
-    else if (_grants.Count == 0 && _error is null)
+    else if (_grants.Count == 0 && _requests.Count == 0 && _error is null)
     {
         <div class="cbw-empty">
             <p class="cbw-empty-title">No grants yet</p>
@@ -38,9 +43,11 @@
                     <a class="btn btn-primary btn-sm" href="@NewGrantHref">Create the first grant</a>
                 </text>,
                 @<p class="text-body-secondary">Grants given to this account will appear here.</p>)
+            @ActionGate.Gate(GrantAction.Request, null,
+                @<a class="btn btn-outline-primary btn-sm" href="@RequestGrantHref">Request a grant</a>)
         </div>
     }
-    else if (_grants.Count > 0)
+    else if (_grants.Count > 0 || _requests.Count > 0)
     {
         <ul class="cbw-grant-rows" aria-label="Grants">
             <li class="cbw-grant-head" aria-hidden="true">
@@ -50,6 +57,34 @@
                 <span>Status</span>
                 <span></span>
             </li>
+            @foreach (var request in _requests)
+            {
+                <li class="cbw-grant-row cbw-request-row" data-grant-request-id="@request.GrantRequestId">
+                    <div class="cbw-grant-name">
+                        <span class="cbw-grant-allowance">@request.Asked(Vocabulary)</span>
+                        <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(request.Operation)</span>
+                    </div>
+                    <div class="cbw-grant-balance cbw-request-note">
+                        @if (request.Note is { } note)
+                        {
+                            <span>@note</span>
+                        }
+                        else
+                        {
+                            <span class="text-body-secondary">No note</span>
+                        }
+                    </div>
+                    <div class="cbw-grant-window">
+                        <span>@request.RequestedText(Now)</span>
+                    </div>
+                    <div class="cbw-grant-status">
+                        <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Requested</span>
+                    </div>
+                    <div class="cbw-grant-actions">
+                        @ActionGate.Gate(GrantAction.Decide, request.GrantRequestId, Decision(request))
+                    </div>
+                </li>
+            }
             @foreach (var grant in _grants)
             {
                 var status = grant.Status(Now);
@@ -107,3 +142,31 @@
         </ul>
     }
 </div>
+
+@code {
+    private RenderFragment Decision(GrantRequest request) =>
+        @<text>
+            @if (_approving == request.GrantRequestId)
+            {
+                <span class="cbw-confirm-text">Approve @request.Asked(Vocabulary) for a year from today?</span>
+                <button type="button" class="btn btn-sm btn-success" disabled="@_deciding" @onclick="() => ApproveAsync(request)">Approve</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deciding" @onclick="CancelDecision">Cancel</button>
+            }
+            else if (_declining == request.GrantRequestId)
+            {
+                <label class="visually-hidden" for="cbw-decline-@request.GrantRequestId">Reason, optional</label>
+                <input id="cbw-decline-@request.GrantRequestId" class="form-control form-control-sm cbw-decline-reason" placeholder="Reason, optional" maxlength="500" @bind="_declineReason" />
+                <button type="button" class="btn btn-sm btn-danger" disabled="@_deciding" @onclick="() => DeclineAsync(request)">Decline</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deciding" @onclick="CancelDecision">Keep</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-sm btn-outline-success" aria-label="Approve request" @onclick="() => ConfirmApprove(request)">
+                    <i class="bi bi-check-lg" aria-hidden="true"></i><span class="cbw-action-label">Approve</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Decline request" @onclick="() => ConfirmDecline(request)">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i><span class="cbw-action-label">Decline</span>
+                </button>
+            }
+        </text>;
+}

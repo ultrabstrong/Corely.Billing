@@ -24,6 +24,7 @@ A form that creates a grant, or edits one when given a `GrantId`.
 ## Notes
 
 - Whether the form is editable is `IGrantActionGate`'s call: Create for a new grant, Update for an existing one. Without it a new grant shows a message, and an existing one shows the same form read-only.
+- An editable existing grant also offers Disable grant, or Enable grant when it is disabled, under the same Update gate. It takes effect at once, without Save, and a disabled grant shows a note that nothing new can draw on it.
 
 - Operation and unit list the registered vocabulary by display name.
 - An existing grant's operation cannot change; create a new grant instead.

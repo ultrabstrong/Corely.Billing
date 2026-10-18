@@ -16,13 +16,14 @@ dotnet run --project Corely.Billing.Demos.WithIAM -- --seed
 dotnet run --project Corely.Billing.Demos.WithIAM
 ```
 
-The seed creates account Acme with four users, password `Test1234`, two grants, and some usage. Open https://localhost:7112. In Development the sign-in page has a "Demo only: quick sign in" dropdown of the four, from `Pages/Authentication/_SignInAssist.cshtml`; picking one signs in as them.
+The seed creates account Acme with five users, password `Test1234`, two grants, some usage, and a pending grant request from `olivia`. Open https://localhost:7112. In Development the sign-in page has a "Demo only: quick sign in" dropdown of the five, from `Pages/Authentication/_SignInAssist.cshtml`; picking one signs in as them.
 
 | User | Permissions | Sees |
 |------|-------------|------|
-| `olivia` | Owner: Read on `grant` and `consumption`, Read and Execute on `quota` | Usage and grants, read-only |
-| `carla` | Read and Update on `grant`, Read on `consumption` | Usage, and Edit on each row; no New grant, no Delete |
+| `olivia` | Owner: Read on `grant` and `consumption`, Read and Create on `grant_request`, Read and Execute on `quota` | Usage and grants, read-only; her pending request, and Request a grant once nothing is pending |
+| `carla` | Read and Update on `grant`, Read on `consumption` | Usage, and Edit on each row; no New grant, no Delete, no requests |
 | `chloe` | Client: Read on `consumption`, Read and Execute on `quota` | Usage alone: no Grants link, no Grant filter, column or chart views, and an export without `grants.csv` |
+| `priya` | Provisioner: Read and Create on `grant`, Read and Update on `grant_request`, Read on `consumption` | New grant, and Approve and Decline on each pending request; no Request a grant |
 | `bobby` | A member with no roles | "You are not allowed to…" on every panel |
 
 `carla` is the proof that each grant action is gated on its own permission, not on one "can manage" flag. Her `grant` permission is created by the seed under system context: an owner holds only Read on `grant`, and IAM refuses to hand out what the caller does not hold, so nobody signed in can give it to her. That is also why `olivia` sees no New grant, Edit or Delete.
@@ -34,6 +35,7 @@ The seed creates account Acme with four users, password `Test1234`, two grants, 
 ## What to look at
 
 - `Program.cs`: three calls: `RegisterBillingResourceTypes()`, `UseCorelyIamPermissions()` and `AddBillingWebIam()`. No accessor or decorators of its own.
-- `DemoSeed.cs`: `carla`'s and `chloe`'s roles and the two grants, created under `AuthenticateAsSystem`, the way a host provisions what its users cannot.
+- `priya` approving `olivia`'s request turns it into a grant for a year in the same save; declining asks for an optional reason. `priya` stands in for the platform admin a real host would have.
+- `DemoSeed.cs`: `carla`'s, `chloe`'s and `priya`'s roles and the two grants, created under `AuthenticateAsSystem`, the way a host provisions what its users cannot.
 - "Ask the assistant" holds an estimated 1,000 tokens and settles what the reply used, as the signed-in user, so it needs Execute on `quota`: `olivia` and `chloe` have it, `carla` does not.
 - `Components/Layout/DemoLayout.razor`: guards the library's routed pages, which carry no `[Authorize]` of their own, and shows the Grants link only with Read on `grant`, through `PermissionView`.

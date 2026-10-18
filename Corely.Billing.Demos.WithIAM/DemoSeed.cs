@@ -1,3 +1,4 @@
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM;
 using Corely.Billing.Services;
@@ -23,6 +24,7 @@ internal static class DemoSeed
         var member = await RegisterUserAsync(services, "bobby", "bobby@example.com");
         var editor = await RegisterUserAsync(services, "carla", "carla@example.com");
         var client = await RegisterUserAsync(services, "chloe", "chloe@example.com");
+        var provisioner = await RegisterUserAsync(services, "priya", "priya@example.com");
 
         Guid accountId;
         using (var scope = services.CreateScope())
@@ -48,6 +50,9 @@ internal static class DemoSeed
             await registration.RegisterUserWithAccountAsync(
                 new RegisterUserWithAccountRequest(client!.Value, accountId)
             );
+            await registration.RegisterUserWithAccountAsync(
+                new RegisterUserWithAccountRequest(provisioner!.Value, accountId)
+            );
         }
 
         using (var scope = services.CreateScope())
@@ -57,6 +62,7 @@ internal static class DemoSeed
                 .AuthenticateAsSystem(DEVICE_ID);
             await RegisterGrantEditorAsync(scope.ServiceProvider, accountId, editor.Value);
             await RegisterClientAsync(scope.ServiceProvider, accountId, client.Value);
+            await RegisterProvisionerAsync(scope.ServiceProvider, accountId, provisioner.Value);
 
             var grants = scope.ServiceProvider.GetRequiredService<IGrantService>();
             var today = scope
@@ -92,13 +98,27 @@ internal static class DemoSeed
             var random = new Random(7);
             for (var i = 0; i < 12; i++)
                 await simulator.GenerateTextAsync(accountId, random.Next(5_000, 40_000));
+
+            await scope
+                .ServiceProvider.GetRequiredService<IGrantRequestService>()
+                .RequestGrantAsync(
+                    new RequestGrantRequest(
+                        accountId,
+                        DemoUsage.TextGeneration,
+                        DemoUsage.Token,
+                        500_000,
+                        "Quarter end reports",
+                        owner.Value
+                    )
+                );
         }
 
         Console.WriteLine(
-            "Seeded account Acme: owner olivia who may read grants, carla who may read and update them, "
-                + "chloe, a client who sees usage and no grants, and bobby with no roles"
+            "Seeded account Acme: owner olivia who may read grants and has asked for more, carla who "
+                + "may read and update grants, chloe, a client who sees usage and no grants, priya who "
+                + "provisions grants and decides requests, and bobby with no roles"
         );
-        Console.WriteLine($"Password for all four: {PASSWORD}");
+        Console.WriteLine($"Password for all five: {PASSWORD}");
     }
 
     private static async Task RegisterGrantEditorAsync(
@@ -163,6 +183,54 @@ internal static class DemoSeed
         );
         await registration.RegisterPermissionsWithRoleAsync(
             new RegisterPermissionsWithRoleRequest(ownerUsage, role.CreatedRoleId, accountId)
+        );
+        await registration.RegisterRolesWithUserAsync(
+            new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)
+        );
+    }
+
+    private static async Task RegisterProvisionerAsync(
+        IServiceProvider scoped,
+        Guid accountId,
+        Guid userId
+    )
+    {
+        var registration = scoped.GetRequiredService<IRegistrationService>();
+        var grants = await registration.RegisterPermissionAsync(
+            new RegisterPermissionRequest(
+                accountId,
+                BillingResourceTypes.GRANT_RESOURCE_TYPE,
+                Guid.Empty,
+                Create: true,
+                Read: true,
+                Description: "Read and create every grant"
+            )
+        );
+        var requests = await registration.RegisterPermissionAsync(
+            new RegisterPermissionRequest(
+                accountId,
+                BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+                Guid.Empty,
+                Read: true,
+                Update: true,
+                Description: "Read, approve and decline every grant request"
+            )
+        );
+        var permissions = await scoped
+            .GetRequiredService<IRetrievalService>()
+            .ListPermissionsAsync(new ListPermissionsRequest(accountId, Take: 100));
+        var ownerConsumption = permissions.Data!.Items.Single(p =>
+            p.IsSystemDefined && p.ResourceType == BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
+        );
+        var role = await registration.RegisterRoleAsync(
+            new RegisterRoleRequest("Provisioner", accountId)
+        );
+        await registration.RegisterPermissionsWithRoleAsync(
+            new RegisterPermissionsWithRoleRequest(
+                [grants.CreatedPermissionId, requests.CreatedPermissionId, ownerConsumption.Id],
+                role.CreatedRoleId,
+                accountId
+            )
         );
         await registration.RegisterRolesWithUserAsync(
             new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)

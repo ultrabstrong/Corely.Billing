@@ -29,6 +29,47 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     }
 
     [Fact]
+    public async Task Balance_ChargesTheGrantItHeld_ForWorkThatFinishesAfterItsGrantIsDisabled()
+    {
+        var paused = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 2);
+        var other = await _ledger.SeedGrantAsync(quantity: 1000, expiresInDays: 60);
+
+        await _ledger.ReserveAsync("job:a/step:1", quantity: 1);
+        await _ledger.SetDisabledAsync(paused, disabled: true);
+        var settled = await _ledger.SettleAsync("job:a/step:1", 40);
+
+        Assert.Equal(SettleQuotaResultCode.Success, settled.ResultCode);
+        Assert.Equal(40, await _ledger.BalanceAsync(paused));
+        Assert.Equal(0, await _ledger.BalanceAsync(other));
+    }
+
+    [Fact]
+    public async Task Balance_SkipsADisabledGrant_ForNewWorkUntilItIsEnabled()
+    {
+        var paused = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 2);
+        var other = await _ledger.SeedGrantAsync(quantity: 1000, expiresInDays: 60);
+        await _ledger.SetDisabledAsync(paused, disabled: true);
+
+        await _ledger.ProcessAsync("job:a/step:1", 40);
+        await _ledger.SetDisabledAsync(paused, disabled: false);
+        await _ledger.ProcessAsync("job:b/step:1", 10);
+
+        Assert.Equal(10, await _ledger.BalanceAsync(paused));
+        Assert.Equal(40, await _ledger.BalanceAsync(other));
+    }
+
+    [Fact]
+    public async Task Reserve_FindsNoGrant_ForAnAccountWhoseOnlyGrantIsDisabled()
+    {
+        var paused = await _ledger.SeedGrantAsync(quantity: 100);
+        await _ledger.SetDisabledAsync(paused, disabled: true);
+
+        var reserved = await _ledger.ReserveAsync("job:a/step:1", quantity: 1);
+
+        Assert.Equal(ReserveQuotaResultCode.NoGrantAvailableError, reserved.ResultCode);
+    }
+
+    [Fact]
     public async Task Balance_SplitsAcrossBothGrants_ForWorkThatCrossesAGrantEdge()
     {
         var expiringSoon = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 2);

@@ -18,10 +18,20 @@ public static class BillingMetricNames
         public const string GRANT_SAVED = "entitlements.grant.saved";
         public const string GRANT_UPDATED = "entitlements.grant.updated";
         public const string GRANT_DELETED = "entitlements.grant.deleted";
+        public const string GRANT_DISABLED = "entitlements.grant.disabled";
+        public const string GRANT_ENABLED = "entitlements.grant.enabled";
         public const string GRANT_QUANTITY = "entitlements.grant.quantity";
         public const string GRANT_VALIDITY_DAYS = "entitlements.grant.validity_days";
         public const string GRANT_ACTIVE_COUNT = "entitlements.grant.active_count";
         public const string GRANT_TOTAL_COUNT = "entitlements.grant.total_count";
+    }
+
+    public static class GrantRequests
+    {
+        public const string GRANT_REQUEST_CREATED = "entitlements.grant_request.created";
+        public const string GRANT_REQUEST_APPROVED = "entitlements.grant_request.approved";
+        public const string GRANT_REQUEST_DECLINED = "entitlements.grant_request.declined";
+        public const string GRANT_REQUEST_QUANTITY = "entitlements.grant_request.quantity";
     }
 
     public static class Consumption

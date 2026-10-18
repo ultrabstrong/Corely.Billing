@@ -1,0 +1,62 @@
+@inherits BillingComponentBase
+<div class="cbw-editor">
+    @ActionGate.Gate(GrantAction.Request, null, Form,
+        @<div class="alert alert-secondary" role="status">You are not allowed to request grants.</div>)
+</div>
+
+@code {
+    private RenderFragment Form =>
+        @<form @onsubmit="SendAsync" novalidate>
+            <fieldset disabled="@_sending">
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <label for="cbw-request-operation" class="form-label">Operation</label>
+                        <select id="cbw-request-operation" class="form-select" @bind="OperationValue">
+                            @foreach (var definition in Vocabulary.Operations)
+                            {
+                                <option value="@definition.Operation.Value">@definition.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <label for="cbw-request-unit" class="form-label">Unit</label>
+                        <select id="cbw-request-unit" class="form-select" @bind="UnitValue">
+                            @foreach (var definition in Vocabulary.Units)
+                            {
+                                <option value="@definition.Unit.Value">@definition.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cbw-request-quantity" class="form-label">How many</label>
+                    <input id="cbw-request-quantity" type="number" min="1" class="form-control" @bind="_quantity" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="cbw-request-note" class="form-label">What it is for <span class="text-body-secondary">(optional)</span></label>
+                    <textarea id="cbw-request-note" class="form-control" rows="3" maxlength="500" @bind="_note"></textarea>
+                </div>
+            </fieldset>
+
+            @if (_error is not null)
+            {
+                <div class="alert alert-danger" role="alert">@_error</div>
+            }
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" disabled="@_sending">
+                    @if (_sending)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                    }
+                    Send request
+                </button>
+                @if (OnCancel.HasDelegate)
+                {
+                    <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel">Cancel</button>
+                }
+            </div>
+        </form>;
+}

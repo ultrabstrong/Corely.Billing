@@ -11,5 +11,6 @@ public class Grant
     public long? Quantity { get; set; }
     public DateTime ValidFromUtc { get; set; }
     public DateTime ValidToUtc { get; set; }
+    public bool Disabled { get; set; }
     public Dictionary<string, string>? Tags { get; set; }
 }

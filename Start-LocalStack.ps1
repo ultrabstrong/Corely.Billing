@@ -18,7 +18,7 @@ $env:MSBUILDDISABLENODEREUSE = '1'
 $demos = @{
     Portal = @{ ConnectionKey = 'Billing'; Port = 7110; Seeds = $true; SignIn = 'No sign in; the demo account is fixed' }
     Subscription = @{ ConnectionKey = 'Billing'; Port = 7111; Seeds = $false; SignIn = 'No sign in; subscribe, visit the members area, cancel' }
-    WithIAM = @{ ConnectionKey = 'Default'; Port = 7112; Seeds = $true; SignIn = 'olivia, carla, chloe or bobby / Test1234' }
+    WithIAM = @{ ConnectionKey = 'Default'; Port = 7112; Seeds = $true; SignIn = 'olivia, carla, chloe, priya or bobby / Test1234' }
 }
 $config = $demos[$Demo]
 $repoRoot = $PSScriptRoot

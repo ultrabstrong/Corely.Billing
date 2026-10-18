@@ -391,6 +391,7 @@ public class QuotaProcessorTests
                     It.IsAny<UsageOperation>(),
                     It.IsAny<UsageUnit>(),
                     It.IsAny<DateTime>(),
+                    It.IsAny<IReadOnlyCollection<Guid>?>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -458,6 +459,7 @@ public class QuotaProcessorTests
                     It.IsAny<UsageOperation>(),
                     It.IsAny<UsageUnit>(),
                     It.IsAny<DateTime>(),
+                    It.IsAny<IReadOnlyCollection<Guid>?>(),
                     It.IsAny<CancellationToken>()
                 )
             )

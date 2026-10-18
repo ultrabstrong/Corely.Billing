@@ -5,4 +5,5 @@ public enum GrantStatus
     Upcoming,
     Active,
     Expired,
+    Disabled,
 }

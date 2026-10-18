@@ -17,6 +17,36 @@ public class GrantExtensionsTests : BillingWebTestContext
         Assert.Equal(expected, Grant(100, fromDays, toDays).Status(Now));
 
     [Theory]
+    [InlineData(5, 40)]
+    [InlineData(-5, 40)]
+    [InlineData(-40, -5)]
+    public void Status_IsDisabled_ForADisabledGrantInAnyWindow(int fromDays, int toDays)
+    {
+        var grant = Grant(100, fromDays, toDays);
+        grant.Disabled = true;
+
+        Assert.Equal(GrantStatus.Disabled, grant.Status(Now));
+    }
+
+    [Fact]
+    public void WhenText_StillFollowsTheWindow_ForADisabledGrant()
+    {
+        var grant = Grant(100, -5, 30);
+        grant.Disabled = true;
+
+        Assert.Equal("Expires in 30 days", grant.WhenText(Now));
+    }
+
+    [Fact]
+    public void ToCsvRow_ReportsDisabled_ForADisabledGrant()
+    {
+        var grant = Grant(100, -5, 30);
+        grant.Disabled = true;
+
+        Assert.Equal("disabled", grant.ToCsvRow(Vocabulary, used: 0, Now).Split(',')[9]);
+    }
+
+    [Theory]
     [InlineData(3, 40, "Starts in 3 days")]
     [InlineData(1, 40, "Starts tomorrow")]
     [InlineData(-5, 30, "Expires in 30 days")]

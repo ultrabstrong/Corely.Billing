@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM;
 using Corely.Billing.Models;
@@ -19,6 +20,7 @@ namespace Corely.Billing.Web.IAM.UnitTests;
 public class PermissionGateTests : BunitContext
 {
     private const string GRANT = BillingResourceTypes.GRANT_RESOURCE_TYPE;
+    private const string GRANT_REQUEST = BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE;
 
     private static readonly Guid AccountId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly DateTime Now = new(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc);
@@ -26,8 +28,11 @@ public class PermissionGateTests : BunitContext
     private static readonly UsageUnit Page = UsageUnit.From("page");
 
     private readonly Mock<IGrantService> _grants = new();
+    private readonly Mock<IGrantRequestService> _grantRequests = new();
     private readonly Mock<IAuthorizationProvider> _authorization = new();
     private readonly HashSet<AuthAction> _allowed = [];
+    private readonly HashSet<AuthAction> _allowedOnRequests = [];
+    private readonly List<GrantRequest> _requests = [];
     private readonly Grant _grant = new()
     {
         GrantId = Guid.CreateVersion7(),
@@ -72,12 +77,34 @@ public class PermissionGateTests : BunitContext
                     new PagedResult<Grant>([_grant], 1, 1, false)
                 )
             );
+        _grantRequests
+            .Setup(g =>
+                g.ListGrantRequestsAsync(
+                    It.IsAny<ListGrantRequestsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(() =>
+                new RetrieveListResult<GrantRequest>(
+                    RetrieveResultCode.Success,
+                    "",
+                    new PagedResult<GrantRequest>([.. _requests], _requests.Count, 1, false)
+                )
+            );
         _grants
             .Setup(g => g.GetGrantAsync(AccountId, _grant.GrantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new RetrieveSingleResult<Grant>(RetrieveResultCode.Success, "", _grant));
         _authorization
             .Setup(p => p.IsAuthorizedAsync(It.IsAny<AuthAction>(), GRANT, It.IsAny<Guid[]>()))
             .ReturnsAsync((AuthAction action, string _, Guid[] _) => _allowed.Contains(action));
+        _authorization
+            .Setup(p =>
+                p.IsAuthorizedAsync(It.IsAny<AuthAction>(), GRANT_REQUEST, It.IsAny<Guid[]>())
+            )
+            .ReturnsAsync(
+                (AuthAction action, string _, Guid[] _) => _allowedOnRequests.Contains(action)
+            );
 
         var userContext = new UserContext(
             new User { Id = Guid.CreateVersion7(), Username = "reader" },
@@ -101,6 +128,7 @@ public class PermissionGateTests : BunitContext
         Services.AddBillingWebIam();
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
         Services.AddSingleton(_grants.Object);
+        Services.AddSingleton(_grantRequests.Object);
         Services.AddSingleton(consumption.Object);
         Services.AddSingleton(vocabulary.Object);
         Services.AddSingleton(_authorization.Object);
@@ -166,6 +194,60 @@ public class PermissionGateTests : BunitContext
             Times.Once
         );
     }
+
+    [Fact]
+    public void GrantList_OffersRequestAlone_ForCreateOnGrantRequestWithoutCreateOnGrant()
+    {
+        Allow(AuthAction.Read);
+        _allowedOnRequests.UnionWith([AuthAction.Read, AuthAction.Create]);
+
+        var toolbar = RenderList().FindAll(".cbw-toolbar a");
+
+        Assert.Equal([BillingWebRoutes.GRANT_REQUEST], toolbar.Select(a => a.GetAttribute("href")));
+    }
+
+    [Fact]
+    public void GrantList_ShowsNoDecision_ForUpdateOnGrantRequestWithoutCreateOnGrant()
+    {
+        Allow(AuthAction.Read);
+        _allowedOnRequests.UnionWith([AuthAction.Read, AuthAction.Update]);
+        _requests.Add(PendingRequest());
+
+        var list = RenderList();
+
+        Assert.Single(list.FindAll(".cbw-request-row"));
+        Assert.Empty(list.FindAll("button[aria-label='Approve request']"));
+    }
+
+    [Fact]
+    public void GrantList_ShowsTheDecision_ForUpdateOnGrantRequestAndCreateOnGrant()
+    {
+        var request = PendingRequest();
+        Allow(AuthAction.Read, AuthAction.Create);
+        _allowedOnRequests.UnionWith([AuthAction.Read, AuthAction.Update]);
+        _requests.Add(request);
+
+        var list = RenderList();
+
+        Assert.Single(list.FindAll("button[aria-label='Approve request']"));
+        Assert.Single(list.FindAll("button[aria-label='Decline request']"));
+        _authorization.Verify(
+            p => p.IsAuthorizedAsync(AuthAction.Update, GRANT_REQUEST, request.GrantRequestId),
+            Times.Once
+        );
+    }
+
+    private static GrantRequest PendingRequest() =>
+        new()
+        {
+            GrantRequestId = Guid.CreateVersion7(),
+            AccountId = AccountId,
+            Operation = Extraction,
+            Unit = Page,
+            Quantity = 500,
+            RequestedUtc = Now.AddDays(-1),
+            Status = GrantRequestStatus.Pending,
+        };
 
     [Fact]
     public void GrantEditor_ShowsTheGrantReadOnly_ForReadWithoutUpdate()

@@ -31,11 +31,17 @@ internal interface IGrantProcessor
         CancellationToken ct = default
     );
 
+    Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    );
+
     Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
         DateTime atUtc,
+        IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default
     );
 }

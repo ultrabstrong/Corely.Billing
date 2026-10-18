@@ -7,4 +7,7 @@ internal sealed class IamBillingAccountAccessor(IBlazorUserContextAccessor userC
 {
     public async Task<Guid?> GetAccountIdAsync() =>
         (await userContextAccessor.GetUserContextAsync())?.CurrentAccount?.Id;
+
+    public async Task<Guid?> GetUserIdAsync() =>
+        (await userContextAccessor.GetUserContextAsync())?.User?.Id;
 }

@@ -34,6 +34,7 @@ internal static class GrantMapper
                 Quantity = grant.Quantity,
                 ValidFromUtc = grant.ValidFromUtc,
                 ValidToUtc = grant.ValidToUtc,
+                Disabled = grant.Disabled,
                 TagsJson = TagSerializer.Serialize(grant.Tags),
             };
     }
@@ -50,6 +51,7 @@ internal static class GrantMapper
                 Quantity = entity.Quantity,
                 ValidFromUtc = entity.ValidFromUtc,
                 ValidToUtc = entity.ValidToUtc,
+                Disabled = entity.Disabled,
                 Tags = TagSerializer.Deserialize(entity.TagsJson),
             };
     }
@@ -66,6 +68,7 @@ internal static class GrantMapper
                 Quantity = request.Quantity,
                 ValidFromUtc = request.ValidFromUtc,
                 ValidToUtc = request.ValidToUtc,
+                Disabled = entity.Disabled,
                 Tags = request.Tags,
             };
     }

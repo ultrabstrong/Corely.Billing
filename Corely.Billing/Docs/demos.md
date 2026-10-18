@@ -17,6 +17,7 @@ The web components with nothing else in the way: no sign-in, and a fixed account
 - an upcoming renewal
 - an unlimited grant for embeddings
 - an image grant, in a second unit
+- a pending request for more images, to approve or decline on `/grants`
 
 - **Home**: `UsageDashboard` composed into the demo's own page, with buttons that simulate a chat reply (an estimated hold, settled to the tokens used) an embedding request and an image request (exact holds)
 - **`/grants`, `/usage`**: the library's routed pages, present because the host adds its assembly to the router
@@ -38,9 +39,11 @@ An AI assistant billed in tokens, inside a Corely.IAM app, wired with [Corely.Bi
 
 - **`olivia`** owns the account: she sees usage and grants, and runs the assistant, but cannot create or change grants. The seed provisions those under system context
 - **`carla`** may read and update grants and read consumption: no New grant, no Delete, and Edit on each row
+- **`chloe`** is a client: usage alone, no grants
+- **`priya`** provisions: creates grants, and approves or declines the grant requests owners send. The seed leaves one pending request from `olivia`
 - **`bobby`** is a member with no roles: every panel says he is not allowed
 
-The password for all three is `Test1234`.
+The password for all five is `Test1234`.
 
 ## Running
 

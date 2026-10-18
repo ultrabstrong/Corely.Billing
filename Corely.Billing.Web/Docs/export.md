@@ -38,7 +38,7 @@ The raw usage behind the components, as CSV, for analysis anywhere else. The das
 | `quantity` | The allowance; empty when unlimited |
 | `unlimited` | `true` for a null quantity |
 | `valid_from_utc`, `valid_to_utc` | The window |
-| `status` | `upcoming`, `active` or `expired` when exported |
+| `status` | `upcoming`, `active` or `expired` when exported, or `disabled` whatever the window |
 | `used` | Everything counted against the grant when exported; empty when the caller cannot read consumption |
 | `remaining` | Never below zero; empty when unlimited or `used` is empty |
 | `overdrawn_by` | How far `used` went past `quantity`; empty when `used` is empty |

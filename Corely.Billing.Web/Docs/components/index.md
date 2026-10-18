@@ -4,8 +4,9 @@ Every component takes the account as `AccountId` and calls the Billing services 
 
 | Component | Does |
 |-----------|------|
-| [GrantList](grant-list.md) | Grants with balance, validity and status; edit and delete |
+| [GrantList](grant-list.md) | Grants with balance, validity and status; edit and delete; pending requests to approve or decline |
 | [GrantEditor](grant-editor.md) | Create or edit one grant |
+| [GrantRequestForm](grant-request-form.md) | Ask for a grant |
 | [UsageChart](usage-chart.md) | Used per period, and each grant's live capacity |
 | [ConsumptionTable](consumption-table.md) | Usage events, sorted and paged |
 | [UsageDashboard](usage-dashboard.md) | Range, filters, chart and table together |

@@ -1,6 +1,7 @@
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
 using Corely.Billing.DataAccess;
+using Corely.Billing.GrantRequests.Processors;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Operations;
 using Corely.Billing.Quota.Processors;
@@ -86,6 +87,12 @@ public static class ServiceRegistrationExtensions
             serviceCollection.AddScoped<IGrantProcessor, GrantProcessor>();
             serviceCollection.Decorate<IGrantProcessor, GrantProcessorTelemetryDecorator>();
 
+            serviceCollection.AddScoped<IGrantRequestProcessor, GrantRequestProcessor>();
+            serviceCollection.Decorate<
+                IGrantRequestProcessor,
+                GrantRequestProcessorTelemetryDecorator
+            >();
+
             serviceCollection.AddScoped<IConsumptionProcessor, ConsumptionProcessor>();
             serviceCollection.Decorate<
                 IConsumptionProcessor,
@@ -102,12 +109,17 @@ public static class ServiceRegistrationExtensions
             serviceCollection.Decorate<IQuotaProcessor, QuotaProcessorTelemetryDecorator>();
 
             serviceCollection.AddScoped<IGrantService, GrantService>();
+            serviceCollection.AddScoped<IGrantRequestService, GrantRequestService>();
             serviceCollection.AddScoped<IConsumptionService, ConsumptionService>();
             serviceCollection.AddScoped<IQuotaService, QuotaService>();
 
             options.ServiceDecorators?.Invoke(serviceCollection);
 
             serviceCollection.Decorate<IGrantService, GrantServiceTelemetryDecorator>();
+            serviceCollection.Decorate<
+                IGrantRequestService,
+                GrantRequestServiceTelemetryDecorator
+            >();
             serviceCollection.Decorate<IConsumptionService, ConsumptionServiceTelemetryDecorator>();
             serviceCollection.Decorate<IQuotaService, QuotaServiceTelemetryDecorator>();
 

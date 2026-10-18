@@ -1,3 +1,4 @@
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Extensions;
 using Corely.Billing.IAM.UnitTests.Auditing;
@@ -43,6 +44,10 @@ public class RegistrationTests
             registry.Get(BillingResourceTypes.GRANT_RESOURCE_TYPE)?.Description
         );
         Assert.Equal(
+            BillingResourceTypes.GRANT_REQUEST_DESCRIPTION,
+            registry.Get(BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE)?.Description
+        );
+        Assert.Equal(
             BillingResourceTypes.CONSUMPTION_DESCRIPTION,
             registry.Get(BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE)?.Description
         );
@@ -54,6 +59,10 @@ public class RegistrationTests
 
     [Theory]
     [InlineData(BillingResourceTypes.GRANT_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(
+        BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+        new[] { AuthAction.Read, AuthAction.Create }
+    )]
     [InlineData(BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE, new[] { AuthAction.Read })]
     [InlineData(
         BillingResourceTypes.QUOTA_RESOURCE_TYPE,
@@ -124,6 +133,14 @@ public class RegistrationTests
                             DateTime.UtcNow.AddDays(1)
                         )
                     )
+            ).ResultCode
+        );
+        Assert.Equal(
+            RequestGrantResultCode.UnauthorizedError,
+            (
+                await provider
+                    .GetRequiredService<IGrantRequestService>()
+                    .RequestGrantAsync(new(AccountId, Extraction, Page, 1))
             ).ResultCode
         );
         Assert.Equal(

@@ -26,6 +26,7 @@ public sealed class PortalDemoTests : IDisposable
     [InlineData("/")]
     [InlineData(BillingWebRoutes.GRANTS)]
     [InlineData(BillingWebRoutes.GRANT_NEW)]
+    [InlineData(BillingWebRoutes.GRANT_REQUEST)]
     [InlineData(BillingWebRoutes.USAGE)]
     public async Task EveryPageAnswers_ForTheHomePageAndTheLibrarysRoutedPages(string path)
     {

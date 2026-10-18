@@ -28,6 +28,16 @@ public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
         return result.CreatedId;
     }
 
+    public async Task SetDisabledAsync(Guid grantId, bool disabled)
+    {
+        var result = await host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .SetGrantDisabledAsync(new SetGrantDisabledRequest(accountId, grantId, disabled))
+        );
+        Assert.Equal(Corely.Billing.Models.ModifyResultCode.Success, result.ResultCode);
+    }
+
     public async Task ProcessAsync(string idempotencyScope, long quantity)
     {
         await ReserveAsync(idempotencyScope, quantity: 1);

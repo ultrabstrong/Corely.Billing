@@ -114,6 +114,49 @@ public class GrantEditorTests : BillingWebTestContext
         Assert.Equal([(GrantAction.Update, (Guid?)grant.GrantId)], ActionGate.Calls);
     }
 
+    [Fact]
+    public void ToggleDisabled_DisablesTheGrantAndSaysSo_ForAnEnabledGrant()
+    {
+        var grant = HaveGrant(250);
+        Grants
+            .Setup(g =>
+                g.SetGrantDisabledAsync(
+                    It.IsAny<SetGrantDisabledRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new ModifyResult(ModifyResultCode.Success, ""));
+        var editor = Render(grant.GrantId);
+
+        editor.Find(".cbw-toggle-disabled").Click();
+
+        Grants.Verify(
+            g =>
+                g.SetGrantDisabledAsync(
+                    new SetGrantDisabledRequest(AccountId, grant.GrantId, true),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        Assert.Equal("Enable grant", editor.Find(".cbw-toggle-disabled").TextContent.Trim());
+        Assert.Contains("This grant is disabled.", editor.Markup);
+    }
+
+    [Fact]
+    public void Render_OffersNoToggle_ForAnExistingGrantWithoutUpdate()
+    {
+        var grant = HaveGrant(250);
+        ActionGate.Deny(GrantAction.Update);
+
+        var editor = Render(grant.GrantId);
+
+        Assert.Empty(editor.FindAll(".cbw-toggle-disabled"));
+    }
+
+    [Fact]
+    public void Render_OffersNoToggle_ForANewGrant() =>
+        Assert.Empty(Render().FindAll(".cbw-toggle-disabled"));
+
     private Grant HaveGrant(long quantity)
     {
         var grant = Grant(quantity);

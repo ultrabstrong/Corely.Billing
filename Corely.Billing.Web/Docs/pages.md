@@ -1,12 +1,13 @@
 # Routed Pages
 
-Four pages built from the components. They route only when the host adds this assembly to its router, so a host that composes its own pages gets none of them.
+Five pages built from the components. They route only when the host adds this assembly to its router, so a host that composes its own pages gets none of them.
 
 | Route | Page | Shows |
 |-------|------|-------|
 | `/grants` | `GrantsPage` | `GrantList` |
 | `/grants/new` | `GrantEditorPage` | `GrantEditor` for a new grant |
 | `/grants/{id}` | `GrantEditorPage` | `GrantEditor` for that grant |
+| `/grants/request` | `GrantRequestPage` | `GrantRequestForm` |
 | `/usage` | `UsagePage` | `UsageDashboard` |
 
 ## Usage

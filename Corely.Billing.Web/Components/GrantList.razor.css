@@ -81,6 +81,16 @@
     display: none;
 }
 
+.cbw-request-note {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+}
+
+.cbw-decline-reason {
+    width: 100%;
+}
+
 .cbw-confirm-text {
     font-size: 0.875rem;
     width: 100%;

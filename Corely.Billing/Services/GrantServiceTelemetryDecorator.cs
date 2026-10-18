@@ -60,6 +60,17 @@ internal class GrantServiceTelemetryDecorator(
             logResult: true
         );
 
+    public Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(GrantService),
+            request,
+            () => _inner.SetGrantDisabledAsync(request, ct),
+            logResult: true
+        );
+
     public Task<DeleteGrantResult> DeleteGrantAsync(
         Guid accountId,
         Guid grantId,

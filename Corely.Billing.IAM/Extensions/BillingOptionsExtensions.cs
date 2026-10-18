@@ -22,10 +22,12 @@ public static class BillingOptionsExtensions
                 }
 
                 services.Decorate<IGrantService, GrantAuthorizationDecorator>();
+                services.Decorate<IGrantRequestService, GrantRequestAuthorizationDecorator>();
                 services.Decorate<IConsumptionService, ConsumptionAuthorizationDecorator>();
                 services.Decorate<IQuotaService, QuotaAuthorizationDecorator>();
 
                 services.Decorate<IGrantService, GrantAuditDecorator>();
+                services.Decorate<IGrantRequestService, GrantRequestAuditDecorator>();
                 services.Decorate<IConsumptionService, ConsumptionAuditDecorator>();
                 services.Decorate<IQuotaService, QuotaAuditDecorator>();
             });

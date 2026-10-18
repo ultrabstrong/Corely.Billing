@@ -11,5 +11,11 @@ Dropped ideas that are easy to remember as done are in [`DESIGN-DECISIONS.md`](.
 Holds past their TTL already stop counting. A sweep would mark them released, so the ledger reads
 the same without knowing the TTL rule.
 
+### Withdrawing a grant request
+- [ ] Let the requester withdraw a pending request, as a `Withdrawn` status, so a wrong amount does not need an admin to decline it
+
+### Requester names in the grant list
+- [ ] A name resolver parameter on `GrantList`, so a request row can read "asked by Olivia" instead of carrying only a user id
+
 ### Per-account reservation TTL
 `ReservationTtl` is app-wide. Work with very different run times might want a TTL per operation.

@@ -54,6 +54,16 @@ internal sealed class GrantAuditDecorator(IGrantService inner, IAuditProvider au
             r => AuditOutcome.Of(r.ResultCode)
         );
 
+    public Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    ) =>
+        auditProvider.RecordAsync(
+            OnGrant(AuthAction.Update, request.AccountId, request.GrantId),
+            () => inner.SetGrantDisabledAsync(request, ct),
+            r => AuditOutcome.Of(r.ResultCode)
+        );
+
     public Task<DeleteGrantResult> DeleteGrantAsync(
         Guid accountId,
         Guid grantId,

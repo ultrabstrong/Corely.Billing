@@ -1,8 +1,11 @@
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
+using Corely.Common.Filtering;
+using Corely.Common.Filtering.Filters;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,8 +17,14 @@ public partial class GrantList
 
     private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
 
+    private IGrantRequestService GrantRequestService =>
+        ScopedServices.GetRequiredService<IGrantRequestService>();
+
     private IConsumptionService ConsumptionService =>
         ScopedServices.GetRequiredService<IConsumptionService>();
+
+    private IBillingAccountAccessor AccountAccessor =>
+        ScopedServices.GetRequiredService<IBillingAccountAccessor>();
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -30,6 +39,9 @@ public partial class GrantList
     public string NewGrantHref { get; set; } = BillingWebRoutes.GRANT_NEW;
 
     [Parameter]
+    public string RequestGrantHref { get; set; } = BillingWebRoutes.GRANT_REQUEST;
+
+    [Parameter]
     public Func<Guid, string> GrantHref { get; set; } = BillingWebRoutes.GrantEditor;
 
     [Parameter]
@@ -39,16 +51,23 @@ public partial class GrantList
     public bool ShowExport { get; set; } = true;
 
     private List<Grant> _grants = [];
+    private List<GrantRequest> _requests = [];
     private Dictionary<Guid, long>? _used;
     private bool _loading = true;
     private bool _deleting;
+    private bool _deciding;
     private string? _error;
     private Guid? _confirmingDelete;
+    private Guid? _approving;
+    private Guid? _declining;
+    private string? _declineReason;
     private Guid? _loadedFor;
     private bool _exporting;
     private ExportOutcome? _export;
 
     private DateTime Now => TimeProvider.GetUtcNow().UtcDateTime;
+
+    private bool CanRequestMore => Vocabulary.Unrequested(_requests).Count > 0;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -80,13 +99,32 @@ public partial class GrantList
         {
             _error = result.ResultCode.ErrorMessage("view grants", result.Message);
             _grants = [];
+            _requests = [];
             _loading = false;
             return;
         }
 
         _grants = result.Data?.Items ?? [];
         _used = await ConsumptionService.UsedByGrantAsync(AccountId, _grants);
+        _requests = await PendingRequestsAsync();
         _loading = false;
+    }
+
+    private async Task<List<GrantRequest>> PendingRequestsAsync()
+    {
+        var result = await GrantRequestService.ListGrantRequestsAsync(
+            new ListGrantRequestsRequest(
+                AccountId,
+                Filter: Filter
+                    .For<GrantRequest>()
+                    .Where(
+                        r => r.Status,
+                        EnumFilter<GrantRequestStatus>.Equals(GrantRequestStatus.Pending)
+                    ),
+                Take: int.MaxValue
+            )
+        );
+        return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
 
     private GrantBalance? BalanceOf(Grant grant) =>
@@ -95,6 +133,72 @@ public partial class GrantList
     private void ConfirmDelete(Grant grant) => _confirmingDelete = grant.GrantId;
 
     private void CancelDelete() => _confirmingDelete = null;
+
+    private void ConfirmApprove(GrantRequest request)
+    {
+        _declining = null;
+        _approving = request.GrantRequestId;
+    }
+
+    private void ConfirmDecline(GrantRequest request)
+    {
+        _approving = null;
+        _declineReason = null;
+        _declining = request.GrantRequestId;
+    }
+
+    private void CancelDecision()
+    {
+        _approving = null;
+        _declining = null;
+    }
+
+    private async Task ApproveAsync(GrantRequest request)
+    {
+        var today = Now.Date;
+        _deciding = true;
+        var result = await GrantRequestService.ApproveGrantRequestAsync(
+            new ApproveGrantRequestRequest(
+                AccountId,
+                request.GrantRequestId,
+                today,
+                today.AddYears(1),
+                await AccountAccessor.GetUserIdAsync()
+            )
+        );
+        await DecidedAsync(result.ResultCode, result.Message, "approve");
+    }
+
+    private async Task DeclineAsync(GrantRequest request)
+    {
+        _deciding = true;
+        var result = await GrantRequestService.DeclineGrantRequestAsync(
+            new DeclineGrantRequestRequest(
+                AccountId,
+                request.GrantRequestId,
+                _declineReason,
+                await AccountAccessor.GetUserIdAsync()
+            )
+        );
+        await DecidedAsync(result.ResultCode, result.Message, "decline");
+    }
+
+    private async Task DecidedAsync(
+        DecideGrantRequestResultCode code,
+        string message,
+        string action
+    )
+    {
+        _deciding = false;
+        CancelDecision();
+        if (
+            code
+            is DecideGrantRequestResultCode.Success
+                or DecideGrantRequestResultCode.AlreadyDecidedError
+        )
+            await LoadAsync();
+        _error = code.ErrorMessage(action, message);
+    }
 
     private async Task DeleteAsync(Grant grant)
     {

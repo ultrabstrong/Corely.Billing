@@ -16,7 +16,7 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Corely.Billing.Consumption.Entities.ConsumptionEventEntity", b =>
@@ -87,6 +87,70 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                     b.ToTable("ConsumptionEvents", (string)null);
                 });
 
+            modelBuilder.Entity("Corely.Billing.GrantRequests.Entities.GrantRequestEntity", b =>
+                {
+                    b.Property<Guid>("GrantRequestId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP")
+                        .HasDefaultValueSql("(UTC_TIMESTAMP)");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("DecidedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("DecisionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid?>("GrantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<long>("Quantity")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("RequestedByUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("RequestedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("TagsJson")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("GrantRequestId");
+
+                    b.HasIndex("AccountId", "Status");
+
+                    b.ToTable("GrantRequests", (string)null);
+                });
+
             modelBuilder.Entity("Corely.Billing.Grants.Entities.GrantEntity", b =>
                 {
                     b.Property<Guid>("GrantId")
@@ -99,6 +163,9 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP")
                         .HasDefaultValueSql("(UTC_TIMESTAMP)");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Operation")
                         .IsRequired()

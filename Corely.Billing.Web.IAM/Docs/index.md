@@ -16,8 +16,14 @@ Nothing else: no accessor, no decorators, no `PermissionView` wrappers of the ho
 
 | Service | Does |
 |---------|------|
-| `IBillingAccountAccessor` | `UserContext.CurrentAccount?.Id` of the signed-in user |
-| `IGrantActionGate` | IAM's `PermissionView` around each grant action, on `grant` |
+| `IBillingAccountAccessor` | `UserContext.CurrentAccount?.Id` of the signed-in user, and `UserContext.User?.Id` as the user |
+| `IGrantActionGate` | IAM's `PermissionView` around each grant action, mapped below |
+
+| Grant action | Permission |
+|--------------|------------|
+| `Create`, `Update`, `Delete` | The same action on `grant` |
+| `Request` | Create on `grant_request` |
+| `Decide` | Update on `grant_request` for that request, inside Create on `grant`: the pair approving is authorized against |
 
 It calls `AddBillingWeb` itself.
 
@@ -31,6 +37,14 @@ It calls `AddBillingWeb` itself.
 | None | "You are not allowed to view grants." | "You are not allowed to view this grant." |
 
 Edit and Delete check the row's grant id, so a permission on one grant shows its controls and no others.
+
+| Permissions on `grant_request` | Grant list |
+|--------------------------------|------------|
+| None | No request rows, and no Request a grant |
+| Read, Create (an owner's default) | Pending requests, and Request a grant |
+| Read, Update, with Create on `grant` | Approve and Decline on each pending request |
+
+Decline shows under the same gate as Approve. The service lets a caller with Update on `grant_request` and no Create on `grant` decline through the API; the screen does not offer it.
 
 ## Notes
 

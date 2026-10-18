@@ -16,8 +16,12 @@ Implement `IBillingAccountAccessor`.
 internal sealed class MyAccountAccessor(IMySession session) : IBillingAccountAccessor
 {
     public Task<Guid?> GetAccountIdAsync() => Task.FromResult(session.AccountId);
+
+    public Task<Guid?> GetUserIdAsync() => Task.FromResult(session.UserId);
 }
 ```
+
+`GetUserIdAsync` is optional and returns null by default. When it answers, grant requests record who asked and who decided.
 
 A [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) host skips this step and the next: [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md)'s `AddBillingWebIam()` registers an accessor that reads the signed-in user's account, and gates each action with IAM's `PermissionView`.
 
@@ -37,7 +41,7 @@ builder.Services.AddBillingWeb<MyAccountAccessor>();
 
 ## 4) Gate Grant Actions
 
-Each create, edit and delete control asks `IGrantActionGate` whether to render. The default shows them all; the server still refuses what the host's decorators refuse. To hide controls the caller may not use, register a gate before `AddBillingWeb`:
+Each create, edit, delete, request and decide control asks `IGrantActionGate` whether to render. The default shows them all; the server still refuses what the host's decorators refuse. To hide controls the caller may not use, register a gate before `AddBillingWeb`:
 
 ```csharp
 public interface IGrantActionGate
@@ -53,6 +57,8 @@ public interface IGrantActionGate
 | A row's Delete button | `Delete` | the row's |
 | The editor for a new grant | `Create` | none |
 | The editor for an existing grant; read-only when not authorized | `Update` | the grant's |
+| Request a grant, in the list and the request form | `Request` | none |
+| A pending request's Approve and Decline | `Decide` | the request's |
 
 ## 5) Include Styles
 

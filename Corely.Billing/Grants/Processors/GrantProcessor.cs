@@ -165,21 +165,55 @@ internal class GrantProcessor(
         );
     }
 
+    public async Task<ModifyResult> SetGrantDisabledAsync(
+        SetGrantDisabledRequest request,
+        CancellationToken ct = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        var changed = await _grantRepo.ExecuteUpdateAsync(
+            e => e.AccountId == request.AccountId && e.GrantId == request.GrantId,
+            set => set.SetProperty(e => e.Disabled, request.Disabled),
+            ct
+        );
+        if (changed == 0)
+        {
+            _logger.LogInformation(
+                "Grant {GrantId} not found for AccountId {AccountId}",
+                request.GrantId,
+                request.AccountId
+            );
+            return new ModifyResult(ModifyResultCode.NotFoundError, "Grant not found");
+        }
+
+        _logger.LogInformation(
+            "Grant {GrantId} for AccountId {AccountId} set Disabled {Disabled}",
+            request.GrantId,
+            request.AccountId,
+            request.Disabled
+        );
+        return new ModifyResult(ModifyResultCode.Success, string.Empty);
+    }
+
     public async Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
         DateTime atUtc,
+        IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default
     )
     {
+        List<Guid> held = [.. heldGrantIds ?? []];
         var entities = await _grantRepo.ListAsync(
             e =>
                 e.AccountId == accountId
                 && e.Operation == operation
                 && e.Unit == unit
                 && e.ValidFromUtc <= atUtc
-                && e.ValidToUtc >= atUtc,
+                && e.ValidToUtc >= atUtc
+                && (!e.Disabled || held.Contains(e.GrantId)),
             cancellationToken: ct
         );
 

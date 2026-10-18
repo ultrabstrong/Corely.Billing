@@ -1,3 +1,4 @@
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
@@ -46,6 +47,18 @@ internal static class DemoSeed
                     )
                 );
             }
+
+            await scope
+                .ServiceProvider.GetRequiredService<IGrantRequestService>()
+                .RequestGrantAsync(
+                    new RequestGrantRequest(
+                        DemoUsage.AccountId,
+                        DemoUsage.ImageGeneration,
+                        DemoUsage.Image,
+                        2_000,
+                        "Launching product photos next month"
+                    )
+                );
         }
 
         var random = new Random(42);
@@ -67,7 +80,7 @@ internal static class DemoSeed
         }
 
         Console.WriteLine(
-            $"Seeded 6 grants and {requests:N0} model requests over {HISTORY_DAYS} days."
+            $"Seeded 6 grants, a pending grant request and {requests:N0} model requests over {HISTORY_DAYS} days."
         );
     }
 

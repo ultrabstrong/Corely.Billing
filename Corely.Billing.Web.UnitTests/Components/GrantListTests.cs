@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Web.Components;
@@ -22,13 +23,194 @@ public class GrantListTests : BillingWebTestContext
     [Fact]
     public void Render_OffersNoCreateLink_ForAnEmptyAccountNotAllowedToCreate()
     {
-        ActionGate.Deny(GrantAction.Create);
+        ActionGate.Deny(GrantAction.Create, GrantAction.Request);
         var list = Render();
 
         Assert.Contains("No grants yet", list.Markup);
         Assert.Contains("Grants given to this account will appear here.", list.Markup);
         Assert.Empty(list.FindAll("a"));
-        Assert.Equal([(GrantAction.Create, (Guid?)null)], ActionGate.Calls);
+        Assert.Equal(
+            [(GrantAction.Create, (Guid?)null), (GrantAction.Request, null)],
+            ActionGate.Calls
+        );
+    }
+
+    [Fact]
+    public void Render_OffersARequest_ForAnEmptyAccountAllowedOnlyToRequest()
+    {
+        ActionGate.Deny(GrantAction.Create);
+
+        var links = Render().FindAll(".cbw-empty a");
+
+        Assert.Equal([BillingWebRoutes.GRANT_REQUEST], links.Select(a => a.GetAttribute("href")));
+    }
+
+    [Fact]
+    public void Render_ShowsAPendingRequestAboveTheGrants_ForAnAccountWithBoth()
+    {
+        HaveGrants(Grant(10));
+        HaveRequests(Request(5_000, note: "Month end batch"));
+
+        var rows = Render().FindAll(".cbw-grant-row");
+
+        Assert.Equal(2, rows.Count);
+        Assert.Contains("cbw-request-row", rows[0].ClassName);
+        Assert.Contains("5,000 pages", rows[0].TextContent);
+        Assert.Contains("Month end batch", rows[0].TextContent);
+        Assert.Contains("Requested 2 days ago", rows[0].TextContent);
+        Assert.Contains("Requested", rows[0].QuerySelector(".badge")!.TextContent);
+    }
+
+    [Fact]
+    public void Render_ListsOnlyPendingRequests_ForTheRequestQuery()
+    {
+        Render();
+
+        GrantRequests.Verify(g =>
+            g.ListGrantRequestsAsync(
+                It.Is<ListGrantRequestsRequest>(r => r.AccountId == AccountId && r.Filter != null),
+                null,
+                It.IsAny<CancellationToken>()
+            )
+        );
+    }
+
+    [Fact]
+    public void Render_ShowsGrantsAndNoError_ForARefusedRequestRead()
+    {
+        HaveGrants(Grant(10));
+        DenyRequests();
+
+        var list = Render();
+
+        Assert.Single(list.FindAll(".cbw-grant-row"));
+        Assert.Empty(list.FindAll(".alert-danger"));
+    }
+
+    [Fact]
+    public void Render_HidesTheRequestButton_ForEveryOperationAndUnitPending()
+    {
+        HaveRequests(Request(5));
+
+        var toolbar = Render().FindAll(".cbw-toolbar a");
+
+        Assert.DoesNotContain(
+            BillingWebRoutes.GRANT_REQUEST,
+            toolbar.Select(a => a.GetAttribute("href"))
+        );
+    }
+
+    [Fact]
+    public void Approve_ConfirmsThenApprovesForAYearFromToday_ForARequest()
+    {
+        var request = Request(5_000);
+        HaveRequests(request);
+        GrantRequests
+            .Setup(g =>
+                g.ApproveGrantRequestAsync(
+                    It.IsAny<ApproveGrantRequestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new ApproveGrantRequestResult(
+                    DecideGrantRequestResultCode.Success,
+                    string.Empty,
+                    Guid.CreateVersion7()
+                )
+            );
+        var list = Render();
+
+        list.Find("button[aria-label='Approve request']").Click();
+        Assert.Contains("Approve 5,000 pages for a year from today?", list.Markup);
+        list.Find(".btn-success").Click();
+
+        GrantRequests.Verify(
+            g =>
+                g.ApproveGrantRequestAsync(
+                    new ApproveGrantRequestRequest(
+                        AccountId,
+                        request.GrantRequestId,
+                        Now.Date,
+                        Now.Date.AddYears(1)
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public void Decline_SendsTheReason_ForADeclinedRequest()
+    {
+        var request = Request(5_000);
+        HaveRequests(request);
+        GrantRequests
+            .Setup(g =>
+                g.DeclineGrantRequestAsync(
+                    It.IsAny<DeclineGrantRequestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new DeclineGrantRequestResult(DecideGrantRequestResultCode.Success, string.Empty)
+            );
+        var list = Render();
+
+        list.Find("button[aria-label='Decline request']").Click();
+        list.Find(".cbw-decline-reason").Change("Use the annual plan");
+        list.Find(".cbw-grant-actions .btn-danger").Click();
+
+        GrantRequests.Verify(
+            g =>
+                g.DeclineGrantRequestAsync(
+                    new DeclineGrantRequestRequest(
+                        AccountId,
+                        request.GrantRequestId,
+                        "Use the annual plan"
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public void Approve_ReloadsAndSaysSo_ForARequestSomeoneElseDecided()
+    {
+        HaveRequests(Request(5_000));
+        GrantRequests
+            .Setup(g =>
+                g.ApproveGrantRequestAsync(
+                    It.IsAny<ApproveGrantRequestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new ApproveGrantRequestResult(
+                    DecideGrantRequestResultCode.AlreadyDecidedError,
+                    "decided",
+                    Guid.Empty
+                )
+            );
+        var list = Render();
+
+        list.Find("button[aria-label='Approve request']").Click();
+        list.Find(".btn-success").Click();
+
+        Assert.Equal(
+            "Someone else already decided that request.",
+            list.Find(".alert-danger").TextContent
+        );
+        GrantRequests.Verify(
+            g =>
+                g.ListGrantRequestsAsync(
+                    It.IsAny<ListGrantRequestsRequest>(),
+                    It.IsAny<IReadOnlySet<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
     }
 
     [Fact]
@@ -131,7 +313,8 @@ public class GrantListTests : BillingWebTestContext
 
         Assert.Equal(
             [
-                (GrantAction.Create, (Guid?)null),
+                (GrantAction.Request, (Guid?)null),
+                (GrantAction.Create, null),
                 (GrantAction.Update, grant.GrantId),
                 (GrantAction.Delete, grant.GrantId),
             ],
@@ -143,7 +326,7 @@ public class GrantListTests : BillingWebTestContext
     public void Render_ShowsEditOnly_ForUpdateWithoutCreateOrDelete()
     {
         HaveGrants(Grant(10));
-        ActionGate.Deny(GrantAction.Create, GrantAction.Delete);
+        ActionGate.Deny(GrantAction.Create, GrantAction.Delete, GrantAction.Request);
 
         var list = Render();
 

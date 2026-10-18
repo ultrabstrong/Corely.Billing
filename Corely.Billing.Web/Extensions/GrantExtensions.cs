@@ -39,12 +39,15 @@ internal static class GrantExtensions
         }
 
         public GrantStatus Status(DateTime utcNow) =>
+            grant.Disabled ? GrantStatus.Disabled : grant.Window(utcNow);
+
+        public GrantStatus Window(DateTime utcNow) =>
             utcNow < grant.ValidFromUtc ? GrantStatus.Upcoming
             : utcNow > grant.ValidToUtc ? GrantStatus.Expired
             : GrantStatus.Active;
 
         public string WhenText(DateTime utcNow) =>
-            grant.Status(utcNow) switch
+            grant.Window(utcNow) switch
             {
                 GrantStatus.Upcoming => $"Starts {(grant.ValidFromUtc - utcNow).AheadText()}",
                 GrantStatus.Active => $"Expires {(grant.ValidToUtc - utcNow).AheadText()}",

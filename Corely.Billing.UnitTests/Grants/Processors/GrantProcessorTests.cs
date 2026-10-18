@@ -200,6 +200,80 @@ public class GrantProcessorTests
     }
 
     [Fact]
+    public async Task SetGrantDisabledAsync_DisablesThenEnables_ForAnExistingGrant()
+    {
+        var grantId = await CreateGrantAsync();
+
+        var disabled = await _grantProcessor.SetGrantDisabledAsync(new(AccountId, grantId, true));
+        var afterDisable = (await _grantProcessor.GetGrantAsync(AccountId, grantId)).Item!;
+        await _grantProcessor.SetGrantDisabledAsync(new(AccountId, grantId, false));
+        var afterEnable = (await _grantProcessor.GetGrantAsync(AccountId, grantId)).Item!;
+
+        Assert.Equal(ModifyResultCode.Success, disabled.ResultCode);
+        Assert.True(afterDisable.Disabled);
+        Assert.False(afterEnable.Disabled);
+    }
+
+    [Fact]
+    public async Task SetGrantDisabledAsync_ReturnsNotFound_ForAnotherAccountsGrant()
+    {
+        var grantId = await CreateGrantAsync(accountId: Guid.CreateVersion7());
+
+        var result = await _grantProcessor.SetGrantDisabledAsync(new(AccountId, grantId, true));
+
+        Assert.Equal(ModifyResultCode.NotFoundError, result.ResultCode);
+        var entity = await _grantRepo.GetAsync(e => e.GrantId == grantId);
+        Assert.False(entity!.Disabled);
+    }
+
+    [Fact]
+    public async Task UpdateGrantAsync_KeepsItDisabled_ForADisabledGrant()
+    {
+        var grantId = await CreateGrantAsync();
+        await _grantProcessor.SetGrantDisabledAsync(new(AccountId, grantId, true));
+
+        await _grantProcessor.UpdateGrantAsync(
+            new UpdateGrantRequest(AccountId, grantId, TestUsage.Page, 250, Now, Now.AddDays(60))
+        );
+
+        Assert.True((await _grantProcessor.GetGrantAsync(AccountId, grantId)).Item!.Disabled);
+    }
+
+    [Fact]
+    public async Task ListActiveGrantsAsync_SkipsADisabledGrant_ForNoHolds()
+    {
+        var live = await CreateGrantAsync();
+        var paused = await CreateGrantAsync();
+        await _grantProcessor.SetGrantDisabledAsync(new(AccountId, paused, true));
+
+        var grants = await _grantProcessor.ListActiveGrantsAsync(
+            AccountId,
+            TestUsage.Extraction,
+            TestUsage.Page,
+            Now
+        );
+
+        Assert.Equal(live, Assert.Single(grants).GrantId);
+    }
+
+    [Fact]
+    public async Task ListActiveGrantsAsync_KeepsADisabledGrant_ForAHoldStillOnIt()
+    {
+        var paused = await CreateGrantAsync();
+        await _grantProcessor.SetGrantDisabledAsync(new(AccountId, paused, true));
+
+        var grants = await _grantProcessor.ListActiveGrantsAsync(
+            AccountId,
+            TestUsage.Extraction,
+            TestUsage.Page,
+            Now,
+            [paused]
+        );
+
+        Assert.Equal(paused, Assert.Single(grants).GrantId);
+    }
+
+    [Fact]
     public async Task ListActiveGrantsAsync_ReturnsNothing_ForADifferentUnit()
     {
         await CreateGrantAsync();

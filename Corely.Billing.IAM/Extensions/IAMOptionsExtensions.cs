@@ -15,6 +15,12 @@ public static class IAMOptionsExtensions
                     AuthAction.Read
                 )
                 .RegisterResourceType(
+                    BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+                    BillingResourceTypes.GRANT_REQUEST_DESCRIPTION,
+                    AuthAction.Read,
+                    AuthAction.Create
+                )
+                .RegisterResourceType(
                     BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE,
                     BillingResourceTypes.CONSUMPTION_DESCRIPTION,
                     AuthAction.Read

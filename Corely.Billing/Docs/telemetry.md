@@ -34,10 +34,16 @@ Metric names carry no prefix. Add one in the implementation if your dashboards n
 | `Grants.GRANT_SAVED` | `entitlements.grant.saved` | Count | A grant is created |
 | `Grants.GRANT_UPDATED` | `entitlements.grant.updated` | Count | A grant is updated |
 | `Grants.GRANT_DELETED` | `entitlements.grant.deleted` | Count | A grant is deleted |
+| `Grants.GRANT_DISABLED` | `entitlements.grant.disabled` | Count | A grant is disabled |
+| `Grants.GRANT_ENABLED` | `entitlements.grant.enabled` | Count | A grant is enabled again |
 | `Grants.GRANT_QUANTITY` | `entitlements.grant.quantity` | Value | A grant is created or updated |
 | `Grants.GRANT_VALIDITY_DAYS` | `entitlements.grant.validity_days` | Value | A grant is created |
 | `Grants.GRANT_ACTIVE_COUNT` | `entitlements.grant.active_count` | Value | Live grants are loaded |
 | `Grants.GRANT_TOTAL_COUNT` | `entitlements.grant.total_count` | Value | Grants are listed |
+| `GrantRequests.GRANT_REQUEST_CREATED` | `entitlements.grant_request.created` | Count | A grant is requested |
+| `GrantRequests.GRANT_REQUEST_QUANTITY` | `entitlements.grant_request.quantity` | Value | A grant is requested |
+| `GrantRequests.GRANT_REQUEST_APPROVED` | `entitlements.grant_request.approved` | Count | A request is approved |
+| `GrantRequests.GRANT_REQUEST_DECLINED` | `entitlements.grant_request.declined` | Count | A request is declined |
 | `Consumption.RESERVATION_TAKEN` | `metering.reservation.taken` | Count | A hold is written |
 | `Consumption.RESERVATION_QUANTITY` | `metering.reservation.quantity` | Value | A hold is written |
 | `Consumption.RESERVATION_SETTLED` | `metering.reservation.settled` | Count | Holds are settled |

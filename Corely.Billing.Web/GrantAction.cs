@@ -5,4 +5,6 @@ public enum GrantAction
     Create,
     Update,
     Delete,
+    Request,
+    Decide,
 }

@@ -10,6 +10,7 @@ Manages grants: an account's allowance of one unit for one operation, valid betw
 | `GetGrantAsync` | `Guid accountId, Guid grantId` | `RetrieveSingleResult<Grant>` |
 | `ListGrantsAsync` | `ListGrantsRequest`, `IReadOnlySet<Guid>? authorizedResourceIds` | `RetrieveListResult<Grant>` |
 | `UpdateGrantAsync` | `UpdateGrantRequest` | `ModifyResult` |
+| `SetGrantDisabledAsync` | `SetGrantDisabledRequest` | `ModifyResult` |
 | `DeleteGrantAsync` | `Guid accountId, Guid grantId` | `DeleteGrantResult` |
 
 ## Usage
@@ -57,6 +58,14 @@ await grantService.UpdateGrantAsync(new UpdateGrantRequest(
     accountId, grantId, MyUsage.Token, Quantity: 1_500_000, periodStart, periodEnd));
 ```
 
+### Disable and enable
+
+```csharp
+await grantService.SetGrantDisabledAsync(new SetGrantDisabledRequest(accountId, grantId, Disabled: true));
+```
+
+A disabled grant gives out nothing new: quota does not reserve against it or count it toward availability, as if it had expired. Work that already holds quota on it finishes there; its settlement still charges the grant it held. Enable it again with `Disabled: false`. `UpdateGrantAsync` never changes the flag.
+
 ## Validation
 
 | Rule | Code |
@@ -71,4 +80,4 @@ await grantService.UpdateGrantAsync(new UpdateGrantRequest(
 - Every method is scoped by `accountId`; another account's grant reads as `NotFoundError`
 - An update cannot change a grant's operation; create a new grant instead
 - Deleting a grant leaves its consumption rows in place
-- A grant is live while `ValidFromUtc <= now <= ValidToUtc`
+- A grant is live while `ValidFromUtc <= now <= ValidToUtc` and it is not disabled
