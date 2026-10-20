@@ -69,7 +69,7 @@ public partial class GrantList
 
     private bool CanRequestMore => Vocabulary.Unrequested(_requests).Count > 0;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetSignedInAsync()
     {
         if (_loadedFor == AccountId)
             return;

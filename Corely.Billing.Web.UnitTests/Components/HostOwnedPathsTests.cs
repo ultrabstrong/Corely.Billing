@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace Corely.Billing.Web.UnitTests.Components;
 
-// The library ships components; the host decides every path. This keeps it that way.
 public class HostOwnedPathsTests
 {
     [Fact]

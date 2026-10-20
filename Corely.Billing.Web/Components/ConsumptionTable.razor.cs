@@ -55,7 +55,7 @@ public partial class ConsumptionTable
     private bool _exporting;
     private ExportOutcome? _export;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetSignedInAsync()
     {
         var key = $"{AccountId}|{Filter.Signature}|{PageSize}";
         if (_loadedFor == key)

@@ -14,8 +14,19 @@ public abstract class BillingComponentBase : OwningComponentBase
     internal UsageExporter Exporter =>
         _exporter ??= ActivatorUtilities.CreateInstance<UsageExporter>(ScopedServices, JSRuntime);
 
-    protected override async Task OnInitializedAsync() =>
-        await ScopedServices.GetRequiredService<IBillingAccountAccessor>().GetAccountIdAsync();
+    private Task? _signIn;
+
+    protected override Task OnInitializedAsync() =>
+        _signIn = ScopedServices.GetRequiredService<IBillingAccountAccessor>().GetAccountIdAsync();
+
+    protected sealed override async Task OnParametersSetAsync()
+    {
+        if (_signIn is not null)
+            await _signIn;
+        await OnParametersSetSignedInAsync();
+    }
+
+    protected virtual Task OnParametersSetSignedInAsync() => Task.CompletedTask;
 
     protected override async ValueTask DisposeAsyncCore()
     {

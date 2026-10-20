@@ -59,7 +59,7 @@ public partial class GrantEditor
         set => _unit = UsageUnit.From(value);
     }
 
-    protected override Task OnParametersSetAsync() => LoadAsync();
+    protected override Task OnParametersSetSignedInAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

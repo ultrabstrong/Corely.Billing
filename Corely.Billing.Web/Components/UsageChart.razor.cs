@@ -103,7 +103,7 @@ public partial class UsageChart
             ? "No limited grant covers this range, so there is no balance to draw."
         : "Nothing was used in this range, and no limited grant covers it.";
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetSignedInAsync()
     {
         if (_parametersFor != (View, BreakDownBy, ShowGrants))
         {

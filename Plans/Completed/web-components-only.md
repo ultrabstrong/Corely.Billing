@@ -1,7 +1,7 @@
 # Corely.Billing.Web: components only, the host owns every path
 
-**Status: built, awaiting release** as `Corely.Billing.Web` 3.0.0 and `Corely.Billing.Web.IAM` 3.0.0 (on
-Corely.IAM.Web 7.0.0), verified against DocsToData through a local package feed. Second of three
+**Status: released** as `Corely.Billing.Web` 3.0.0 and `Corely.Billing.Web.IAM` 3.0.0 (on Corely.IAM.Web
+7.0.0), with `Corely.Billing.Web` 3.0.1 fixing a component that loaded before its scope signed in. Second of three
 plans in order: after
 `Corely.IAM/Plans/web-components-only.md`, before `DocsToData/Plans/New/account-scoped-routes.md`.
 
@@ -103,3 +103,11 @@ pages; check with a build).
 7. **DocsToData check:** the portal built and passed its unit and functional tests on the local
    packages, and its grants list, grant editor and usage dashboard rendered with the portal's links
    and no console errors.
+8. **3.0.1: a component waits for its scope to sign in.** DocsToData's grants page, inside
+   `AccountScope`, showed "You are not allowed to view grants". `BillingComponentBase` signed its
+   scope in from `OnInitializedAsync`, but Blazor calls `OnParametersSetAsync` straight away for
+   parameters that arrive while that is still awaiting, and `AccountScope`'s re-render sends them;
+   `GrantList` then listed grants on an unsigned scope. The base now seals `OnParametersSetAsync`,
+   awaits the sign in, and calls `OnParametersSetSignedInAsync`, which the five loading components
+   override instead. `BillingComponentBaseTests` re-sends parameters during a held sign in and fails
+   without the wait.

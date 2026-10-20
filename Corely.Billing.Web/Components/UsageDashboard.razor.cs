@@ -66,7 +66,7 @@ public partial class UsageDashboard
 
     private DateTime Today => TimeProvider.GetUtcNow().UtcDateTime.Date;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetSignedInAsync()
     {
         if (_loadedFor == AccountId)
             return;
