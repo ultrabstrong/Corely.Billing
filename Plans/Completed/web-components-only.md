@@ -1,6 +1,8 @@
 # Corely.Billing.Web: components only, the host owns every path
 
-Status: planned 2026-10-20, not started. Second of three plans in order: after
+**Status: built, awaiting release** as `Corely.Billing.Web` 3.0.0 and `Corely.Billing.Web.IAM` 3.0.0 (on
+Corely.IAM.Web 7.0.0), verified against DocsToData through a local package feed. Second of three
+plans in order: after
 `Corely.IAM/Plans/web-components-only.md`, before `DocsToData/Plans/New/account-scoped-routes.md`.
 
 ## Why
@@ -76,3 +78,28 @@ pages; check with a build).
 4. As with Corely.IAM: verify against DocsToData through a local package feed first, then tag
    `Corely.Billing.Web-v3.0.0` and `Corely.Billing.Web.IAM-v3.0.0` **only with the owner's say so**,
    after this plan moves to `Plans/Completed/`.
+
+## As built
+
+1. **`BillingPageBase` moved to `Corely.Billing.Web.Components`**, beside `BillingComponentBase`, and
+   its `AccountId` became `CurrentAccountId`. A shell at an account path takes an `AccountId` route
+   parameter, which would otherwise collide with the base's property; the new name matches
+   Corely.IAM.Web's `AuthenticatedPageBase.CurrentAccountId` and says which account it is.
+2. **The WithIAM shells load for the signed in account.** Each inherits `BillingPageBase`, wraps its
+   content in `AccountScope`, passes `CurrentAccountId` to the component and uses the route's
+   `AccountId` only for links, so the URL is never an authorization input. They carry `[Authorize]`;
+   the Portal shells keep the old pages' shape with `PortalRoutes` paths.
+3. **The demos' paths live in each demo** (`PortalRoutes`, `DemoRoutes`), not in the library.
+   `Corely.Billing.Web.IAM` needed no code change for Corely.IAM.Web 7, only the package version.
+4. **The editor and request form already navigated only through callbacks**; nothing fell back to a
+   library path once the pages left.
+5. **Docs:** `Docs/pages.md` became `Docs/hosting-components.md`; the migration guide is
+   `MIGRATION-Billing.Web-3.0.md`.
+6. **Tests:** `HostOwnedPathsTests` fails on any `RouteAttribute` in the assembly (adding `@page` to
+   a component turned it red; restored). `GrantListTests` and `PermissionGateTests` pass host links
+   and assert they render as given. `WithIamDemoTests` proves each account shell answers and sends an
+   anonymous visitor to sign in with the page as return URL; `PortalDemoTests` serves the moved
+   pages at the demo's paths.
+7. **DocsToData check:** the portal built and passed its unit and functional tests on the local
+   packages, and its grants list, grant editor and usage dashboard rendered with the portal's links
+   and no console errors.
