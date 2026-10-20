@@ -1,0 +1,19 @@
+@page "/accounts/{AccountId:guid}/usage"
+@attribute [Authorize]
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Usage</PageTitle>
+
+<h1 class="h3 mb-3">Usage</h1>
+
+<AccountScope AccountId="AccountId">
+    @if (CurrentAccountId is { } accountId)
+    {
+        <UsageDashboard AccountId="accountId" />
+    }
+</AccountScope>
+
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+}

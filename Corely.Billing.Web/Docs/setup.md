@@ -76,4 +76,4 @@ Bootstrap 5.3 and Bootstrap Icons come from the host.
 - Authorization belongs in the host's service decorators, through `BillingOptions.DecorateServices`. See the [Authorization](../../Corely.Billing/Docs/authorization.md) docs.
 - Each component owns its DI scope (`OwningComponentBase`), so components loading together never share a `DbContext`. A component calls `IBillingAccountAccessor.GetAccountIdAsync()` in its own scope before anything else, which is where an accessor signs that scope in when the host's decorators need a user: IAM's does.
 - A host's own component that calls Billing services follows the same two rules: inherit `OwningComponentBase` and take scoped services from `ScopedServices`, never `@inject` or `[Inject]`, which resolve from the circuit's scope.
-- For the routed pages, see [Routed Pages](pages.md).
+- The library has no routed pages and its assembly is not added to the router. Write a shell per page; see [Hosting the Components](hosting-components.md).

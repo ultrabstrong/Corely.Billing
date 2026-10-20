@@ -19,6 +19,9 @@ namespace Corely.Billing.Web.IAM.UnitTests;
 
 public class PermissionGateTests : BunitContext
 {
+    private const string NEW_GRANT_HREF = "/host/grants/new";
+    private const string REQUEST_GRANT_HREF = "/host/grants/request";
+
     private const string GRANT = BillingResourceTypes.GRANT_RESOURCE_TYPE;
     private const string GRANT_REQUEST = BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE;
 
@@ -139,7 +142,12 @@ public class PermissionGateTests : BunitContext
     private void Allow(params AuthAction[] actions) => _allowed.UnionWith(actions);
 
     private IRenderedComponent<GrantList> RenderList() =>
-        Render<GrantList>(p => p.Add(c => c.AccountId, AccountId));
+        Render<GrantList>(p =>
+            p.Add(c => c.AccountId, AccountId)
+                .Add(c => c.NewGrantHref, NEW_GRANT_HREF)
+                .Add(c => c.RequestGrantHref, REQUEST_GRANT_HREF)
+                .Add(c => c.GrantHref, id => $"/host/grants/{id}")
+        );
 
     [Fact]
     public void GrantList_ShowsEditOnly_ForReadAndUpdateWithoutCreateOrDelete()
@@ -203,7 +211,7 @@ public class PermissionGateTests : BunitContext
 
         var toolbar = RenderList().FindAll(".cbw-toolbar a");
 
-        Assert.Equal([BillingWebRoutes.GRANT_REQUEST], toolbar.Select(a => a.GetAttribute("href")));
+        Assert.Equal([REQUEST_GRANT_HREF], toolbar.Select(a => a.GetAttribute("href")));
     }
 
     [Fact]

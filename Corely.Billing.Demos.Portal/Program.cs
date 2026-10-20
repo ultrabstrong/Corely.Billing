@@ -37,8 +37,6 @@ if (seeding)
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddAdditionalAssemblies(typeof(BillingWebRoutes).Assembly)
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

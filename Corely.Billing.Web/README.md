@@ -1,6 +1,6 @@
 # Corely.Billing.Web
 
-Blazor Server components for [Corely.Billing](https://github.com/ultrabstrong/Corely.Billing): a grant list and editor, a usage chart with six views, a usage event table, and CSV export, plus four opt-in routed pages.
+Blazor Server components for [Corely.Billing](https://github.com/ultrabstrong/Corely.Billing): a grant list and editor, a usage chart with six views, a usage event table, and CSV export. The host places them at its own paths.
 
 ```csharp
 builder.Services.AddBillingServices(billingOptions);

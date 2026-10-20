@@ -5,14 +5,14 @@
 
 <PageTitle>Request a grant</PageTitle>
 
-<a class="btn btn-link px-0 mb-2" href="@BillingWebRoutes.GRANTS"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Grants</a>
+<a class="btn btn-link px-0 mb-2" href="@PortalRoutes.GRANTS"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Grants</a>
 <h1 class="h3 mb-3">Request a grant</h1>
 
-@if (Loaded && AccountId is null)
+@if (Loaded && CurrentAccountId is null)
 {
     <div class="alert alert-warning" role="alert">No account is selected.</div>
 }
-else if (AccountId is { } accountId)
+else if (CurrentAccountId is { } accountId)
 {
     <div class="cbw-editor-page">
         <GrantRequestForm AccountId="accountId" OnSent="BackToList" OnCancel="BackToList" />
@@ -20,5 +20,5 @@ else if (AccountId is { } accountId)
 }
 
 @code {
-    private void BackToList() => Navigation.NavigateTo(BillingWebRoutes.GRANTS);
+    private void BackToList() => Navigation.NavigateTo(PortalRoutes.GRANTS);
 }

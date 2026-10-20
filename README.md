@@ -86,7 +86,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, tok
 | Project | Purpose |
 |---------|---------|
 | `Corely.Billing` | Core library: grants, the consumption ledger, quota |
-| `Corely.Billing.Web` | Blazor components and opt-in routed pages for grants and usage |
+| `Corely.Billing.Web` | Blazor components for grants and usage, placed by the host at its own paths |
 | `Corely.Billing.IAM` | Corely.IAM resource types and authorization decorators for the Billing services |
 | `Corely.Billing.Web.IAM` | [Corely.IAM.Web](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM.Web/Docs/index.md) for the web components: the signed-in account and per-action gates |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo: grant, reserve, settle on SQLite |

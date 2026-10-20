@@ -1,0 +1,26 @@
+@page "/accounts/{AccountId:guid}/grants/request"
+@attribute [Authorize]
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject NavigationManager Navigation
+
+<PageTitle>Request a grant</PageTitle>
+
+<a class="btn btn-link px-0 mb-2" href="@DemoRoutes.Grants(AccountId)"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Grants</a>
+<h1 class="h3 mb-3">Request a grant</h1>
+
+<AccountScope AccountId="AccountId">
+    @if (CurrentAccountId is { } accountId)
+    {
+        <div class="cbw-editor-page">
+            <GrantRequestForm AccountId="accountId" OnSent="BackToList" OnCancel="BackToList" />
+        </div>
+    }
+</AccountScope>
+
+@code {
+    [Parameter]
+    public Guid AccountId { get; set; }
+
+    private void BackToList() => Navigation.NavigateTo(DemoRoutes.Grants(AccountId));
+}

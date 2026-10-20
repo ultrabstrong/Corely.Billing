@@ -149,7 +149,7 @@ git push origin Corely.Billing-v2.0.1
 | Project | Purpose |
 |---------|---------|
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
-| `Corely.Billing.Web` | Blazor Server components and opt-in routed pages. Versioned on its own. No reference to Corely.IAM |
+| `Corely.Billing.Web` | Blazor Server components. The host writes the pages and passes every link; the demos hold working shells. Versioned on its own. No reference to Corely.IAM |
 | `Corely.Billing.IAM` | Corely.IAM permissions for the three services: resource types, authorization and audit decorators shaped like IAM's own, `UseCorelyIamPermissions()`. Versioned on its own |
 | `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. Versioned on its own |
 | `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |

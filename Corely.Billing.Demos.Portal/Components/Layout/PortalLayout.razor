@@ -5,8 +5,8 @@
         <div class="container">
             <a class="navbar-brand" href="/"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Billing portal</a>
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.GRANTS">Grants</NavLink></li>
-                <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.USAGE">Usage</NavLink></li>
+                <li class="nav-item"><NavLink class="nav-link" href="@PortalRoutes.GRANTS">Grants</NavLink></li>
+                <li class="nav-item"><NavLink class="nav-link" href="@PortalRoutes.USAGE">Usage</NavLink></li>
             </ul>
             <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ToggleTheme"
                     aria-label="@(_theme == "dark" ? "Use light theme" : "Use dark theme")">

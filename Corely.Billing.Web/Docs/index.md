@@ -1,6 +1,6 @@
 # Corely.Billing.Web Documentation
 
-Blazor Server components for Corely.Billing: a grant list and editor, a usage chart with six views, a usage event table, and CSV export of all of it. A host drops them into its own pages, or opts in to four routed pages that use them.
+Blazor Server components for Corely.Billing: a grant list and editor, a usage chart with six views, a usage event table, and CSV export of all of it. A host places them in its own pages, at its own paths, and passes every link.
 
 - **No identity library**: the host says which account, and a gate decides which grant actions to show; [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Docs/index.md) wires both to [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM)
 - **Authorization stays in the host**: an `UnauthorizedError` from a decorated service shows as a message
@@ -21,7 +21,7 @@ Blazor Server components for Corely.Billing: a grant list and editor, a usage ch
     - [ConsumptionTable](components/consumption-table.md)
     - [UsageDashboard](components/usage-dashboard.md)
 - [Export](export.md)
-- [Routed Pages](pages.md)
+- [Hosting the Components](hosting-components.md)
 - [Styling](styling.md)
 
 ## Quick Start
@@ -33,6 +33,6 @@ builder.Services.AddBillingWeb<MyAccountAccessor>();
 ```
 
 ```razor
-<GrantList AccountId="accountId" />
+<GrantList AccountId="accountId" NewGrantHref="/grants/new" RequestGrantHref="/grants/request" GrantHref="id => $&quot;/grants/{id}&quot;" />
 <UsageDashboard AccountId="accountId" />
 ```

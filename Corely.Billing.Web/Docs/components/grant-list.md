@@ -5,7 +5,10 @@ An account's grants, newest first, each with its balance, validity window and st
 ## Usage
 
 ```razor
-<GrantList AccountId="accountId" />
+<GrantList AccountId="accountId"
+           NewGrantHref="/grants/new"
+           RequestGrantHref="/grants/request"
+           GrantHref="id => $&quot;/grants/{id}&quot;" />
 ```
 
 ## Parameters
@@ -13,9 +16,9 @@ An account's grants, newest first, each with its balance, validity window and st
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `AccountId` | required | The account |
-| `NewGrantHref` | `BillingWebRoutes.GRANT_NEW` | Where "New grant" goes |
-| `RequestGrantHref` | `BillingWebRoutes.GRANT_REQUEST` | Where "Request a grant" goes |
-| `GrantHref` | `BillingWebRoutes.GrantEditor` | Where a grant's edit link goes |
+| `NewGrantHref` | required | Where "New grant" goes |
+| `RequestGrantHref` | required | Where "Request a grant" goes |
+| `GrantHref` | required | Where a grant's edit link goes, given its id |
 | `OnDeleted` | none | Called with the deleted grant |
 | `ShowExport` | `true` | Show the CSV button |
 

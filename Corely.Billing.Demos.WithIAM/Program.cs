@@ -82,8 +82,6 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 
 app.MapRazorPages();
-app.MapRazorComponents<App>()
-    .AddAdditionalAssemblies(typeof(BillingWebRoutes).Assembly)
-    .AddInteractiveServerRenderMode();
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

@@ -6,11 +6,11 @@
 
 <h1 class="h3 mb-3">Usage</h1>
 
-@if (Loaded && AccountId is null)
+@if (Loaded && CurrentAccountId is null)
 {
     <div class="alert alert-warning" role="alert">No account is selected.</div>
 }
-else if (AccountId is { } accountId)
+else if (CurrentAccountId is { } accountId)
 {
     <UsageDashboard AccountId="accountId" />
 }

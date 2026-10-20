@@ -8,8 +8,16 @@ namespace Corely.Billing.Web.UnitTests.Components;
 
 public class GrantListTests : BillingWebTestContext
 {
+    private const string NEW_GRANT_HREF = "/host/grants/new";
+    private const string REQUEST_GRANT_HREF = "/host/grants/request";
+
     private IRenderedComponent<GrantList> Render() =>
-        Render<GrantList>(p => p.Add(c => c.AccountId, AccountId));
+        Render<GrantList>(p =>
+            p.Add(c => c.AccountId, AccountId)
+                .Add(c => c.NewGrantHref, NEW_GRANT_HREF)
+                .Add(c => c.RequestGrantHref, REQUEST_GRANT_HREF)
+                .Add(c => c.GrantHref, id => $"/host/grants/{id}")
+        );
 
     [Fact]
     public void Render_OffersTheFirstGrant_ForAnEmptyAccountAllowedToCreate()
@@ -17,7 +25,7 @@ public class GrantListTests : BillingWebTestContext
         var list = Render();
 
         Assert.Contains("No grants yet", list.Markup);
-        Assert.Equal(BillingWebRoutes.GRANT_NEW, list.Find(".cbw-empty a").GetAttribute("href"));
+        Assert.Equal(NEW_GRANT_HREF, list.Find(".cbw-empty a").GetAttribute("href"));
     }
 
     [Fact]
@@ -42,7 +50,7 @@ public class GrantListTests : BillingWebTestContext
 
         var links = Render().FindAll(".cbw-empty a");
 
-        Assert.Equal([BillingWebRoutes.GRANT_REQUEST], links.Select(a => a.GetAttribute("href")));
+        Assert.Equal([REQUEST_GRANT_HREF], links.Select(a => a.GetAttribute("href")));
     }
 
     [Fact]
@@ -94,10 +102,7 @@ public class GrantListTests : BillingWebTestContext
 
         var toolbar = Render().FindAll(".cbw-toolbar a");
 
-        Assert.DoesNotContain(
-            BillingWebRoutes.GRANT_REQUEST,
-            toolbar.Select(a => a.GetAttribute("href"))
-        );
+        Assert.DoesNotContain(REQUEST_GRANT_HREF, toolbar.Select(a => a.GetAttribute("href")));
     }
 
     [Fact]
@@ -344,7 +349,7 @@ public class GrantListTests : BillingWebTestContext
 
         var view = Render().Find("a[aria-label='View grant']");
 
-        Assert.Equal(BillingWebRoutes.GrantEditor(grant.GrantId), view.GetAttribute("href"));
+        Assert.Equal($"/host/grants/{grant.GrantId}", view.GetAttribute("href"));
     }
 
     [Fact]

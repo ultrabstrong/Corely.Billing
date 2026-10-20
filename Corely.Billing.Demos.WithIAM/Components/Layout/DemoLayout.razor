@@ -9,10 +9,13 @@
                 <ul class="navbar-nav me-auto">
                     <PermissionView Action="AuthAction.Read" Resource="@BillingResourceTypes.GRANT_RESOURCE_TYPE">
                         <Authorized>
-                            <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.GRANTS">Grants</NavLink></li>
+                            <li class="nav-item"><NavLink class="nav-link" href="@DemoRoutes.Grants(_accountId ?? Guid.Empty)">Grants</NavLink></li>
                         </Authorized>
                     </PermissionView>
-                    <li class="nav-item"><NavLink class="nav-link" href="@BillingWebRoutes.USAGE">Usage</NavLink></li>
+                    @if (_accountId is { } accountId)
+                    {
+                        <li class="nav-item"><NavLink class="nav-link" href="@DemoRoutes.Usage(accountId)">Usage</NavLink></li>
+                    }
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
@@ -44,11 +47,13 @@
 @code {
     private string? _username;
     private string? _accountName;
+    private Guid? _accountId;
 
     protected override async Task OnInitializedAsync()
     {
         var context = await UserContextAccessor.GetUserContextAsync();
         _username = context?.User?.Username;
         _accountName = context?.CurrentAccount?.AccountName;
+        _accountId = context?.CurrentAccount?.Id;
     }
 }

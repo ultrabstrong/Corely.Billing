@@ -1,0 +1,32 @@
+@page "/accounts/{AccountId:guid}/grants/new"
+@page "/accounts/{AccountId:guid}/grants/{GrantId:guid}"
+@attribute [Authorize]
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@inject NavigationManager Navigation
+
+<PageTitle>@Heading</PageTitle>
+
+<a class="btn btn-link px-0 mb-2" href="@DemoRoutes.Grants(AccountId)"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Grants</a>
+<h1 class="h3 mb-3">@Heading</h1>
+
+<AccountScope AccountId="AccountId">
+    @if (CurrentAccountId is { } accountId)
+    {
+        <div class="cbw-editor-page">
+            <GrantEditor AccountId="accountId" GrantId="GrantId" OnSaved="BackToList" OnCancel="BackToList" />
+        </div>
+    }
+</AccountScope>
+
+@code {
+    [Parameter]
+    public Guid AccountId { get; set; }
+
+    [Parameter]
+    public Guid? GrantId { get; set; }
+
+    private string Heading => GrantId is null ? "New grant" : "Grant";
+
+    private void BackToList() => Navigation.NavigateTo(DemoRoutes.Grants(AccountId));
+}

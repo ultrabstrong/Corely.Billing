@@ -1,0 +1,22 @@
+@page "/accounts/{AccountId:guid}/grants"
+@attribute [Authorize]
+@inherits BillingPageBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Grants</PageTitle>
+
+<h1 class="h3 mb-3">Grants</h1>
+
+<AccountScope AccountId="AccountId">
+    @if (CurrentAccountId is { } accountId)
+    {
+        <GrantList AccountId="accountId"
+                   NewGrantHref="@DemoRoutes.GrantNew(AccountId)"
+                   RequestGrantHref="@DemoRoutes.GrantRequest(AccountId)"
+                   GrantHref="id => DemoRoutes.Grant(AccountId, id)" />
+    }
+</AccountScope>
+
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+}

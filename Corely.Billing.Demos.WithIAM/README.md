@@ -38,4 +38,5 @@ The seed creates account Acme with five users, password `Test1234`, two grants, 
 - `priya` approving `olivia`'s request turns it into a grant for a year in the same save; declining asks for an optional reason. `priya` stands in for the platform admin a real host would have.
 - `DemoSeed.cs`: `carla`'s, `chloe`'s and `priya`'s roles and the two grants, created under `AuthenticateAsSystem`, the way a host provisions what its users cannot.
 - "Ask the assistant" holds an estimated 1,000 tokens and settles what the reply used, as the signed-in user, so it needs Execute on `quota`: `olivia` and `chloe` have it, `carla` does not.
-- `Components/Layout/DemoLayout.razor`: guards the library's routed pages, which carry no `[Authorize]` of their own, and shows the Grants link only with Read on `grant`, through `PermissionView`.
+- `Components/Pages`: the page shells at account paths (`/accounts/{id}/grants`, `/accounts/{id}/usage`, paths in `DemoRoutes`), each guarded by `[Authorize]` and Corely.IAM.Web's `AccountScope`, loading for the signed in account and using the route's only for links.
+- `Components/Layout/DemoLayout.razor`: shows the Grants link only with Read on `grant`, through `PermissionView`.

@@ -1,6 +1,7 @@
 extern alias PortalDemo;
 
 using System.Net;
+using PortalDemo::Corely.Billing.Demos.Portal;
 using PortalDemo::Corely.Billing.Demos.Portal.Components;
 
 namespace Corely.Billing.Web.FunctionalTests.Demos;
@@ -24,11 +25,11 @@ public sealed class PortalDemoTests : IDisposable
 
     [Theory]
     [InlineData("/")]
-    [InlineData(BillingWebRoutes.GRANTS)]
-    [InlineData(BillingWebRoutes.GRANT_NEW)]
-    [InlineData(BillingWebRoutes.GRANT_REQUEST)]
-    [InlineData(BillingWebRoutes.USAGE)]
-    public async Task EveryPageAnswers_ForTheHomePageAndTheLibrarysRoutedPages(string path)
+    [InlineData(PortalRoutes.GRANTS)]
+    [InlineData(PortalRoutes.GRANT_NEW)]
+    [InlineData(PortalRoutes.GRANT_REQUEST)]
+    [InlineData(PortalRoutes.USAGE)]
+    public async Task EveryPageAnswers_ForTheHomePageAndTheDemosShells(string path)
     {
         using var response = await _client.GetAsync(path, TestContext.Current.CancellationToken);
 

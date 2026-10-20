@@ -1,6 +1,7 @@
 extern alias WithIamDemo;
 
 using System.Net;
+using WithIamDemo::Corely.Billing.Demos.WithIAM;
 using WithIamDemo::Corely.Billing.Demos.WithIAM.Components;
 
 namespace Corely.Billing.Web.FunctionalTests.Demos;
@@ -45,5 +46,23 @@ public sealed class WithIamDemoTests : IDisposable
         using var response = await _client.GetAsync(path, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("grants")]
+    [InlineData("grants/new")]
+    [InlineData("grants/request")]
+    [InlineData("usage")]
+    public async Task AccountShellsSendAnonymousVisitorsToSignIn_WithThePageAsReturnUrl(string page)
+    {
+        var path = $"{DemoRoutes.Account(Guid.CreateVersion7())}/{page}";
+        using var response = await _client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains(
+            $"ReturnUrl={Uri.EscapeDataString(path)}",
+            response.Headers.Location!.OriginalString,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 }

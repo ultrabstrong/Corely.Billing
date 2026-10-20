@@ -35,14 +35,14 @@ public partial class GrantList
     [Parameter, EditorRequired]
     public Guid AccountId { get; set; }
 
-    [Parameter]
-    public string NewGrantHref { get; set; } = BillingWebRoutes.GRANT_NEW;
+    [Parameter, EditorRequired]
+    public string NewGrantHref { get; set; } = null!;
 
-    [Parameter]
-    public string RequestGrantHref { get; set; } = BillingWebRoutes.GRANT_REQUEST;
+    [Parameter, EditorRequired]
+    public string RequestGrantHref { get; set; } = null!;
 
-    [Parameter]
-    public Func<Guid, string> GrantHref { get; set; } = BillingWebRoutes.GrantEditor;
+    [Parameter, EditorRequired]
+    public Func<Guid, string> GrantHref { get; set; } = null!;
 
     [Parameter]
     public EventCallback<Grant> OnDeleted { get; set; }

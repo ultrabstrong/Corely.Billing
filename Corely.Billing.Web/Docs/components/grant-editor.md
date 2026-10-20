@@ -6,8 +6,8 @@ A form that creates a grant, or edits one when given a `GrantId`.
 
 ```razor
 <GrantEditor AccountId="accountId"
-             OnSaved="id => Navigation.NavigateTo(BillingWebRoutes.GRANTS)"
-             OnCancel="() => Navigation.NavigateTo(BillingWebRoutes.GRANTS)" />
+             OnSaved="id => Navigation.NavigateTo(&quot;/grants&quot;)"
+             OnCancel="() => Navigation.NavigateTo(&quot;/grants&quot;)" />
 
 <GrantEditor AccountId="accountId" GrantId="grantId" OnSaved="ReloadAsync" />
 ```
