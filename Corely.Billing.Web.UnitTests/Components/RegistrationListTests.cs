@@ -141,6 +141,29 @@ public class RegistrationListTests : BillingWebTestContext
     }
 
     [Fact]
+    public void Render_LoadsOnce_ForTheSameParametersSentAgain()
+    {
+        HaveGrants(_grant);
+        HaveRegistrations(Held("ada"));
+        var list = Render();
+
+        list.Render(p =>
+            p.Add(c => c.AccountId, AccountId)
+                .Add(c => c.Operation, Members)
+                .Add(c => c.GrantId, null)
+        );
+
+        Quota.Verify(
+            q =>
+                q.ListRegistrationsAsync(
+                    It.IsAny<ListRegistrationsRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
     public void Render_SaysNothingIsRegistered_ForNoRegistrations()
     {
         HaveGrants(_grant);

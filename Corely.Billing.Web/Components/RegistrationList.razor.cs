@@ -40,6 +40,7 @@ public partial class RegistrationList
     private bool _loading = true;
     private bool _working;
     private string? _error;
+    private (Guid, UsageOperation, Guid?)? _loadedFor;
 
     private DateTime Now => TimeProvider.GetUtcNow().UtcDateTime;
 
@@ -47,7 +48,14 @@ public partial class RegistrationList
 
     public Task RefreshAsync() => LoadAsync();
 
-    protected override Task OnParametersSetSignedInAsync() => LoadAsync();
+    protected override async Task OnParametersSetSignedInAsync()
+    {
+        if (_loadedFor == (AccountId, Operation, GrantId))
+            return;
+
+        _loadedFor = (AccountId, Operation, GrantId);
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {
