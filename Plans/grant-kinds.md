@@ -1,4 +1,4 @@
-# Grant kinds: consumable, capacity and allowance
+# Grant kinds: consumable, capacity, allowance and feature
 
 **Status: designed 2026-10-24 with the owner, ready to build.** A major version of `Corely.Billing`
 and the packages that depend on it. Found by dogfooding: DocsToData's document retention needed a
@@ -20,7 +20,7 @@ meter. Three other shapes of entitlement come up as soon as an app does more tha
 - **Seats:** a limit that things take and give back (users, active workflows, a subscription's
   members). Nothing is used up; a seat is held until released.
 - **An amount the app reads:** extra retention days, a larger file size limit. No usage at all.
-- **A feature:** on or off (SFTP access, a provider).
+- **A feature:** enabled or disabled (SFTP access, a provider).
 
 Today these are approximated with consumable grants (`Docs/usage-shapes.md`'s "Seats or feature
 access" and "Subscription" rows), and the components show them as balances: DocsToData's retention
@@ -29,24 +29,30 @@ registered unit, so "Document Extraction in days" can be granted.
 
 ## The design
 
-### Three kinds, stored on the grant
+### Four kinds, stored on the grant
 
 `GrantKind`, a new required column on `Grants`:
 
-| Kind | The quantity is | Usage against it |
-|---|---|---|
-| `Consumable` | A balance | Reserved and settled, as today |
-| `Capacity` | A number of seats | Registered and released (below) |
-| `Allowance` | An amount the app reads | None |
+| Kind | The quantity is | The unit | Usage against it |
+|---|---|---|---|
+| `Consumable` | A balance, or none for unlimited | Required | Reserved and settled, as today |
+| `Capacity` | A number of seats, or none for unlimited | Required | Registered and released (below) |
+| `Allowance` | An amount the app reads, or none for unlimited | Required | None |
+| `Feature` | Always none | Always none | None: an active grant means enabled |
 
 **The row is the truth.** A grant says what kind it is, so any reader (a component, a report, a
 query) can tell without the app's registrations. Existing rows migrate to `Consumable`, which is
 what every grant is today; the model has no default.
 
+**A feature is its own kind, not an allowance with no quantity.** An allowance with no quantity is an
+unlimited amount ("unlimited retention days"); a feature is a switch. Inferring one from the other
+would show unlimited retention as "Enabled". So `Unit` becomes nullable, null only for a feature, and
+a feature grant with a quantity or a unit is refused.
+
 ### The display type, read from the row
 
-`GrantKind` and whether `Quantity` is set give six display types, a `GrantType` enum with no storage
-of its own:
+`GrantKind` and whether `Quantity` is set give seven display types, a `GrantType` enum with no
+storage of its own:
 
 ```csharp
 public GrantType GetGrantType() =>
@@ -56,13 +62,11 @@ public GrantType GetGrantType() =>
         (GrantKind.Consumable, _) => GrantType.Balance,
         (GrantKind.Capacity, null) => GrantType.UnlimitedSeats,
         (GrantKind.Capacity, _) => GrantType.Seats,
-        (GrantKind.Allowance, null) => GrantType.Feature,
+        (GrantKind.Allowance, null) => GrantType.UnlimitedAllowance,
         (GrantKind.Allowance, _) => GrantType.Allowance,
+        (GrantKind.Feature, _) => GrantType.Feature,
     };
 ```
-
-A feature is an allowance with no quantity: any active grant means yes, none means no. No magic
-numbers.
 
 ### Operations declare their kind and unit
 
@@ -76,7 +80,7 @@ billing
     .RegisterOperation("document_extraction", "Document Extraction", GrantKind.Consumable, unit: "pages")
     .RegisterOperation("document_retention", "Document Retention", GrantKind.Allowance, unit: "days")
     .RegisterOperation("seats", "Seats", GrantKind.Capacity, unit: "users")
-    .RegisterOperation("sftp_access", "SFTP Access", GrantKind.Allowance);
+    .RegisterOperation("sftp_access", "SFTP Access", GrantKind.Feature);
 
 public sealed record UsageOperationDefinition(
     UsageOperation Operation, string DisplayName, GrantKind Kind, UsageUnit? Unit);
@@ -85,7 +89,8 @@ public sealed record UsageOperationDefinition(
 The declaration is a guard, not the source: creating a grant whose kind or unit disagrees with its
 operation's declaration is refused with a result code, and the forms offer only declared pairs. A
 grant whose operation is no longer declared can still be read, because its kind is on the row. Units
-keep their own registration for display names, since several operations can share one. No new
+keep their own registration for display names, since several operations can share one. A feature
+operation declares no unit; every other kind must. No new
 interface: the vocabulary stays the shared list of names grants, consumption and quota use.
 
 ### Registrations, for capacity
@@ -155,9 +160,8 @@ public enum RegistrationStatus { Active, Released, GrantEnded, GrantDisabled }
   add up: allowances and capacities sum; consumables are drawn soonest expiring first, as today.
 - Each read refuses a grant of the wrong kind for its operation with a result code, never an
   exception.
-- `HasFeatureAsync` is shorthand for an allowance that is unlimited or above zero. It exists because
-  apps think "does this account have it", and the helpers mirror how apps use grants rather than how
-  they are stored.
+- `HasFeatureAsync` answers whether the account has an active `Feature` grant for the operation. It
+  reads only feature grants; an allowance is never read as a feature.
 
 ### Grants carry their own state
 
@@ -204,13 +208,14 @@ Every grant component switches on `GrantType`.
   - Seats: "2 of 7 seats in use".
   - Unlimited seats: "Unlimited, 12 in use".
   - Allowance: "+60 days, until 1 June 2027".
-  - Feature: "Enabled, until 1 June 2027".
+  - Unlimited allowance: "Unlimited days, until 1 June 2027".
+  - Feature: "Enabled, until 1 June 2027", or "Disabled".
 - **The grant editor and the request form, as one flow:**
   1. Pick what to grant, from operations grouped by type (Balance: Document Extraction; Allowance:
      Document Retention; Feature: SFTP Access).
   2. The form shows only that type's fields. Balance and Seats: quantity (or unlimited), start, end
-     with a "never expires" switch. Allowance: the amount added, start, end. Feature: start and end
-     only.
+     with a "never expires" switch. Allowance: the amount added (or unlimited), start, end. Feature:
+     start and end only.
   3. The unit is never asked for: it comes from the operation.
 
   The request form a customer uses follows the same steps, limited to what they may request.
@@ -234,7 +239,7 @@ is rewritten around the kinds:
 | Seats | Capacity | `RegisterAsync`, `ReleaseRegistrationAsync`, `GetCapacityAsync` |
 | **Subscription** | Capacity with no expiry | Register members as seats. The app tracks whether the subscription is paid: a lapse disables the grant, a renewal enables it again, so its registrations come back with it |
 | An extra amount | Allowance | `GetAllowanceAsync`: the host adds the total to its own default |
-| Feature access | Allowance with no quantity | `HasFeatureAsync` |
+| Feature access | Feature | `HasFeatureAsync` |
 
 The subscription page says plainly that the grant never expires and that disabling is the lapse,
 since "a subscription that never ends" reads as a contradiction otherwise. The demos follow:
@@ -245,8 +250,10 @@ since "a subscription that never ends" reads as a contradiction otherwise. The d
 Each tier as the repository defines them, and each regression test proven red against the bug it
 guards.
 
-- `GetGrantType` for all six combinations (unit).
-- Creating a grant whose kind or unit disagrees with its operation is refused (unit).
+- `GetGrantType` for all seven types (unit).
+- Creating a grant whose kind or unit disagrees with its operation is refused, and so is a feature
+  grant with a quantity or a unit (unit).
+- `HasFeatureAsync` ignores allowances, and `GetAllowanceAsync` ignores features (unit).
 - Allowances and capacities sum across active grants; disabled, expired and future grants are
   ignored; unlimited wins (integration).
 - Registering: the longest lived grant with room is picked; the last seat cannot be taken twice by
