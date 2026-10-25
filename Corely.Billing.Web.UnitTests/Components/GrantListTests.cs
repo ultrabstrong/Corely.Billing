@@ -102,7 +102,7 @@ public class GrantListTests : BillingWebTestContext
     public void Render_HidesTheRequestButton_ForEveryOperationPending()
     {
         HaveRequests([
-            .. new[] { Extraction, Seats, Retention, Sftp }.Select(operation =>
+            .. new[] { Extraction, Members, Retention, Sftp }.Select(operation =>
             {
                 var request = Request(5);
                 request.Operation = operation;
@@ -304,7 +304,7 @@ public class GrantListTests : BillingWebTestContext
     [Theory]
     [InlineData("allowance", "+60 days, until 31 March 2026")]
     [InlineData("feature", "Enabled, until 31 March 2026")]
-    [InlineData("seats", "2 of 7 users in use")]
+    [InlineData("capacity", "2 of 7 users in use")]
     public void Render_ShowsItsOwnStateAndNoMeter_ForEachGrantType(string type, string expected)
     {
         HaveGrants(
@@ -394,5 +394,52 @@ public class GrantListTests : BillingWebTestContext
             Times.Once
         );
         Assert.Empty(list.FindAll(".cbw-grant-row"));
+    }
+
+    [Fact]
+    public void Delete_SaysWhatItReleases_ForACapacityGrantWithRegistrations()
+    {
+        HaveGrants(Capacity(7, inUse: 3));
+        var list = Render();
+
+        list.Find("button[aria-label='Delete grant']").Click();
+
+        Assert.Contains(
+            "Delete this grant and release the 3 users registered on it?",
+            list.Find(".cbw-confirm-text").TextContent
+        );
+    }
+
+    [Fact]
+    public void Render_GroupsRowsUnderTheirKind_InKindOrder()
+    {
+        var feature = Feature();
+        var balance = Grant(100);
+        var allowance = Retained(60);
+        var capacity = Capacity(7, inUse: 2);
+        HaveGrants(feature, balance, allowance, capacity);
+        HaveRequests(Request(5_000));
+
+        var list = Render();
+
+        Assert.Equal(
+            [
+                "Balance",
+                "request",
+                balance.GrantId.ToString(),
+                "Capacity",
+                capacity.GrantId.ToString(),
+                "Allowance",
+                allowance.GrantId.ToString(),
+                "Feature",
+                feature.GrantId.ToString(),
+            ],
+            list.FindAll(".cbw-grant-group, .cbw-grant-row")
+                .Select(item =>
+                    item.ClassList.Contains("cbw-grant-group") ? item.TextContent.Trim()
+                    : item.ClassList.Contains("cbw-request-row") ? "request"
+                    : item.GetAttribute("data-grant-id")
+                )
+        );
     }
 }

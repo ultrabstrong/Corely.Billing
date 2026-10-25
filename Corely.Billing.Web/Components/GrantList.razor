@@ -39,7 +39,7 @@
             <p class="cbw-empty-title">No grants yet</p>
             @ActionGate.Gate(GrantAction.Create, null,
                 @<text>
-                    <p class="text-body-secondary">A grant is what this account may use: a quantity of one unit, for one operation, between two dates.</p>
+                    <p class="text-body-secondary">A grant is what this account holds of one operation between two dates: a balance to use, a capacity to register against, an amount added, or a feature.</p>
                     <a class="btn btn-primary btn-sm" href="@NewGrantHref">Create the first grant</a>
                 </text>,
                 @<p class="text-body-secondary">Grants given to this account will appear here.</p>)
@@ -57,7 +57,10 @@
                 <span>Status</span>
                 <span></span>
             </li>
-            @foreach (var request in _requests)
+            @foreach (var group in Groups)
+            {
+            <li class="cbw-grant-group" data-grant-kind="@group.Kind">@group.Kind.GroupLabel()</li>
+            @foreach (var request in group.Requests)
             {
                 <li class="cbw-grant-row cbw-request-row" data-grant-request-id="@request.GrantRequestId">
                     <div class="cbw-grant-name">
@@ -85,7 +88,7 @@
                     </div>
                 </li>
             }
-            @foreach (var grant in _grants)
+            @foreach (var grant in group.Grants)
             {
                 var status = grant.Status(Now);
                 <li class="cbw-grant-row" data-grant-id="@grant.GrantId">
@@ -125,7 +128,7 @@
                             @<text>
                                 @if (_confirmingDelete == grant.GrantId)
                                 {
-                                    <span class="cbw-confirm-text">Delete this grant?</span>
+                                    <span class="cbw-confirm-text">@grant.DeletePrompt(Vocabulary)</span>
                                     <button type="button" class="btn btn-sm btn-danger" disabled="@_deleting" @onclick="() => DeleteAsync(grant)">Delete</button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deleting" @onclick="CancelDelete">Keep</button>
                                 }
@@ -138,6 +141,7 @@
                             </text>)
                     </div>
                 </li>
+            }
             }
         </ul>
     }

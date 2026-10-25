@@ -10,7 +10,7 @@
 {
     <div class="card mb-4">
         <div class="card-body">
-            <p class="card-text mb-1"><span class="badge text-bg-success me-2">Active</span>@Membership.SEATS seats, renewing until you cancel</p>
+            <p class="card-text mb-1"><span class="badge text-bg-success me-2">Active</span>@Membership.CAPACITY members, renewing until you cancel</p>
             <p class="text-body-secondary mb-3">Since @subscription.ValidFromUtc.ToString("MMMM d, yyyy")</p>
             <div class="d-flex gap-2">
                 <a class="btn btn-primary" href="/members">Open the members area</a>
@@ -27,7 +27,7 @@ else
         <div class="card-body">
             <p class="card-text">@(Model.Subscription is null ? "You have no subscription." : "Your subscription has lapsed. Its members come back when you renew.")</p>
             <form method="post" asp-page-handler="Subscribe">
-                <button type="submit" class="btn btn-primary">@(Model.Subscription is null ? $"Subscribe for {Membership.SEATS} seats" : "Renew")</button>
+                <button type="submit" class="btn btn-primary">@(Model.Subscription is null ? $"Subscribe for {Membership.CAPACITY} members" : "Renew")</button>
             </form>
         </div>
     </div>

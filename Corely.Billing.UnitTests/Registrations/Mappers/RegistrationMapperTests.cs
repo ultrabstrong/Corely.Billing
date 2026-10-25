@@ -15,7 +15,7 @@ public class RegistrationMapperTests
             RegistrationId = Guid.CreateVersion7(),
             AccountId = Guid.CreateVersion7(),
             GrantId = Guid.CreateVersion7(),
-            Operation = TestUsage.Seats,
+            Operation = TestUsage.Members,
             Reference = "user:ada",
             RegisteredUtc = Now.AddDays(-3),
             ReleasedUtc = releasedUtc,
@@ -31,25 +31,25 @@ public class RegistrationMapperTests
         };
 
     [Fact]
-    public void StatusOn_IsActive_ForAHeldSeatOnALiveGrant() =>
+    public void StatusOn_IsActive_ForAHeldRegistrationOnALiveGrant() =>
         Assert.Equal(RegistrationStatus.Active, Registration().StatusOn(Grant(), Now));
 
     [Fact]
-    public void StatusOn_IsReleased_ForAReleasedSeatWhateverItsGrant() =>
+    public void StatusOn_IsReleased_ForAReleasedRegistrationWhateverItsGrant() =>
         Assert.Equal(
             RegistrationStatus.Released,
             Registration(releasedUtc: Now.AddDays(-1)).StatusOn(Grant(disabled: true), Now)
         );
 
     [Fact]
-    public void StatusOn_IsGrantDisabled_ForAHeldSeatOnADisabledGrant() =>
+    public void StatusOn_IsGrantDisabled_ForAHeldRegistrationOnADisabledGrant() =>
         Assert.Equal(
             RegistrationStatus.GrantDisabled,
             Registration().StatusOn(Grant(disabled: true), Now)
         );
 
     [Fact]
-    public void StatusOn_IsGrantEnded_ForAHeldSeatOnAnEndedGrant() =>
+    public void StatusOn_IsGrantEnded_ForAHeldRegistrationOnAnEndedGrant() =>
         Assert.Equal(
             RegistrationStatus.GrantEnded,
             Registration().StatusOn(Grant(endsInDays: -1), Now)
@@ -77,7 +77,7 @@ public class RegistrationMapperTests
     {
         var entity = new RegisterRequest(
             Guid.CreateVersion7(),
-            TestUsage.Seats,
+            TestUsage.Members,
             "  bob ",
             "   "
         ).ToEntity(Guid.CreateVersion7(), Now);

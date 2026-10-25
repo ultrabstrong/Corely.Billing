@@ -36,9 +36,9 @@ The raw usage behind the components, as CSV, for analysis anywhere else. The das
 | `grant_id` | The grant |
 | `operation`, `operation_name` | What it covers |
 | `kind` | `consumable`, `capacity`, `allowance` or `feature` |
-| `type` | `balance`, `unlimited`, `seats`, `unlimitedseats`, `allowance`, `unlimitedallowance` or `feature` |
+| `type` | `balance`, `unlimited`, `capacity`, `unlimitedcapacity`, `allowance`, `unlimitedallowance` or `feature` |
 | `unit`, `unit_name` | What it is counted in; empty for a feature |
-| `quantity` | The balance, seats or amount; empty when unlimited or a feature |
+| `quantity` | The balance, capacity or amount; empty when unlimited or a feature |
 | `unlimited` | `true` for a null quantity on any kind but a feature |
 | `valid_from_utc`, `valid_to_utc` | The window |
 | `status` | `upcoming`, `active` or `expired` when exported, or `disabled` whatever the window |

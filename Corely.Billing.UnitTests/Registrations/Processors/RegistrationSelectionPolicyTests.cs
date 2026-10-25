@@ -9,12 +9,12 @@ public class RegistrationSelectionPolicyTests
 
     private readonly RegistrationSelectionPolicy _policy = new();
 
-    private static Grant Grant(long? seats, int endsInDays) =>
+    private static Grant Grant(long? capacity, int endsInDays) =>
         new()
         {
             GrantId = Guid.CreateVersion7(),
             Kind = GrantKind.Capacity,
-            Quantity = seats,
+            Quantity = capacity,
             ValidFromUtc = Now.AddDays(-1),
             ValidToUtc = Now.AddDays(endsInDays),
         };

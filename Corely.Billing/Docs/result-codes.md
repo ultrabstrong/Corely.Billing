@@ -102,9 +102,9 @@ Returned by `GetBalanceAsync`, `GetAllowanceAsync`, `HasFeatureAsync` and `GetCa
 
 | Code | Meaning |
 |------|---------|
-| `Registered` | A seat is held; `Registration` names it and its grant |
-| `AlreadyRegisteredError` | The reference already holds a seat for this operation |
-| `NoCapacityError` | Active grants exist, and every seat on them is taken |
+| `Registered` | Registered; `Registration` names it and its grant |
+| `AlreadyRegisteredError` | The reference is already registered on an active grant of this operation |
+| `NoCapacityError` | Active grants exist, and every one is full |
 | `NoActiveGrantError` | No active capacity grant for this operation |
 | `WrongKindError` | The operation is not registered, or is not a capacity |
 | `ValidationError` | Input validation failed |

@@ -1,7 +1,5 @@
 @inherits BillingComponentBase
-<section class="cbw-registrations mt-4" aria-label="Registrations">
-    <h2 class="h5">Registrations</h2>
-
+<section class="cbw-registrations" aria-label="Registrations">
     @if (_error is not null)
     {
         <div class="alert alert-danger py-2" role="alert">@_error</div>
@@ -13,7 +11,7 @@
     }
     else if (_registrations.Count == 0)
     {
-        <p class="text-body-secondary">Nothing holds a seat on this grant.</p>
+        <p class="text-body-secondary">@(OneGrant ? "Nothing is registered on this grant." : $"Nothing is registered against {Vocabulary.DisplayName(Operation)}.")</p>
     }
     else
     {
@@ -28,21 +26,38 @@
                             <div class="small text-body-secondary text-break">@description</div>
                         }
                         <div class="small text-body-secondary">Since @registration.RegisteredUtc.ToString("MMM d, yyyy")</div>
+                        @if (!OneGrant)
+                        {
+                            <div class="small text-body-secondary text-break" data-registration-grant>On @GrantText(registration.GrantId)</div>
+                        }
                     </div>
                     <span class="badge rounded-pill @registration.Status.BadgeClass()">@registration.Status.Label()</span>
-                    @ActionGate.Gate(GrantAction.ManageRegistrations, Grant.GrantId,
-                        @<button type="button" class="btn btn-sm btn-outline-danger" disabled="@_working" @onclick="() => ReleaseAsync(registration)">Release</button>)
+                    @ActionGate.Gate(GrantAction.ManageRegistrations, registration.GrantId,
+                        @<div class="d-flex flex-wrap gap-2 align-items-center">
+                            @if (!OneGrant && Targets(registration.GrantId).Any())
+                            {
+                                <label class="visually-hidden" for="cbw-move-@registration.RegistrationId">Move to</label>
+                                <select id="cbw-move-@registration.RegistrationId" class="form-select form-select-sm w-auto" value="@MoveTarget(registration)" @onchange="e => SetMoveTarget(registration, e.Value?.ToString())">
+                                    @foreach (var target in Targets(registration.GrantId))
+                                    {
+                                        <option value="@target.GrantId">@target.HeadlineAndWindow(Vocabulary)</option>
+                                    }
+                                </select>
+                                <button type="button" class="btn btn-sm btn-outline-primary" disabled="@_working" @onclick="() => MoveAsync(registration)">Move</button>
+                            }
+                            <button type="button" class="btn btn-sm btn-outline-danger" disabled="@_working" @onclick="() => ReleaseAsync(registration)">Release</button>
+                        </div>)
                 </li>
             }
         </ul>
 
-        @if (_targets.Count > 0)
+        @if (GrantId is { } grantId && Targets(grantId).Any())
         {
-            @ActionGate.Gate(GrantAction.ManageRegistrations, Grant.GrantId,
+            @ActionGate.Gate(GrantAction.ManageRegistrations, grantId,
                 @<div class="d-flex flex-wrap gap-2 align-items-center">
                     <label for="cbw-move-target" class="form-label mb-0">Move all to</label>
-                    <select id="cbw-move-target" class="form-select form-select-sm w-auto" @bind="_targetId">
-                        @foreach (var target in _targets)
+                    <select id="cbw-move-target" class="form-select form-select-sm w-auto" @bind="_moveAllTo">
+                        @foreach (var target in Targets(grantId))
                         {
                             <option value="@target.GrantId">@target.HeadlineAndWindow(Vocabulary)</option>
                         }

@@ -10,7 +10,7 @@ internal static class GrantKindExtensions
             kind switch
             {
                 GrantKind.Consumable => "Balance",
-                GrantKind.Capacity => "Seats",
+                GrantKind.Capacity => "Capacity",
                 GrantKind.Allowance => "Allowance",
                 _ => "Feature",
             };

@@ -44,7 +44,7 @@ public partial class GrantRequestForm
     private UsageOperationDefinition? Definition => Vocabulary.Definition(_operation);
 
     private string UnitPlural =>
-        Definition?.Unit is { } unit ? $"{Vocabulary.DisplayName(unit)}s" : "seats";
+        Definition?.Unit is { } unit ? $"{Vocabulary.DisplayName(unit)}s" : string.Empty;
 
     protected override void OnInitialized()
     {

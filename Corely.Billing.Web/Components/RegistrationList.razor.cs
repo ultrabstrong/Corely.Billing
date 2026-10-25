@@ -27,14 +27,25 @@ public partial class RegistrationList
     public Guid AccountId { get; set; }
 
     [Parameter, EditorRequired]
-    public Grant Grant { get; set; } = null!;
+    public UsageOperation Operation { get; set; }
+
+    [Parameter]
+    public Guid? GrantId { get; set; }
 
     private List<Registration> _registrations = [];
-    private List<Grant> _targets = [];
-    private Guid _targetId;
+    private Dictionary<Guid, Grant> _grants = [];
+    private List<Grant> _active = [];
+    private readonly Dictionary<Guid, Guid> _moveTo = [];
+    private Guid _moveAllTo;
     private bool _loading = true;
     private bool _working;
     private string? _error;
+
+    private DateTime Now => TimeProvider.GetUtcNow().UtcDateTime;
+
+    private bool OneGrant => GrantId is not null;
+
+    public Task RefreshAsync() => LoadAsync();
 
     protected override Task OnParametersSetSignedInAsync() => LoadAsync();
 
@@ -42,27 +53,60 @@ public partial class RegistrationList
     {
         _loading = true;
         var registrations = await QuotaService.ListRegistrationsAsync(
-            new ListRegistrationsRequest([AccountId], GrantId: Grant.GrantId, Take: int.MaxValue)
+            new ListRegistrationsRequest(
+                [AccountId],
+                Operation: Operation,
+                GrantId: GrantId,
+                Take: int.MaxValue
+            )
         );
         _registrations = registrations.Data?.Items ?? [];
-        if (registrations.ResultCode != RetrieveResultCode.Success)
-            _error = registrations.ResultCode.ErrorMessage(
-                "view registrations",
-                registrations.Message
-            );
+        _error =
+            registrations.ResultCode == RetrieveResultCode.Success
+                ? null
+                : registrations.ResultCode.ErrorMessage(
+                    "view registrations",
+                    registrations.Message
+                );
 
         var grants = await GrantService.ListGrantsAsync(
             new ListGrantsRequest(
                 [AccountId],
                 Kind: GrantKind.Capacity,
-                Operation: Grant.Operation,
-                ActiveAtUtc: TimeProvider.GetUtcNow().UtcDateTime,
+                Operation: Operation,
                 Take: int.MaxValue
             )
         );
-        _targets = [.. (grants.Data?.Items ?? []).Where(g => g.GrantId != Grant.GrantId)];
-        _targetId = _targets.FirstOrDefault()?.GrantId ?? Guid.Empty;
+        _grants = (grants.Data?.Items ?? []).ToDictionary(g => g.GrantId);
+        _active = [.. _grants.Values.Where(g => g.IsActiveAt(Now))];
+
+        _moveTo.Clear();
+        foreach (var registration in _registrations)
+        {
+            if (Targets(registration.GrantId).FirstOrDefault() is { } target)
+                _moveTo[registration.RegistrationId] = target.GrantId;
+        }
+        _moveAllTo = GrantId is { } grantId
+            ? Targets(grantId).FirstOrDefault()?.GrantId ?? Guid.Empty
+            : Guid.Empty;
         _loading = false;
+    }
+
+    private IEnumerable<Grant> Targets(Guid fromGrantId) =>
+        _active.Where(g => g.GrantId != fromGrantId);
+
+    private string GrantText(Guid grantId) =>
+        _grants.TryGetValue(grantId, out var grant)
+            ? grant.HeadlineAndWindow(Vocabulary)
+            : "A grant that no longer exists";
+
+    private Guid MoveTarget(Registration registration) =>
+        _moveTo.GetValueOrDefault(registration.RegistrationId);
+
+    private void SetMoveTarget(Registration registration, string? value)
+    {
+        if (Guid.TryParse(value, out var target))
+            _moveTo[registration.RegistrationId] = target;
     }
 
     private async Task ReleaseAsync(Registration registration)
@@ -73,22 +117,28 @@ public partial class RegistrationList
             registration.RegistrationId
         );
         _working = false;
+        await LoadAsync();
         _error = result.ResultCode switch
         {
             ModifyResultCode.Success => null,
             ModifyResultCode.UnauthorizedError => "You are not allowed to release registrations.",
             _ => result.Message,
         };
-        await LoadAsync();
     }
 
-    private async Task MoveAllAsync()
+    private Task MoveAsync(Registration registration) =>
+        MoveAsync(registration.GrantId, MoveTarget(registration), [registration.RegistrationId]);
+
+    private Task MoveAllAsync() => MoveAsync(GrantId!.Value, _moveAllTo, null);
+
+    private async Task MoveAsync(Guid fromGrantId, Guid toGrantId, List<Guid>? registrationIds)
     {
         _working = true;
         var result = await QuotaService.MoveRegistrationsAsync(
-            new MoveRegistrationsRequest(AccountId, Grant.GrantId, _targetId)
+            new MoveRegistrationsRequest(AccountId, fromGrantId, toGrantId, registrationIds)
         );
         _working = false;
+        await LoadAsync();
         _error = result.ResultCode switch
         {
             MoveRegistrationsResultCode.Success => null,
@@ -96,6 +146,5 @@ public partial class RegistrationList
                 "You are not allowed to move registrations.",
             _ => result.Message,
         };
-        await LoadAsync();
     }
 }

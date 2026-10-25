@@ -489,7 +489,7 @@ public class QuotaProcessorTests
     }
 
     [Fact]
-    public async Task GetCapacityAsync_AddsSeatsAndCountsThoseHeld_ForSeveralGrants()
+    public async Task GetCapacityAsync_AddsCapacityAndCountsWhatIsRegistered_ForSeveralGrants()
     {
         HaveGrants(
             GrantKind.Capacity,
@@ -498,7 +498,7 @@ public class QuotaProcessorTests
         );
         HaveInUse((GrantId1, 3), (GrantId2, 1));
 
-        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Seats);
+        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Members);
 
         Assert.Equal(7, result.Granted);
         Assert.Equal(4, result.InUse);
@@ -510,7 +510,7 @@ public class QuotaProcessorTests
     {
         HaveGrants(GrantKind.Capacity, Grant(GrantId1, null, kind: GrantKind.Capacity));
 
-        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Seats);
+        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Members);
 
         Assert.Null(result.Granted);
         Assert.Null(result.Free);

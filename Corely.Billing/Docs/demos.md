@@ -17,7 +17,7 @@ The web components with nothing else in the way: no sign-in, and a fixed account
 - an upcoming renewal
 - an unlimited grant for embeddings
 - an image grant, in a second unit
-- five team seats, three of them held by registered members
+- a capacity of five team members, three of them registered
 - 60 extra days of log retention, an allowance
 - fine tuning, a feature
 - a pending request for more images, to approve or decline on `/grants`
@@ -28,11 +28,11 @@ The web components with nothing else in the way: no sign-in, and a fixed account
 
 ## Subscription
 
-A subscription is one capacity grant of three seats that never expires. Two Razor Pages and one class hold all of it.
+A subscription is one capacity grant of three members that never expires. Two Razor Pages and one class hold all of it.
 
 - **Subscribe** creates the grant; **Cancel** disables it, which is the lapse; subscribing again enables it
 - **The members page** opens only while `GetCapacityAsync` reads an active grant
-- **Each visit** registers "you" as a seat, once, and the page shows "1 of 3 seats in use"
+- **Each visit** registers "you", once, and the page shows "1 of 3 members in use"
 
 It uses no reservations, no consumption and no reports. See [Usage Shapes](usage-shapes.md).
 

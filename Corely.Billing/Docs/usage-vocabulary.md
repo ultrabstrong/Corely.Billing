@@ -1,6 +1,6 @@
 # Usage Vocabulary
 
-Operations and units are host-defined tokens. `UsageOperation` names what is granted (`text_generation`, `seats`, `sftp_access`); `UsageUnit` names what it is counted in (`token`, `user`). Each operation declares its [grant kind](usage-shapes.md) and its unit.
+Operations and units are host-defined tokens. `UsageOperation` names what is granted (`text_generation`, `team_members`, `sftp_access`); `UsageUnit` names what it is counted in (`token`, `user`). Each operation declares its [grant kind](usage-shapes.md) and its unit.
 
 ## Features
 
@@ -18,7 +18,7 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
     .RegisterUnit("user", "user")
     .RegisterUnit("day", "day")
     .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token")
-    .RegisterOperation("seats", "Seats", GrantKind.Capacity, "user")
+    .RegisterOperation("team_members", "Team members", GrantKind.Capacity, "user")
     .RegisterOperation("log_retention", "Log Retention", GrantKind.Allowance, "day")
     .RegisterOperation("sftp_access", "SFTP Access", GrantKind.Feature);
 ```

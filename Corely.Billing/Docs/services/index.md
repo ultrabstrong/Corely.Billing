@@ -8,10 +8,10 @@ Four public services form the API surface of Corely.Billing. All are registered 
 |---------|---------|---------|
 | `IGrantService` | Create, read, update, disable, delete and list grants | 6 |
 | `IGrantRequestService` | Ask for a grant, approve or decline the request | 5 |
-| `IQuotaService` | A read per grant kind, reserve and settle, register and release seats | 11 |
+| `IQuotaService` | A read per grant kind, reserve and settle, register and release against capacity | 11 |
 | `IConsumptionService` | Totals, time series, event listing, ledger health | 6 |
 
-Writes to the ledger and to registrations go through `IQuotaService` only. That is what keeps every consumption row tied to a reservation against a grant, and every seat within its grant.
+Writes to the ledger and to registrations go through `IQuotaService` only. That is what keeps every consumption row tied to a reservation against a grant, and every registration within its grant's capacity.
 
 ## Decorator Pattern
 

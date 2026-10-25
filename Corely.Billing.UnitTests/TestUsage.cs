@@ -8,7 +8,7 @@ internal static class TestUsage
     internal static UsageOperation Extraction { get; } = UsageOperation.From("extraction");
     internal static UsageOperation NoOp { get; } = UsageOperation.From("noop");
     internal static UsageOperation Other { get; } = UsageOperation.From("other");
-    internal static UsageOperation Seats { get; } = UsageOperation.From("seats");
+    internal static UsageOperation Members { get; } = UsageOperation.From("members");
     internal static UsageOperation Retention { get; } = UsageOperation.From("retention");
     internal static UsageOperation Sftp { get; } = UsageOperation.From("sftp");
 
@@ -26,7 +26,7 @@ internal static class TestUsage
         new(Extraction, "Extraction", GrantKind.Consumable, Page),
         new(NoOp, "No-op", GrantKind.Consumable, Page),
         new(Other, "Other", GrantKind.Consumable, Document),
-        new(Seats, "Seats", GrantKind.Capacity, User),
+        new(Members, "Members", GrantKind.Capacity, User),
         new(Retention, "Retention", GrantKind.Allowance, Day),
         new(Sftp, "SFTP", GrantKind.Feature, null),
     ];

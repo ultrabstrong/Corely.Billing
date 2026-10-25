@@ -21,7 +21,7 @@ public abstract class BillingWebTestContext : BunitContext
     protected static readonly UsageUnit Page = UsageUnit.From("page");
     protected static readonly UsageOperation Retention = UsageOperation.From("document_retention");
     protected static readonly UsageOperation Sftp = UsageOperation.From("sftp_access");
-    protected static readonly UsageOperation Seats = UsageOperation.From("seats");
+    protected static readonly UsageOperation Members = UsageOperation.From("members");
     protected static readonly UsageUnit Day = UsageUnit.From("day");
     protected static readonly UsageUnit User = UsageUnit.From("user");
 
@@ -204,15 +204,15 @@ public abstract class BillingWebTestContext : BunitContext
             Disabled = disabled,
         };
 
-    protected static Grant Capacity(long? seats, long inUse) =>
+    protected static Grant Capacity(long? capacity, long inUse) =>
         new()
         {
             GrantId = Guid.CreateVersion7(),
             AccountId = AccountId,
-            Operation = Seats,
+            Operation = Members,
             Kind = GrantKind.Capacity,
             Unit = User,
-            Quantity = seats,
+            Quantity = capacity,
             InUse = inUse,
             ValidFromUtc = Now.AddDays(-10),
             ValidToUtc = Now.AddDays(30),
@@ -223,7 +223,7 @@ public abstract class BillingWebTestContext : BunitContext
         public IReadOnlyList<UsageOperationDefinition> Operations { get; } =
         [
             new(Extraction, "Document extraction", GrantKind.Consumable, Page),
-            new(Seats, "Seats", GrantKind.Capacity, User),
+            new(Members, "Members", GrantKind.Capacity, User),
             new(Retention, "Document retention", GrantKind.Allowance, Day),
             new(Sftp, "SFTP access", GrantKind.Feature, null),
         ];

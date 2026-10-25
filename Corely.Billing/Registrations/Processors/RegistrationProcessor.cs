@@ -78,14 +78,15 @@ internal class RegistrationProcessor(
                 );
             }
 
+            List<Guid> activeGrantIds = [.. grants.Select(g => g.GrantId)];
             if (
                 registration.Reference is { } reference
                 && await _registrationRepo.AnyAsync(
                     r =>
                         r.AccountId == request.AccountId
-                        && r.Operation == request.Operation
                         && r.Reference == reference
-                        && r.ReleasedUtc == null,
+                        && r.ReleasedUtc == null
+                        && activeGrantIds.Contains(r.GrantId),
                     ct
                 )
             )
@@ -96,10 +97,7 @@ internal class RegistrationProcessor(
                 );
             }
 
-            var grant = _selectionPolicy.Pick(
-                grants,
-                await CountInUseAsync([.. grants.Select(g => g.GrantId)], ct)
-            );
+            var grant = _selectionPolicy.Pick(grants, await CountInUseAsync(activeGrantIds, ct));
             if (grant is null)
             {
                 return new RegisterResult(
@@ -115,7 +113,7 @@ internal class RegistrationProcessor(
             await _uowProvider.CommitAsync(ct);
 
             _logger.LogInformation(
-                "Registration {RegistrationId} holds a seat on grant {GrantId} for AccountId {AccountId}",
+                "Registration {RegistrationId} holds capacity on grant {GrantId} for AccountId {AccountId}",
                 registration.RegistrationId,
                 grant.GrantId,
                 request.AccountId
@@ -160,6 +158,20 @@ internal class RegistrationProcessor(
         }
 
         return new ModifyResult(ModifyResultCode.Success, string.Empty);
+    }
+
+    public Task<int> ReleaseAllOnGrantAsync(
+        Guid accountId,
+        Guid grantId,
+        CancellationToken ct = default
+    )
+    {
+        var releasedUtc = UtcNow;
+        return _registrationRepo.ExecuteUpdateAsync(
+            r => r.AccountId == accountId && r.GrantId == grantId && r.ReleasedUtc == null,
+            set => set.SetProperty(r => r.ReleasedUtc, releasedUtc),
+            ct
+        );
     }
 
     public async Task<MoveRegistrationsResult> MoveAsync(
@@ -210,11 +222,11 @@ internal class RegistrationProcessor(
 
             var target = to.ToModel();
             var inUse = (await CountInUseAsync([to.GrantId], ct)).GetValueOrDefault(to.GrantId);
-            if (target.Quantity is { } seats && inUse + moving.Count > seats)
+            if (target.Quantity is { } capacity && inUse + moving.Count > capacity)
             {
                 return Moved(
                     MoveRegistrationsResultCode.NoCapacityError,
-                    $"The target grant has {Math.Max(0, seats - inUse)} seats free for {moving.Count}"
+                    $"The target grant has room for {Math.Max(0, capacity - inUse)} of {moving.Count}"
                 );
             }
 

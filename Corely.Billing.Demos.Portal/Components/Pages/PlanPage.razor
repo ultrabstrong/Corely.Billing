@@ -1,0 +1,73 @@
+@page "/plan"
+@inherits OwningComponentBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Plan</PageTitle>
+
+<h1 class="h3 mb-3">Plan</h1>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <section class="card h-100" aria-labelledby="retention-title" data-plan="retention">
+            <div class="card-body">
+                <h2 id="retention-title" class="h5 card-title">Log retention</h2>
+                <p class="text-body-secondary small">An allowance: the app keeps logs for @DEFAULT_RETENTION_DAYS days, and adds the account's active <strong>Log retention</strong> grants on top.</p>
+                @if (_retention is { } retention)
+                {
+                    <dl class="row mb-0">
+                        <dt class="col-7 fw-normal">App default</dt>
+                        <dd class="col-5 text-end">@DEFAULT_RETENTION_DAYS days</dd>
+                        <dt class="col-7 fw-normal">From @retention.Grants.Count active grant@(retention.Grants.Count == 1 ? "" : "s")</dt>
+                        <dd class="col-5 text-end">@(retention.Total is { } extra ? $"+{extra:N0} days" : "Unlimited")</dd>
+                        <dt class="col-7">Logs are kept</dt>
+                        <dd class="col-5 text-end fw-semibold" data-retention-days>@(retention.Total is { } total ? $"{DEFAULT_RETENTION_DAYS + total:N0} days" : "Forever")</dd>
+                    </dl>
+                }
+            </div>
+        </section>
+    </div>
+    <div class="col-md-6">
+        <section class="card h-100" aria-labelledby="fine-tuning-title" data-plan="fine-tuning">
+            <div class="card-body">
+                <h2 id="fine-tuning-title" class="h5 card-title">Fine tuning</h2>
+                <p class="text-body-secondary small">A feature: on while the account holds an active <strong>Fine tuning</strong> grant. Disable the grant on the grants page to see it switch off.</p>
+                @if (_fineTuning is { } fineTuning)
+                {
+                    <p data-feature-state>
+                        @if (fineTuning.HasFeature)
+                        {
+                            <span class="badge text-bg-success">Enabled</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-secondary">Not included</span>
+                        }
+                    </p>
+                    <button type="button" class="btn btn-primary btn-sm" disabled="@(!fineTuning.HasFeature)" @onclick="StartJob">Start a fine tuning job</button>
+                    @if (_message is not null)
+                    {
+                        <div class="alert alert-info py-2 mt-3 mb-0" role="status">@_message</div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private const int DEFAULT_RETENTION_DAYS = 30;
+
+    private IQuotaService Quota => ScopedServices.GetRequiredService<IQuotaService>();
+
+    private GetAllowanceResult? _retention;
+    private HasFeatureResult? _fineTuning;
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _retention = await Quota.GetAllowanceAsync(DemoUsage.AccountId, DemoUsage.LogRetention);
+        _fineTuning = await Quota.HasFeatureAsync(DemoUsage.AccountId, DemoUsage.FineTuning);
+    }
+
+    private void StartJob() => _message = "A fine tuning job would start here. Nothing is metered: the feature only gates it.";
+}

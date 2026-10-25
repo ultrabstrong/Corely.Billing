@@ -57,7 +57,7 @@ public partial class GrantEditor
     private string QuantityLabel =>
         Kind switch
         {
-            GrantKind.Capacity => "Seats",
+            GrantKind.Capacity => "Capacity",
             GrantKind.Allowance => "Amount added",
             _ => "Quantity",
         };
@@ -65,7 +65,7 @@ public partial class GrantEditor
     private string UnitPlural =>
         (_grant?.Unit ?? Definition?.Unit) is { } unit
             ? $"{Vocabulary.DisplayName(unit)}s"
-            : "seats";
+            : string.Empty;
 
     private string OperationValue
     {

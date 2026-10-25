@@ -1,6 +1,6 @@
 # Corely.Billing.Demos.Subscription
 
-The smallest host: a subscription is one capacity grant of three seats that never expires, and a members page opens only while it is enabled. Two Razor Pages and one class, `Membership.cs`, hold all of it.
+The smallest host: a subscription is one capacity grant of three members that never expires, and a members page opens only while it is enabled. Two Razor Pages and one class, `Membership.cs`, hold all of it.
 
 ## Run it
 
@@ -17,16 +17,16 @@ Open https://localhost:7111. Subscribe, open the members area, cancel, then subs
 
 ## What it uses
 
-- **Subscribe**: `CreateGrantAsync` with `GrantKind.Capacity`, three seats, and `GrantConstants.NEVER_EXPIRES_UTC` as its end. A subscription ends when it lapses, not on a date.
+- **Subscribe**: `CreateGrantAsync` with `GrantKind.Capacity`, a capacity of three, and `GrantConstants.NEVER_EXPIRES_UTC` as its end. A subscription ends when it lapses, not on a date.
 - **Cancel**: `SetGrantDisabledAsync` disables the grant. That is the lapse.
 - **Renew**: subscribing again enables the same grant, and its members come back with it.
 - **The gate**: the members page opens only while `GetCapacityAsync` reads an active grant.
-- **A member**: opening the members page registers "you" as a seat with `RegisterAsync`. A second visit is `AlreadyRegisteredError`, so the page still reads "1 of 3 seats in use".
+- **A member**: opening the members page registers "you" with `RegisterAsync`. A second visit is `AlreadyRegisteredError`, so the page still reads "1 of 3 members in use".
 
 ## What it does not use, and why that is fine
 
-- **Reservations and consumption**: a seat is held, not used up.
+- **Reservations and consumption**: a registration holds capacity; nothing is used up.
 - **Payments**: whether the subscription is paid is the host's business; it disables or enables the grant to match.
-- **Reports and time series**: seats in use is the whole question.
+- **Reports and time series**: members in use is the whole question.
 
 The tables for all of it are in the schema anyway, empty, and cost nothing.

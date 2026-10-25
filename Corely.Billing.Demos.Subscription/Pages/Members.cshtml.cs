@@ -6,7 +6,7 @@ namespace Corely.Billing.Demos.Subscription.Pages;
 
 public class MembersModel(Membership membership) : PageModel
 {
-    public string SeatsText { get; private set; } = string.Empty;
+    public string CapacityText { get; private set; } = string.Empty;
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -23,7 +23,7 @@ public class MembersModel(Membership membership) : PageModel
         }
 
         var capacity = await membership.CapacityAsync();
-        SeatsText = $"{capacity.InUse:N0} of {capacity.Granted:N0} seats in use";
+        CapacityText = $"{capacity.InUse:N0} of {capacity.Granted:N0} members in use";
         return Page();
     }
 }

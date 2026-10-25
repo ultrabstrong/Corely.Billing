@@ -9,7 +9,7 @@ namespace Corely.Billing.Demos.Subscription;
 
 public sealed class Membership(IGrantService grants, IQuotaService quota, TimeProvider timeProvider)
 {
-    public const int SEATS = 3;
+    public const int CAPACITY = 3;
     public const string YOU = "you";
 
     public static readonly Guid AccountId = Guid.Parse("0199a0de-0000-7000-8000-00000000c0de");
@@ -41,7 +41,7 @@ public sealed class Membership(IGrantService grants, IQuotaService quota, TimePr
                 AccountId,
                 Access,
                 GrantKind.Capacity,
-                SEATS,
+                CAPACITY,
                 Now,
                 GrantConstants.NEVER_EXPIRES_UTC
             )

@@ -13,6 +13,8 @@ internal interface IRegistrationProcessor
         CancellationToken ct = default
     );
 
+    Task<int> ReleaseAllOnGrantAsync(Guid accountId, Guid grantId, CancellationToken ct = default);
+
     Task<MoveRegistrationsResult> MoveAsync(
         MoveRegistrationsRequest request,
         CancellationToken ct = default

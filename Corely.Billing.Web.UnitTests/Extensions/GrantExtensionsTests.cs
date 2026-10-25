@@ -92,11 +92,11 @@ public class GrantExtensionsTests : BillingWebTestContext
         );
 
     [Fact]
-    public void StateText_CountsTheSeatsHeld_ForSeats() =>
+    public void StateText_CountsWhatIsRegistered_ForCapacity() =>
         Assert.Equal("2 of 7 users in use", Capacity(7, inUse: 2).StateText(Vocabulary, Now));
 
     [Fact]
-    public void StateText_CountsTheSeatsHeld_ForUnlimitedSeats() =>
+    public void StateText_CountsWhatIsRegistered_ForUnlimitedCapacity() =>
         Assert.Equal("Unlimited, 12 in use", Capacity(null, inUse: 12).StateText(Vocabulary, Now));
 
     [Fact]
@@ -154,12 +154,12 @@ public class GrantExtensionsTests : BillingWebTestContext
     }
 
     [Fact]
-    public void ToCsvRow_ReportsTheSeatsHeld_ForACapacityGrant()
+    public void ToCsvRow_ReportsWhatIsRegistered_ForACapacityGrant()
     {
         var cells = Capacity(7, inUse: 3).ToCsvRow(Vocabulary, Now).Split(',');
 
         Assert.Equal(
-            ["capacity", "seats", "7", "", "3"],
+            ["capacity", "capacity", "7", "", "3"],
             [cells[3], cells[4], cells[7], cells[12], cells[14]]
         );
     }

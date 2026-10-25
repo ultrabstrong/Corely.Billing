@@ -134,6 +134,9 @@ internal class GrantProcessor(
             return new DeleteGrantResult(DeleteGrantResultCode.NotFoundError, "Grant not found");
         }
 
+        if (entity.Kind == GrantKind.Capacity)
+            await _registrationProcessor.ReleaseAllOnGrantAsync(accountId, grantId, ct);
+
         await _grantRepo.DeleteAsync(entity, ct);
         return new DeleteGrantResult(DeleteGrantResultCode.Success, string.Empty);
     }

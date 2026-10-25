@@ -42,7 +42,7 @@ owner holds them:
 | `grant` | Read | Owners see their quota but cannot give themselves more. Grants are provisioned by the host, under system context, or by approving a request |
 | `grant_request` | Read, Create | Owners ask for more and see what they asked. Deciding (Update) is held by no owner |
 | `consumption` | Read | Owners see their usage |
-| `quota` | Read, Execute | Owners can run work that consumes their own quota, and hold and release seats |
+| `quota` | Read, Execute | Owners can run work that consumes their own quota, and register and release against their capacity |
 | `billing_all_accounts` | None | Only a platform role reads across accounts |
 
 Because IAM refuses to hand out what the caller does not hold, an owner also cannot create a
@@ -112,5 +112,5 @@ recorded with its refusal code.
 ## Notes
 
 - The decorators sit inside Billing's telemetry decorators, so a denied call is still logged.
-- One permission covers reserve, settle and release, so a caller can never hold quota it cannot settle or release. The same holds for registering and releasing a seat.
+- One permission covers reserve, settle and release, so a caller can never hold quota it cannot settle or release. The same holds for registering and releasing.
 - A user who consumes quota interactively needs Execute on `quota`; one who only watches usage needs Read on `consumption`.

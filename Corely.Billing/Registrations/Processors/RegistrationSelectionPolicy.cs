@@ -11,7 +11,8 @@ internal sealed class RegistrationSelectionPolicy : IRegistrationSelectionPolicy
 
         return grants
             .Where(g =>
-                g.Quantity is not { } seats || inUseByGrant.GetValueOrDefault(g.GrantId) < seats
+                g.Quantity is not { } capacity
+                || inUseByGrant.GetValueOrDefault(g.GrantId) < capacity
             )
             .OrderByDescending(g => g.ValidToUtc)
             .ThenBy(g => g.Quantity is not null)

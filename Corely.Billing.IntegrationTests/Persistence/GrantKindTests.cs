@@ -56,7 +56,7 @@ public sealed class GrantKindTests : IDisposable
 
     private Task<RegisterResult> RegisterAsync(string? reference = null) =>
         QuotaAsync(q =>
-            q.RegisterAsync(new RegisterRequest(AccountId, TestUsage.Seats, reference))
+            q.RegisterAsync(new RegisterRequest(AccountId, TestUsage.Members, reference))
         );
 
     [Fact]
@@ -100,14 +100,14 @@ public sealed class GrantKindTests : IDisposable
     }
 
     [Fact]
-    public async Task GetCapacityAsync_AddsSeatsAndCountsThoseHeld_ForTwoGrants()
+    public async Task GetCapacityAsync_AddsCapacityAndCountsWhatIsRegistered_ForTwoGrants()
     {
-        await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 2);
-        await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 3, toDays: 90);
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 2);
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 3, toDays: 90);
         await RegisterAsync("ada");
         await RegisterAsync("bob");
 
-        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Seats));
+        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Members));
 
         Assert.Equal(5, capacity.Granted);
         Assert.Equal(2, capacity.InUse);
@@ -116,8 +116,8 @@ public sealed class GrantKindTests : IDisposable
     [Fact]
     public async Task RegisterAsync_TakesTheLongestLivedGrant_ForTwoWithRoom()
     {
-        await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 7);
-        var longLived = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 365);
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 7);
+        var longLived = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 365);
 
         var result = await RegisterAsync("ada");
 
@@ -126,22 +126,22 @@ public sealed class GrantKindTests : IDisposable
     }
 
     [Fact]
-    public async Task RegisterAsync_RefusesASecondSeat_ForAReferenceAlreadyHeld()
+    public async Task RegisterAsync_RefusesASecondRegistration_ForAReferenceAlreadyHeld()
     {
-        await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5);
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5);
         await RegisterAsync("ada");
 
         var second = await RegisterAsync("ada");
-        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Seats));
+        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Members));
 
         Assert.Equal(RegisterResultCode.AlreadyRegisteredError, second.ResultCode);
         Assert.Equal(1, capacity.InUse);
     }
 
     [Fact]
-    public async Task RegisterAsync_RefusesAndReleasingFreesASeat_ForAFullGrant()
+    public async Task RegisterAsync_RefusesAndReleasingFreesRoom_ForAFullGrant()
     {
-        await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 1);
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 1);
         var ada = await RegisterAsync("ada");
 
         var full = await RegisterAsync("bob");
@@ -167,7 +167,7 @@ public sealed class GrantKindTests : IDisposable
     [Fact]
     public async Task ListRegistrationsAsync_ReportsTheGrantsState_ForADisabledThenEndedGrant()
     {
-        var grant = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 10);
+        var grant = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 10);
         await RegisterAsync("ada");
         await DisableAsync(grant);
 
@@ -187,12 +187,12 @@ public sealed class GrantKindTests : IDisposable
     }
 
     [Fact]
-    public async Task MoveRegistrationsAsync_ReleasesAndRecreatesOnTheTarget_ForEveryActiveSeat()
+    public async Task MoveRegistrationsAsync_ReleasesAndRecreatesOnTheTarget_ForEveryActiveRegistration()
     {
-        var from = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 10);
+        var from = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 10);
         await RegisterAsync("ada");
         await RegisterAsync("bob");
-        var to = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 5);
+        var to = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 5);
 
         var moved = await QuotaAsync(q =>
             q.MoveRegistrationsAsync(new MoveRegistrationsRequest(AccountId, from, to))
@@ -217,18 +217,53 @@ public sealed class GrantKindTests : IDisposable
     [Fact]
     public async Task MoveRegistrationsAsync_MovesNothing_ForATargetWithoutRoom()
     {
-        var from = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 5, toDays: 10);
+        var from = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 10);
         await RegisterAsync("ada");
         await RegisterAsync("bob");
-        var to = await GrantAsync(TestUsage.Seats, GrantKind.Capacity, 1, toDays: 5);
+        var to = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 1, toDays: 5);
 
         var moved = await QuotaAsync(q =>
             q.MoveRegistrationsAsync(new MoveRegistrationsRequest(AccountId, from, to))
         );
-        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Seats));
+        var capacity = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Members));
 
         Assert.Equal(MoveRegistrationsResultCode.NoCapacityError, moved.ResultCode);
         Assert.Equal(2, capacity.Grants.Single(g => g.GrantId == from).InUse);
+    }
+
+    [Fact]
+    public async Task DeleteGrantAsync_ReleasesItsRegistrations_ForACapacityGrant()
+    {
+        var doomed = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 10);
+        await RegisterAsync("ada");
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 5);
+
+        await _host.WithScopeAsync(services =>
+            services.GetRequiredService<IGrantService>().DeleteGrantAsync(AccountId, doomed)
+        );
+        var active = await QuotaAsync(q =>
+            q.ListRegistrationsAsync(new ListRegistrationsRequest([AccountId]))
+        );
+        var again = await RegisterAsync("ada");
+
+        Assert.Empty(active.Data!.Items);
+        Assert.Equal(RegisterResultCode.Registered, again.ResultCode);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_RegistersAgain_ForAReferenceHeldOnlyOnAnEndedGrant()
+    {
+        await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 10);
+        await RegisterAsync("ada");
+        _host.TimeProvider.Advance(TimeSpan.FromDays(11));
+        var renewal = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5, toDays: 30);
+
+        var before = await QuotaAsync(q => q.GetCapacityAsync(AccountId, TestUsage.Members));
+        var again = await RegisterAsync("ada");
+
+        Assert.Equal(0, before.InUse);
+        Assert.Equal(RegisterResultCode.Registered, again.ResultCode);
+        Assert.Equal(renewal, again.Registration!.GrantId);
     }
 
     [Fact]

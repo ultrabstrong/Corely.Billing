@@ -173,7 +173,7 @@ public class GrantEditorTests : BillingWebTestContext
 
         Assert.Empty(editor.FindAll("#cbw-unit"));
         Assert.Equal(
-            ["Balance", "Seats", "Allowance", "Feature"],
+            ["Balance", "Capacity", "Allowance", "Feature"],
             editor.FindAll("#cbw-operation optgroup").Select(g => g.GetAttribute("label"))
         );
         Assert.Equal(4, editor.FindAll("#cbw-operation option").Count);

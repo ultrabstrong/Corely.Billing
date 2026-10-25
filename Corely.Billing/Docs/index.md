@@ -1,6 +1,6 @@
 # Corely.Billing Documentation
 
-Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left. It serves a metered pipeline with reservations and retries, and just as well seats, a subscription, prepaid credits, a trial, an extra amount or feature access. Supports SQL Server and MySQL.
+Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left. It serves a metered pipeline with reservations and retries, and just as well a limited capacity, a subscription, prepaid credits, a trial, an extra amount or feature access. Supports SQL Server and MySQL.
 
 ```mermaid
 flowchart LR
@@ -26,9 +26,9 @@ flowchart LR
 
 Blue is what the host configures, green is the public API, amber is internal, grey is the schema and the tool that owns it.
 
-- **Grant kinds**: a consumable balance, a capacity of seats, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
-- **Usage shapes**: metered, prepaid credits, trial, seats, subscription, an extra amount or feature access, from the same schema
-- **Registrations**: a seat is held on a capacity grant until released, atomically against the last one
+- **Grant kinds**: a consumable balance, a capacity to register against, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
+- **Usage shapes**: metered, prepaid credits, trial, capacity, subscription, an extra amount or feature access, from the same schema
+- **Registrations**: a place on a capacity grant is held until released, atomically against the last one
 - **Reservations**: quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting**: work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries**: a retried unit of work recognises its own earlier rows instead of charging twice

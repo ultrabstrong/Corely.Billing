@@ -25,8 +25,8 @@ public class Grant
         {
             (GrantKind.Consumable, null) => GrantType.Unlimited,
             (GrantKind.Consumable, _) => GrantType.Balance,
-            (GrantKind.Capacity, null) => GrantType.UnlimitedSeats,
-            (GrantKind.Capacity, _) => GrantType.Seats,
+            (GrantKind.Capacity, null) => GrantType.UnlimitedCapacity,
+            (GrantKind.Capacity, _) => GrantType.Capacity,
             (GrantKind.Allowance, null) => GrantType.UnlimitedAllowance,
             (GrantKind.Allowance, _) => GrantType.Allowance,
             (GrantKind.Feature, _) => GrantType.Feature,

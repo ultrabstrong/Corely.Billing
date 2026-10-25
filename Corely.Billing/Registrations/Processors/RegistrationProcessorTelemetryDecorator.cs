@@ -55,6 +55,18 @@ internal class RegistrationProcessorTelemetryDecorator(
         return result;
     }
 
+    public Task<int> ReleaseAllOnGrantAsync(
+        Guid accountId,
+        Guid grantId,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(RegistrationProcessor),
+            grantId,
+            () => _inner.ReleaseAllOnGrantAsync(accountId, grantId, ct),
+            logResult: true
+        );
+
     public async Task<MoveRegistrationsResult> MoveAsync(
         MoveRegistrationsRequest request,
         CancellationToken ct = default

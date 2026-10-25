@@ -14,7 +14,7 @@ public static class BillingResourceTypes
     public const string CONSUMPTION_DESCRIPTION = "Billing consumption: what an account used";
     public const string QUOTA_DESCRIPTION =
         "Billing quota: reading balances, allowances, features and capacity, reserving and "
-        + "settling usage, and registering seats";
+        + "settling usage, and registering against capacity";
     public const string ALL_ACCOUNTS_DESCRIPTION =
         "Billing reads across every account, for a role in the platform account";
 }

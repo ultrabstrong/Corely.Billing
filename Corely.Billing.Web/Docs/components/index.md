@@ -5,7 +5,8 @@ Every component takes the account as `AccountId` and calls the Billing services 
 | Component | Does |
 |-----------|------|
 | [GrantList](grant-list.md) | Grants with their state, validity and status; edit and delete; pending requests to approve or decline |
-| [GrantEditor](grant-editor.md) | Create or edit one grant, and the seats held on a capacity grant |
+| [GrantEditor](grant-editor.md) | Create or edit one grant, and what is registered on a capacity grant |
+| [RegistrationList](registration-list.md) | What is registered against a capacity, across its grants or on one, with release and move |
 | [GrantRequestForm](grant-request-form.md) | Ask for a grant |
 | [UsageChart](usage-chart.md) | Used per period, and each grant's live capacity |
 | [ConsumptionTable](consumption-table.md) | Usage events, sorted and paged |

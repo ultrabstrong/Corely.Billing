@@ -4,8 +4,8 @@ public enum GrantType
 {
     Balance,
     Unlimited,
-    Seats,
-    UnlimitedSeats,
+    Capacity,
+    UnlimitedCapacity,
     Allowance,
     UnlimitedAllowance,
     Feature,

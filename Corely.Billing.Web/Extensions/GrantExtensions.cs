@@ -67,9 +67,9 @@ internal static class GrantExtensions
             {
                 GrantType.Unlimited =>
                     $"Unlimited, {UsageText.Count(grant.Used ?? 0, grant.UnitName(vocabulary))} used",
-                GrantType.Seats =>
+                GrantType.Capacity =>
                     $"{grant.InUse ?? 0:N0} of {UsageText.Count(grant.Quantity!.Value, grant.UnitName(vocabulary))} in use",
-                GrantType.UnlimitedSeats => $"Unlimited, {grant.InUse ?? 0:N0} in use",
+                GrantType.UnlimitedCapacity => $"Unlimited, {grant.InUse ?? 0:N0} in use",
                 GrantType.Allowance =>
                     $"+{UsageText.Count(grant.Quantity!.Value, grant.UnitName(vocabulary))}{grant.UntilText()}",
                 GrantType.UnlimitedAllowance =>
@@ -89,7 +89,12 @@ internal static class GrantExtensions
         public string HeadlineAndWindow(IUsageVocabulary vocabulary) =>
             $"{grant.Headline(vocabulary)}, {grant.WindowText()}";
 
+        public string DeletePrompt(IUsageVocabulary vocabulary) =>
+            grant.InUse is { } inUse and > 0
+                ? $"Delete this grant and release the {UsageText.Count(inUse, grant.UnitName(vocabulary))} registered on it?"
+                : "Delete this grant?";
+
         public string UnitName(IUsageVocabulary vocabulary) =>
-            grant.Unit is { } unit ? vocabulary.DisplayName(unit) : "seat";
+            grant.Unit is { } unit ? vocabulary.DisplayName(unit) : string.Empty;
     }
 }

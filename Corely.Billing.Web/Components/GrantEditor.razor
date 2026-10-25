@@ -22,7 +22,8 @@
             </text>)
         @if (_grant is { Kind: GrantKind.Capacity } capacity)
         {
-            <RegistrationList AccountId="AccountId" Grant="capacity" />
+            <h2 class="h5 mt-4">Registrations</h2>
+            <RegistrationList AccountId="AccountId" Operation="capacity.Operation" GrantId="capacity.GrantId" />
         }
     }
 </div>

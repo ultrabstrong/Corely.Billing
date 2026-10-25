@@ -313,6 +313,24 @@ Built as designed, with these differences:
 - **The export README is tested against `grants.csv`'s header,** so a column added or dropped
   without its description fails a unit test. It had drifted while the columns changed.
 
+Changed after the owner tried the demo:
+
+- **"Seat" became "capacity" everywhere.** `GrantType.Capacity` and `UnlimitedCapacity`, the form's
+  group label, the CSV `type` values and the docs. A capacity counts whatever its unit names (team
+  members, workflows), and "seat" only fit users.
+- **Deleting a capacity grant releases its registrations.** Before, they stayed active pointing at
+  nothing, and the same references could never register again. The grant list's delete confirmation
+  says how much is registered first.
+- **Only active grants hold registrations.** A registration on an ended or disabled grant holds
+  nothing, so its reference can register again on an active grant. A new grant starts empty; moving
+  stays explicit. Extending or enabling the old grant brings its registrations back, so a reference
+  that registered again meanwhile is registered on both.
+- **The grant list groups rows by kind,** under a heading each, in the dropdown's order.
+- **`RegistrationList` takes an operation,** listing every registration across its grants with a
+  per row Move, or one grant's with Move all. The Portal demo has `/team` (capacity) and `/plan`
+  (an allowance and a feature).
+
 Regression tests proven red against the bug each guards: two concurrent registrations for the last
 seat with the grant row lock removed (both providers), the kind backfill with its `UPDATE` removed
-(both providers), and the export README with a stale column.
+(both providers), the export README with a stale column, deleting a capacity grant without releasing, and registering
+again while an ended grant still held the reference.

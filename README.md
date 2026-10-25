@@ -2,7 +2,7 @@
 
 Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left, kept reconciled across retries so a replayed unit of work is never charged twice.
 
-Not only for metering: seats, a subscription, prepaid credits, a trial, an extra amount or a feature use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
+Not only for metering: a limited capacity, a subscription, prepaid credits, a trial, an extra amount or a feature use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
 
 **Try it running:** three demo apps show the web components, a subscription, and Billing inside a [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) app. See [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md).
 
@@ -30,8 +30,8 @@ flowchart LR
 
 ## Highlights
 
-- **Grant kinds**: a consumable balance, a capacity of seats, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
-- **Seats**: registrations hold a capacity grant's seats until released, atomically against the last one
+- **Grant kinds**: a consumable balance, a capacity to register against, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
+- **Capacity**: registrations hold a place on a capacity grant until released, atomically against the last one
 - **Reservations**: quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting**: work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries**: a retried unit of work recognises its own earlier rows instead of charging twice

@@ -8,7 +8,7 @@ internal static class TestUsage
     internal static UsageOperation Extraction { get; } = UsageOperation.From("extraction");
     internal static UsageOperation NoOp { get; } = UsageOperation.From("noop");
     internal static UsageOperation Other { get; } = UsageOperation.From("other");
-    internal static UsageOperation Seats { get; } = UsageOperation.From("seats");
+    internal static UsageOperation Members { get; } = UsageOperation.From("members");
     internal static UsageOperation Retention { get; } = UsageOperation.From("retention");
     internal static UsageOperation Sftp { get; } = UsageOperation.From("sftp");
 
@@ -30,7 +30,7 @@ internal static class TestUsage
                 .RegisterOperation(Extraction.Value, "Extraction", GrantKind.Consumable, Page.Value)
                 .RegisterOperation(NoOp.Value, "No-op", GrantKind.Consumable, Page.Value)
                 .RegisterOperation(Other.Value, "Other", GrantKind.Consumable, Document.Value)
-                .RegisterOperation(Seats.Value, "Seats", GrantKind.Capacity, User.Value)
+                .RegisterOperation(Members.Value, "Members", GrantKind.Capacity, User.Value)
                 .RegisterOperation(Retention.Value, "Retention", GrantKind.Allowance, Day.Value)
                 .RegisterOperation(Sftp.Value, "SFTP", GrantKind.Feature);
     }

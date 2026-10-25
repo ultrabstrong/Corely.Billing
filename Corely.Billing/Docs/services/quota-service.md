@@ -62,7 +62,7 @@ catch (WorkFailedException)
 
 ```csharp
 var registered = await quotaService.RegisterAsync(
-    new RegisterRequest(accountId, seats, Reference: $"user:{userId}", Description: userName));
+    new RegisterRequest(accountId, teamMembers, Reference: $"user:{userId}", Description: userName));
 
 await quotaService.ReleaseRegistrationAsync(accountId, registered.Registration!.RegistrationId);
 ```
@@ -77,7 +77,7 @@ await quotaService.ReleaseRegistrationAsync(accountId, registered.Registration!.
 | `SettledQuantity` | `SettleQuotaResult` | What was charged |
 | `Overdrawn` | `SettleQuotaResult` | The charge exceeded every live grant; the last one absorbed it |
 | `RemainingRatio` | `SettleQuotaResult` | What is left across live grants, 0 to 1; 1 while an unlimited grant is live |
-| `Registration` | `RegisterResult` | The seat held, with the grant it went on |
+| `Registration` | `RegisterResult` | What was registered, with the grant it went on |
 | `Status` | `Registration` | `Active`, `Released`, `GrantEnded` or `GrantDisabled`, read from its grant at query time |
 
 ## Notes
@@ -85,7 +85,9 @@ await quotaService.ReleaseRegistrationAsync(accountId, registered.Registration!.
 - `ReserveQuotaRequest.Provider` is who performs the work, for reporting by provider
 - `ReserveQuotaRequest.Tags` are copied onto every row the reservation writes
 - `NoGrantAvailableError` means no live grant at all; `InsufficientQuotaError` means grants exist without enough room across them
-- A registration goes on the active grant with room that ends last; registering is atomic, so two requests for the last seat cannot both succeed
-- A `Reference` already held for the operation is `AlreadyRegisteredError`; leave it null for seats that need no identity
+- A registration goes on the active grant with room that ends last; registering is atomic, so two requests for the last place cannot both succeed
+- A `Reference` already registered on an active grant of the operation is `AlreadyRegisteredError`; leave it null for registrations that need no identity
+- A registration on an ended or disabled grant holds nothing: the reference can register again, and goes on an active grant like any other
+- Deleting a capacity grant releases its registrations
 - A database the read cannot reach throws, as any fault does; it is not reported as an empty balance
 - See the [Reservations](../reservations.md) docs for retry and overdraft behavior

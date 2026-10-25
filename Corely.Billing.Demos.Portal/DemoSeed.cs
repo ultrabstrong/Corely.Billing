@@ -34,7 +34,7 @@ internal static class DemoSeed
                 (DemoUsage.TextGeneration, GrantKind.Consumable, 6_000_000, 20, 385),
                 (DemoUsage.Embeddings, GrantKind.Consumable, null, -120, 245),
                 (DemoUsage.ImageGeneration, GrantKind.Consumable, 1_000, -HISTORY_DAYS, 185),
-                (DemoUsage.TeamSeats, GrantKind.Capacity, 5, -60, 305),
+                (DemoUsage.TeamMembers, GrantKind.Capacity, 5, -60, 305),
                 (DemoUsage.LogRetention, GrantKind.Allowance, 60, -30, 335),
                 (DemoUsage.FineTuning, GrantKind.Feature, null, -10, 355),
             ];
@@ -65,7 +65,7 @@ internal static class DemoSeed
                 await quotaService.RegisterAsync(
                     new RegisterRequest(
                         DemoUsage.AccountId,
-                        DemoUsage.TeamSeats,
+                        DemoUsage.TeamMembers,
                         reference,
                         description
                     )
@@ -103,7 +103,7 @@ internal static class DemoSeed
         }
 
         Console.WriteLine(
-            $"Seeded 9 grants, 3 team seats, a pending grant request and {requests:N0} model requests over {HISTORY_DAYS} days."
+            $"Seeded 9 grants, 3 team members, a pending grant request and {requests:N0} model requests over {HISTORY_DAYS} days."
         );
     }
 

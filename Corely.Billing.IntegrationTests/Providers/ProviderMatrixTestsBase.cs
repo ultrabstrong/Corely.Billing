@@ -93,7 +93,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     }
 
     [RequiresDockerFact]
-    public async Task LastSeatGoesToOneRegistration_ForTwoRegisteringAtOnce()
+    public async Task LastPlaceGoesToOneRegistration_ForTwoRegisteringAtOnce()
     {
         await Host.WithScopeAsync(services =>
             services
@@ -101,7 +101,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                 .CreateGrantAsync(
                     new CreateGrantRequest(
                         AccountId,
-                        TestUsage.Seats,
+                        TestUsage.Members,
                         GrantKind.Capacity,
                         1,
                         Host.TimeProvider.GetUtcNow().UtcDateTime.AddDays(-1),
@@ -118,7 +118,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                         services
                             .GetRequiredService<IQuotaService>()
                             .RegisterAsync(
-                                new RegisterRequest(AccountId, TestUsage.Seats, $"user{i}")
+                                new RegisterRequest(AccountId, TestUsage.Members, $"user{i}")
                             )
                     )
                 )
@@ -126,7 +126,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
         var capacity = await Host.WithScopeAsync(services =>
             services
                 .GetRequiredService<IQuotaService>()
-                .GetCapacityAsync(AccountId, TestUsage.Seats)
+                .GetCapacityAsync(AccountId, TestUsage.Members)
         );
 
         Assert.Equal(

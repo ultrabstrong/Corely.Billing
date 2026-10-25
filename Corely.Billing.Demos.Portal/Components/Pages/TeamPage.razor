@@ -1,0 +1,89 @@
+@page "/team"
+@inherits OwningComponentBase
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+<PageTitle>Team</PageTitle>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Team</h1>
+    @if (_capacity is { } capacity)
+    {
+        <span class="text-body-secondary" data-capacity>@CapacityText(capacity)</span>
+    }
+</div>
+
+<p class="text-body-secondary">Each member holds one place on a <strong>Team members</strong> capacity grant until released. Adding a member registers them; the grant with room that ends last takes them.</p>
+
+<form class="row g-2 align-items-end mb-4" @onsubmit="AddAsync">
+    <div class="col-sm-4">
+        <label for="member-name" class="form-label">Name</label>
+        <input id="member-name" class="form-control" @bind="_name" maxlength="200" />
+    </div>
+    <div class="col-sm-5">
+        <label for="member-role" class="form-label">Role, optional</label>
+        <input id="member-role" class="form-control" @bind="_role" maxlength="500" />
+    </div>
+    <div class="col-sm-3">
+        <button type="submit" class="btn btn-primary w-100" disabled="@_adding">Add member</button>
+    </div>
+</form>
+
+@if (_message is not null)
+{
+    <div class="alert alert-info py-2" role="status">@_message</div>
+}
+
+<RegistrationList @ref="_list" AccountId="DemoUsage.AccountId" Operation="DemoUsage.TeamMembers" />
+
+@code {
+    private IQuotaService Quota => ScopedServices.GetRequiredService<IQuotaService>();
+
+    private RegistrationList? _list;
+    private GetCapacityResult? _capacity;
+    private string? _name;
+    private string? _role;
+    private string? _message;
+    private bool _adding;
+
+    protected override Task OnInitializedAsync() => LoadCapacityAsync();
+
+    private async Task LoadCapacityAsync() =>
+        _capacity = await Quota.GetCapacityAsync(DemoUsage.AccountId, DemoUsage.TeamMembers);
+
+    private static string CapacityText(GetCapacityResult capacity) =>
+        capacity.Granted is { } granted
+            ? $"{capacity.InUse:N0} of {granted:N0} members in use"
+            : $"Unlimited, {capacity.InUse:N0} in use";
+
+    private async Task AddAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_name))
+        {
+            _message = "Give the member a name.";
+            return;
+        }
+
+        _adding = true;
+        var result = await Quota.RegisterAsync(
+            new RegisterRequest(DemoUsage.AccountId, DemoUsage.TeamMembers, _name.Trim(), _role)
+        );
+        _adding = false;
+        _message = result.ResultCode switch
+        {
+            RegisterResultCode.Registered => $"{_name.Trim()} joined the team.",
+            RegisterResultCode.AlreadyRegisteredError => $"{_name.Trim()} is already on the team.",
+            RegisterResultCode.NoCapacityError => "The team is full. Release a member, or add capacity on the grants page.",
+            RegisterResultCode.NoActiveGrantError => "No active Team members grant. Add one on the grants page.",
+            _ => result.Message,
+        };
+        if (result.ResultCode == RegisterResultCode.Registered)
+        {
+            _name = null;
+            _role = null;
+        }
+
+        await LoadCapacityAsync();
+        if (_list is not null)
+            await _list.RefreshAsync();
+    }
+}

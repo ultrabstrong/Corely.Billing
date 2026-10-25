@@ -282,7 +282,7 @@ public class GrantProcessorTests
     }
 
     [Fact]
-    public async Task GetGrantAsync_ReturnsTheSeatsHeld_ForACapacityGrant()
+    public async Task GetGrantAsync_ReturnsWhatIsRegistered_ForACapacityGrant()
     {
         var grantId = await CreateGrantAsync(kind: GrantKind.Capacity);
         _registrations

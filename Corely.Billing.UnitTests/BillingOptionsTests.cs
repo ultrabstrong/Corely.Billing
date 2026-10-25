@@ -76,7 +76,7 @@ public class BillingOptionsTests
                 .RegisterUnit("day", "day")
                 .RegisterUnit("user", "user")
                 .RegisterOperation("extract", "Extract", GrantKind.Consumable, "page")
-                .RegisterOperation("seats", "Seats", GrantKind.Capacity, "user")
+                .RegisterOperation("members", "Members", GrantKind.Capacity, "user")
                 .RegisterOperation("retain", "Retain", GrantKind.Allowance, "day")
                 .RegisterOperation("sftp", "SFTP", GrantKind.Feature)
                 .DeclarationProblem()

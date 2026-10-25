@@ -10,7 +10,7 @@ internal static class DemoUsage
     public static readonly UsageOperation TextGeneration = UsageOperation.From("text_generation");
     public static readonly UsageOperation Embeddings = UsageOperation.From("embeddings");
     public static readonly UsageOperation ImageGeneration = UsageOperation.From("image_generation");
-    public static readonly UsageOperation TeamSeats = UsageOperation.From("team_seats");
+    public static readonly UsageOperation TeamMembers = UsageOperation.From("team_members");
     public static readonly UsageOperation LogRetention = UsageOperation.From("log_retention");
     public static readonly UsageOperation FineTuning = UsageOperation.From("fine_tuning");
     public static readonly UsageUnit Token = UsageUnit.From("token");
@@ -37,7 +37,7 @@ internal static class DemoUsage
                 GrantKind.Consumable,
                 Image.Value
             )
-            .RegisterOperation(TeamSeats.Value, "Team seats", GrantKind.Capacity, Member.Value)
+            .RegisterOperation(TeamMembers.Value, "Team members", GrantKind.Capacity, Member.Value)
             .RegisterOperation(LogRetention.Value, "Log retention", GrantKind.Allowance, Day.Value)
             .RegisterOperation(FineTuning.Value, "Fine tuning", GrantKind.Feature);
 }

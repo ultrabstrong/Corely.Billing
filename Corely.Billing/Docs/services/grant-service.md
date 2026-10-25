@@ -30,7 +30,7 @@ The unit is the operation's declared unit when `Unit` is left null. A kind or un
 
 ### Unlimited
 
-A null `Quantity` is unlimited: an unlimited balance, unlimited seats or an unlimited allowance. Quota draws on an unlimited consumable before any limited grant and never finds it short.
+A null `Quantity` is unlimited: an unlimited balance, an unlimited capacity or an unlimited allowance. Quota draws on an unlimited consumable before any limited grant and never finds it short.
 
 ```csharp
 await grantService.CreateGrantAsync(new CreateGrantRequest(
@@ -80,7 +80,7 @@ Every `Grant` that `GetGrantAsync` and `ListGrantsAsync` return carries its stat
 | `Remaining` | Consumable | What is left, never below zero; null for unlimited |
 | `InUse` | Capacity | Active registrations on it |
 
-`GetGrantType()` reads the display type from the kind and whether a quantity is set: `Balance`, `Unlimited`, `Seats`, `UnlimitedSeats`, `Allowance`, `UnlimitedAllowance` or `Feature`.
+`GetGrantType()` reads the display type from the kind and whether a quantity is set: `Balance`, `Unlimited`, `Capacity`, `UnlimitedCapacity`, `Allowance`, `UnlimitedAllowance` or `Feature`.
 
 ### Update
 
@@ -113,5 +113,5 @@ A disabled grant gives out nothing new: quota does not reserve against it, regis
 - Every method is scoped by `accountId`; another account's grant reads as `NotFoundError`
 - An update cannot change a grant's operation, kind or unit; create a new grant instead
 - A grant whose operation is no longer registered still reads, because its kind is on the row
-- Deleting a grant leaves its consumption rows in place
+- Deleting a grant leaves its consumption rows in place, and releases a capacity grant's registrations
 - A grant is active while `ValidFromUtc <= now <= ValidToUtc` and it is not disabled

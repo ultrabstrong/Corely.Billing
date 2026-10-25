@@ -1,6 +1,6 @@
 # GrantList
 
-An account's grants, newest first, each with its own state, validity window and status. Pending grant requests come first, in the same rows.
+An account's grants, grouped by kind under a heading each (Balance, Capacity, Allowance, Feature), newest first within a group. Each row shows its own state, validity window and status. Pending grant requests come first in their kind's group, in the same rows.
 
 ## Usage
 
@@ -37,8 +37,8 @@ Each grant type reads its own way in the State column:
 |------|-------|
 | Balance | A meter of used against quantity: "320 of 500 pages left"; running low under a tenth left, overdrawn past the quantity |
 | Unlimited | "Unlimited, 1,240 pages used" |
-| Seats | "2 of 7 users in use" |
-| Unlimited seats | "Unlimited, 12 in use" |
+| Capacity | "2 of 7 users in use" |
+| Unlimited capacity | "Unlimited, 12 in use" |
 | Allowance | "+60 days, until 31 March 2026", or "with no end date" for a grant that never expires |
 | Unlimited allowance | "Unlimited days, until 31 March 2026" |
 | Feature | "Enabled, until 31 March 2026", or "Disabled" |
@@ -55,7 +55,7 @@ Only a balance draws a meter. The state comes with the grant from `ListGrantsAsy
 
 ## Notes
 
-- Delete asks for confirmation in the row. Nothing opens a modal.
+- Delete asks for confirmation in the row, and for a capacity grant says how much is registered on it: deleting releases those registrations. Nothing opens a modal.
 - New, Edit and Delete each go through `IGrantActionGate`, with the row's grant id for Edit and Delete. A row the caller cannot update offers View instead of Edit. "Request a grant" asks for `Request`; Approve and Decline ask for `Decide` with the request's id. The host's decorators still refuse what the gate hides.
 - The decider is `IBillingAccountAccessor.GetUserIdAsync()`, null unless the host's accessor supplies it.
 - CSV downloads every grant with its kind, type and state, and no requests. See [Export](../export.md).

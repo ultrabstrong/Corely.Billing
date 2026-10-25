@@ -63,6 +63,17 @@ public partial class GrantList
 
     private bool CanRequestMore => Vocabulary.Unrequested(_requests).Count > 0;
 
+    private IEnumerable<(GrantKind Kind, List<GrantRequest> Requests, List<Grant> Grants)> Groups =>
+        Enum.GetValues<GrantKind>()
+            .Select(kind =>
+                (
+                    kind,
+                    _requests.Where(r => r.Kind == kind).ToList(),
+                    _grants.Where(g => g.Kind == kind).ToList()
+                )
+            )
+            .Where(group => group.Item2.Count > 0 || group.Item3.Count > 0);
+
     protected override async Task OnParametersSetSignedInAsync()
     {
         if (_loadedFor == AccountId)

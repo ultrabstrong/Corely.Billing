@@ -5,7 +5,7 @@ Every grant has a kind, and every way of using grants is one kind used one way. 
 | Kind | The quantity is | The unit | Usage against it |
 |------|-----------------|----------|------------------|
 | `Consumable` | A balance, or null for unlimited | Required | Reserved and settled |
-| `Capacity` | A number of seats, or null for unlimited | Required | Registered and released |
+| `Capacity` | How many registrations it holds at once, or null for unlimited | Required | Registered and released |
 | `Allowance` | An amount the app reads, or null for unlimited | Required | None |
 | `Feature` | Always null | Always null | None: an active grant means enabled |
 
@@ -14,7 +14,7 @@ Every grant has a kind, and every way of using grants is one kind used one way. 
 | Metered | Consumable | `ReserveAsync`, `SettleAsync` |
 | Prepaid credits | Consumable, far future expiry | `GetBalanceAsync`, `SettleAsync` |
 | Trial | Consumable, short window | `GetBalanceAsync` |
-| Seats | Capacity | `RegisterAsync`, `ReleaseRegistrationAsync`, `GetCapacityAsync` |
+| Limited capacity | Capacity | `RegisterAsync`, `ReleaseRegistrationAsync`, `GetCapacityAsync` |
 | Subscription | Capacity that never expires | `RegisterAsync` for members, `SetGrantDisabledAsync` for a lapse |
 | An extra amount | Allowance | `GetAllowanceAsync` |
 | Feature access | Feature | `HasFeatureAsync` |
@@ -63,27 +63,28 @@ var reason = reserved.ResultCode switch
 };
 ```
 
-## Seats
+## Capacity
 
-A capacity grant's quantity is a number of seats. A seat is held by a registration until it is released; nothing is used up.
+A capacity grant's quantity is how many registrations it holds at once: team members, active workflows, connected devices. A registration holds its place until it is released; nothing is used up.
 
 ```csharp
 var registered = await quotaService.RegisterAsync(
-    new RegisterRequest(accountId, seats, Reference: $"user:{userId}", Description: userName));
+    new RegisterRequest(accountId, teamMembers, Reference: $"user:{userId}", Description: userName));
 if (registered.ResultCode == RegisterResultCode.NoCapacityError)
-    return "Every seat is taken";
+    return "The team is full";
 ```
 
-- **One seat per reference**: a `Reference` already held for the operation is `AlreadyRegisteredError`, not a second seat.
-- **Atomic**: two registrations racing for the last seat cannot both succeed.
-- **Longest lived first**: a registration goes on the active grant with room that ends last, so a seat does not sit on a grant ending next week.
-- **Never moved silently**: a registration stays on its grant when the grant ends or is disabled, and reports `GrantEnded` or `GrantDisabled`. `MoveRegistrationsAsync` releases each one and registers it again on another grant.
+- **One registration per reference**: a `Reference` already registered on an active grant of the operation is `AlreadyRegisteredError`.
+- **Atomic**: two registrations racing for the last place cannot both succeed.
+- **Longest lived first**: a registration goes on the active grant with room that ends last, so it does not sit on a grant ending next week.
+- **Only active grants hold anything**: when a grant ends or is disabled, its registrations report `GrantEnded` or `GrantDisabled` and hold nothing, as if released. The reference can register again, and goes on an active grant like any other. Extending or enabling the grant brings its registrations back, so a reference that registered again meanwhile is then registered on both.
+- **Never moved silently**: a new grant starts empty. `MoveRegistrationsAsync` releases registrations and registers them again on another grant, when the app asks.
+- **Deleting a grant releases its registrations.**
 
 `GetCapacityAsync` adds up the active grants: `Granted` (null for unlimited), `InUse` and `Free`.
-
 ## Subscription
 
-A subscription is a capacity grant that never expires, with each member registered as a seat. The grant's end date is `GrantConstants.NEVER_EXPIRES_UTC`, because a subscription ends when it lapses, not on a date. The app tracks whether it is paid: a lapse disables the grant, and a renewal enables it again, so its registrations come back with it.
+A subscription is a capacity grant that never expires, with each member registered against it. The grant's end date is `GrantConstants.NEVER_EXPIRES_UTC`, because a subscription ends when it lapses, not on a date. The app tracks whether it is paid: a lapse disables the grant, and a renewal enables it again, so its registrations come back with it.
 
 ```csharp
 await grantService.CreateGrantAsync(new CreateGrantRequest(
@@ -123,4 +124,4 @@ if (!sftp.HasFeature)
 - Each quota read refuses an operation of another kind with `WrongKindError`, so an allowance is never read as a feature or a balance.
 - An unlimited consumable grant is spent before any limited grant it overlaps, and never runs short.
 - `ListGrantsAsync` returns each grant with its own state: `Used` and `Remaining` for a consumable, `InUse` for a capacity.
-- The Blazor components in [Corely.Billing.Web](../../Corely.Billing.Web/Docs/index.md) show each kind its own way: a meter for a balance, seats in use for a capacity, the amount added for an allowance, enabled or disabled for a feature.
+- The Blazor components in [Corely.Billing.Web](../../Corely.Billing.Web/Docs/index.md) show each kind its own way: a meter for a balance, how much is registered for a capacity, the amount added for an allowance, enabled or disabled for a feature.
