@@ -231,6 +231,31 @@ public sealed class GrantKindTests : IDisposable
         Assert.Equal(2, capacity.Grants.Single(g => g.GrantId == from).InUse);
     }
 
+    [Theory]
+    [InlineData("allowance")]
+    [InlineData("other operation")]
+    public async Task MoveRegistrationsAsync_RefusesAndMovesNothing_ForATargetThatIsNotLikeKind(
+        string target
+    )
+    {
+        var from = await GrantAsync(TestUsage.Members, GrantKind.Capacity, 5);
+        await RegisterAsync("ada");
+        var to =
+            target == "allowance"
+                ? await GrantAsync(TestUsage.Retention, GrantKind.Allowance, 60)
+                : await GrantAsync(TestUsage.Devices, GrantKind.Capacity, 5);
+
+        var moved = await QuotaAsync(q =>
+            q.MoveRegistrationsAsync(new MoveRegistrationsRequest(AccountId, from, to))
+        );
+        var held = await QuotaAsync(q =>
+            q.ListRegistrationsAsync(new ListRegistrationsRequest([AccountId]))
+        );
+
+        Assert.Equal(MoveRegistrationsResultCode.WrongKindError, moved.ResultCode);
+        Assert.Equal(from, Assert.Single(held.Data!.Items).GrantId);
+    }
+
     [Fact]
     public async Task DeleteGrantAsync_ReleasesItsRegistrations_ForACapacityGrant()
     {
