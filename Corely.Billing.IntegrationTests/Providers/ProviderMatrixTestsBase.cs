@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Corely.Billing.Consumption.Entities;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.DataAccess;
@@ -9,6 +10,7 @@ using Corely.Billing.Services;
 using Corely.Common.Filtering;
 using Corely.Common.Filtering.Filters;
 using Corely.Common.Filtering.Ordering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -346,7 +348,55 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
 }
 
 public class MsSqlProviderMatrixTests()
-    : ProviderMatrixTestsBase(new ProviderTestHost(DatabaseProvider.MsSql)) { }
+    : ProviderMatrixTestsBase(new ProviderTestHost(DatabaseProvider.MsSql))
+{
+    [RequiresDockerFact]
+    public async Task IdempotentScriptAppliesEveryMigration_ForAnEmptyDatabase()
+    {
+        var script = await Host.QueryAsync(db =>
+            Task.FromResult(
+                db.GetService<IMigrator>()
+                    .GenerateScript(options: MigrationsSqlGenerationOptions.Idempotent)
+            )
+        );
+        var migrations = await Host.QueryAsync(db =>
+            Task.FromResult(db.Database.GetMigrations().Count())
+        );
+        var database = new SqlConnectionStringBuilder(Host.ConnectionString)
+        {
+            InitialCatalog = "IdempotentScript",
+        }.ConnectionString;
+
+        await using (var master = new SqlConnection(Host.ConnectionString))
+        {
+            await master.OpenAsync();
+            await new SqlCommand(
+                "CREATE DATABASE [IdempotentScript]",
+                master
+            ).ExecuteNonQueryAsync();
+        }
+
+        await using var connection = new SqlConnection(database);
+        await connection.OpenAsync();
+        foreach (
+            var batch in Regex
+                .Split(script, @"^\s*GO\s*$", RegexOptions.Multiline)
+                .Where(b => !string.IsNullOrWhiteSpace(b))
+        )
+        {
+            await new SqlCommand(batch, connection).ExecuteNonQueryAsync();
+        }
+        var applied = (int)
+            (
+                await new SqlCommand(
+                    $"SELECT COUNT(*) FROM {MigrationConstants.DEFAULT_HISTORY_TABLE}",
+                    connection
+                ).ExecuteScalarAsync()
+            )!;
+
+        Assert.Equal(migrations, applied);
+    }
+}
 
 public class MySqlProviderMatrixTests()
     : ProviderMatrixTestsBase(new ProviderTestHost(DatabaseProvider.MySql)) { }

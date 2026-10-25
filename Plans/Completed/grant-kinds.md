@@ -330,7 +330,10 @@ Changed after the owner tried the demo:
   per row Move, or one grant's with Move all. The Portal demo has `/team` (capacity) and `/plan`
   (an allowance and a feature).
 
+Found after release, while moving DocsToData onto 3.0: the SQL Server kind backfill named the new`nKind` column in the batch that added it, so the idempotent script (`db script -i`) failed to compile.`n`db migrate` was unaffected. The backfills now run through `EXEC`, released as the migration CLI 3.0.1,`nand a provider test applies the idempotent script to an empty SQL Server database.
+
 Regression tests proven red against the bug each guards: two concurrent registrations for the last
 seat with the grant row lock removed (both providers), the kind backfill with its `UPDATE` removed
 (both providers), the export README with a stale column, deleting a capacity grant without releasing, and registering
-again while an ended grant still held the reference.
+again while an ended grant still held the reference, and the idempotent script with the backfill
+unwrapped.

@@ -24,9 +24,12 @@ public sealed class ProviderTestHost(DatabaseProvider provider) : IBillingTestHo
 
     public DatabaseProvider Provider => provider;
 
+    public string ConnectionString { get; private set; } = string.Empty;
+
     public async ValueTask InitializeAsync()
     {
         var connectionString = await StartContainerAsync();
+        ConnectionString = connectionString;
 
         var services = new ServiceCollection();
         services.AddLogging(builder =>

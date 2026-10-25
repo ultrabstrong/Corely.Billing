@@ -32,7 +32,7 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                 nullable: true
             );
 
-            migrationBuilder.Sql("UPDATE Grants SET Kind = 'Consumable'");
+            migrationBuilder.Sql("EXEC(N'UPDATE Grants SET Kind = ''Consumable''')");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Kind",
@@ -74,7 +74,7 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                 nullable: true
             );
 
-            migrationBuilder.Sql("UPDATE GrantRequests SET Kind = 'Consumable'");
+            migrationBuilder.Sql("EXEC(N'UPDATE GrantRequests SET Kind = ''Consumable''')");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Kind",
