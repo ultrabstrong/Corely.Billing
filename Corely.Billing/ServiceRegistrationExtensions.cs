@@ -5,6 +5,7 @@ using Corely.Billing.GrantRequests.Processors;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Operations;
 using Corely.Billing.Quota.Processors;
+using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Services;
 using Corely.Billing.Telemetry;
 using Corely.Billing.Usage;
@@ -27,13 +28,8 @@ public static class ServiceRegistrationExtensions
             ArgumentNullException.ThrowIfNull(serviceCollection);
             ArgumentNullException.ThrowIfNull(options);
 
-            if (options.Operations.Count == 0 || options.Units.Count == 0)
-            {
-                throw new InvalidOperationException(
-                    "Register at least one operation and one unit on BillingOptions. Nothing can be "
-                        + "granted or consumed without them."
-                );
-            }
+            if (options.DeclarationProblem() is { } problem)
+                throw new InvalidOperationException(problem);
 
             if (options.EFConfigurationFactory != null)
             {
@@ -57,12 +53,7 @@ public static class ServiceRegistrationExtensions
             >();
             serviceCollection.AddSingleton<IUsageVocabulary>(
                 new UsageVocabulary(
-                    [
-                        .. options.Operations.Select(o => new UsageOperationDefinition(
-                            o.Key,
-                            o.Value
-                        )),
-                    ],
+                    [.. options.Operations.Values],
                     [.. options.Units.Select(u => new UsageUnitDefinition(u.Key, u.Value))]
                 )
             );
@@ -83,6 +74,16 @@ public static class ServiceRegistrationExtensions
             serviceCollection.AddScoped<IValidationProvider, FluentValidationProvider>();
 
             serviceCollection.AddScoped<IGrantSelectionPolicy, ExpiringFirstGrantSelectionPolicy>();
+
+            serviceCollection.AddScoped<
+                IRegistrationSelectionPolicy,
+                RegistrationSelectionPolicy
+            >();
+            serviceCollection.AddScoped<IRegistrationProcessor, RegistrationProcessor>();
+            serviceCollection.Decorate<
+                IRegistrationProcessor,
+                RegistrationProcessorTelemetryDecorator
+            >();
 
             serviceCollection.AddScoped<IGrantProcessor, GrantProcessor>();
             serviceCollection.Decorate<IGrantProcessor, GrantProcessorTelemetryDecorator>();

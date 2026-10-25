@@ -64,7 +64,7 @@ public class ConsumptionReportProcessorTelemetryDecoratorTests
     [Fact]
     public async Task ListConsumptionEventsAsync_RecordsTheTotalCount_ForAPage()
     {
-        var request = new ListConsumptionEventsRequest(AccountId);
+        var request = new ListConsumptionEventsRequest([AccountId]);
         _inner
             .Setup(p => p.ListConsumptionEventsAsync(request, default))
             .ReturnsAsync(PagedResult<ConsumptionEvent>.Create([], 13, 0, 25));

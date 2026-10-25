@@ -36,9 +36,7 @@ public class GrantRequestProcessorTelemetryDecoratorTests
             .Setup(p => p.RequestGrantAsync(It.IsAny<RequestGrantRequest>(), default))
             .ReturnsAsync(new RequestGrantResult(code, "", RequestId));
 
-        await _decorator.RequestGrantAsync(
-            new(AccountId, TestUsage.Extraction, TestUsage.Page, 250)
-        );
+        await _decorator.RequestGrantAsync(new(AccountId, TestUsage.Extraction, 250));
 
         _telemetry.Verify(
             t => t.Increment(BillingMetricNames.GrantRequests.GRANT_REQUEST_CREATED),

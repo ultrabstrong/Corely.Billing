@@ -93,8 +93,8 @@ public class AuditDecoratorCoverageTests
         services.AddBillingServices(
             BillingOptions
                 .Create(Configuration)
-                .RegisterOperation(Extraction.Value, "Extraction")
                 .RegisterUnit(Page.Value, "page")
+                .RegisterOperation(Extraction.Value, "Extraction", GrantKind.Consumable, Page.Value)
                 .UseCorelyIamPermissions()
         );
         return services.BuildServiceProvider();

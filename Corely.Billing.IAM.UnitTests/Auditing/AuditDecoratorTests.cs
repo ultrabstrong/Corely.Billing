@@ -1,6 +1,7 @@
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Auditing;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Models;
 using Corely.Billing.Services;
 using Corely.IAM.Security.Enums;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
@@ -21,7 +22,14 @@ public class AuditDecoratorTests
             .ReturnsAsync(new CreateGrantResult(CreateGrantResultCode.Success, "", created));
 
         await new GrantAuditDecorator(inner.Object, _auditProvider).CreateGrantAsync(
-            new(AccountId, Extraction, Page, 1, DateTime.UtcNow, DateTime.UtcNow.AddDays(1))
+            new(
+                AccountId,
+                Extraction,
+                GrantKind.Consumable,
+                1,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddDays(1)
+            )
         );
 
         var captured = Assert.Single(_auditProvider.Calls);
@@ -86,22 +94,38 @@ public class AuditDecoratorTests
     }
 
     [Fact]
-    public async Task GetAvailability_RecordsTheAvailabilityAsTheResult()
+    public async Task GetBalanceAsync_RecordsTheReadsResultCode_ForAWrongKind()
     {
         var inner = new Mock<IQuotaService>();
         inner
-            .Setup(s => s.GetAvailabilityAsync(AccountId, Extraction, Page, default))
-            .ReturnsAsync(QuotaAvailability.Exhausted);
+            .Setup(s => s.GetBalanceAsync(AccountId, Extraction, default))
+            .ReturnsAsync(new GetBalanceResult(QuotaReadResultCode.WrongKindError, "", null, []));
 
-        await new QuotaAuditDecorator(inner.Object, _auditProvider).GetAvailabilityAsync(
+        await new QuotaAuditDecorator(inner.Object, _auditProvider).GetBalanceAsync(
             AccountId,
-            Extraction,
-            Page
+            Extraction
         );
 
-        Assert.Equal(
-            nameof(QuotaAvailability.Exhausted),
-            Assert.Single(_auditProvider.Calls).Outcome!.ResultCode
+        var captured = Assert.Single(_auditProvider.Calls);
+        Assert.Equal(nameof(QuotaReadResultCode.WrongKindError), captured.Outcome!.ResultCode);
+        Assert.Equal(AuthAction.Read, captured.Call.Action);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_RecordsAnExecuteOnQuota_ForARegistration()
+    {
+        var inner = new Mock<IQuotaService>();
+        inner
+            .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>(), default))
+            .ReturnsAsync(new RegisterResult(RegisterResultCode.Registered, ""));
+
+        await new QuotaAuditDecorator(inner.Object, _auditProvider).RegisterAsync(
+            new RegisterRequest(AccountId, Extraction, "ada")
         );
+
+        var captured = Assert.Single(_auditProvider.Calls);
+        Assert.Equal(AuthAction.Execute, captured.Call.Action);
+        Assert.Equal(BillingResourceTypes.QUOTA_RESOURCE_TYPE, captured.Call.ResourceType);
+        Assert.Equal(nameof(RegisterResultCode.Registered), captured.Outcome!.ResultCode);
     }
 }

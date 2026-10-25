@@ -165,4 +165,64 @@ public class GrantEditorTests : BillingWebTestContext
             .ReturnsAsync(new RetrieveSingleResult<Grant>(RetrieveResultCode.Success, "", grant));
         return grant;
     }
+
+    [Fact]
+    public void Render_OffersOnlyDeclaredOperationsGroupedByKindAndNoUnit_ForANewGrant()
+    {
+        var editor = Render();
+
+        Assert.Empty(editor.FindAll("#cbw-unit"));
+        Assert.Equal(
+            ["Balance", "Seats", "Allowance", "Feature"],
+            editor.FindAll("#cbw-operation optgroup").Select(g => g.GetAttribute("label"))
+        );
+        Assert.Equal(4, editor.FindAll("#cbw-operation option").Count);
+        Assert.Equal("pages", editor.Find("[data-unit]").TextContent);
+    }
+
+    [Fact]
+    public void Save_CreatesAFeatureWithNoQuantityOrUnit_ForAFeatureOperation()
+    {
+        var editor = Render();
+        editor.Find("#cbw-operation").Change(Sftp.Value);
+
+        Assert.Empty(editor.FindAll("#cbw-quantity"));
+        editor.Find("form").Submit();
+
+        Assert.NotNull(_created);
+        Assert.Equal(GrantKind.Feature, _created!.Kind);
+        Assert.Null(_created.Quantity);
+        Assert.Null(_created.Unit);
+    }
+
+    [Fact]
+    public void Save_CreatesAnAllowanceInTheDeclaredKind_ForAnAllowanceOperation()
+    {
+        var editor = Render();
+        editor.Find("#cbw-operation").Change(Retention.Value);
+        editor.Find("#cbw-quantity").Change("60");
+
+        Assert.Equal("Amount added", editor.Find("label[for=cbw-quantity]").TextContent);
+        Assert.Empty(editor.FindAll("#cbw-never-expires"));
+        editor.Find("form").Submit();
+
+        Assert.Equal(GrantKind.Allowance, _created!.Kind);
+        Assert.Equal(60, _created.Quantity);
+    }
+
+    [Fact]
+    public void Save_CreatesAGrantThatNeverExpires_ForTheNeverExpiresSwitch()
+    {
+        var editor = Render();
+        editor.Find("#cbw-quantity").Change("500");
+        editor.Find("#cbw-never-expires").Change(true);
+
+        Assert.Empty(editor.FindAll("#cbw-to"));
+        editor.Find("form").Submit();
+
+        Assert.Equal(
+            Corely.Billing.Grants.Constants.GrantConstants.NEVER_EXPIRES_UTC,
+            _created!.ValidToUtc
+        );
+    }
 }

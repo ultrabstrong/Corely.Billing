@@ -82,7 +82,7 @@ public partial class ConsumptionTable
 
         var result = await ConsumptionService.ListConsumptionEventsAsync(
             new ListConsumptionEventsRequest(
-                AccountId,
+                [AccountId],
                 Filter.FromUtc,
                 Filter.ToUtc,
                 Filter.Units,

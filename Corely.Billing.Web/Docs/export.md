@@ -34,14 +34,17 @@ The raw usage behind the components, as CSV, for analysis anywhere else. The das
 | Column | Meaning |
 |---|---|
 | `grant_id` | The grant |
-| `operation`, `operation_name`, `unit`, `unit_name` | What it covers |
-| `quantity` | The allowance; empty when unlimited |
-| `unlimited` | `true` for a null quantity |
+| `operation`, `operation_name` | What it covers |
+| `kind` | `consumable`, `capacity`, `allowance` or `feature` |
+| `type` | `balance`, `unlimited`, `seats`, `unlimitedseats`, `allowance`, `unlimitedallowance` or `feature` |
+| `unit`, `unit_name` | What it is counted in; empty for a feature |
+| `quantity` | The balance, seats or amount; empty when unlimited or a feature |
+| `unlimited` | `true` for a null quantity on any kind but a feature |
 | `valid_from_utc`, `valid_to_utc` | The window |
 | `status` | `upcoming`, `active` or `expired` when exported, or `disabled` whatever the window |
-| `used` | Everything counted against the grant when exported; empty when the caller cannot read consumption |
-| `remaining` | Never below zero; empty when unlimited or `used` is empty |
-| `overdrawn_by` | How far `used` went past `quantity`; empty when `used` is empty |
+| `used` | A consumable's settled and held quantity when exported; empty for other kinds |
+| `remaining` | A consumable's balance, never below zero; empty when unlimited or another kind |
+| `in_use` | A capacity's active registrations; empty for other kinds |
 | `tags` | A JSON object |
 
 ## Format

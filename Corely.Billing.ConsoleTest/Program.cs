@@ -12,8 +12,8 @@ services.AddLogging();
 services.AddBillingServices(
     BillingOptions
         .Create(new ConfigurationBuilder().Build())
-        .RegisterOperation("text_generation", "Text Generation")
         .RegisterUnit("token", "token")
+        .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token")
 );
 using var provider = services.BuildServiceProvider();
 using var scope = provider.CreateScope();
@@ -29,13 +29,20 @@ var accountId = Guid.CreateVersion7();
 var now = DateTime.UtcNow;
 
 await grants.CreateGrantAsync(
-    new CreateGrantRequest(accountId, generation, token, 100_000, now.AddDays(-1), now.AddDays(2))
+    new CreateGrantRequest(
+        accountId,
+        generation,
+        GrantKind.Consumable,
+        100_000,
+        now.AddDays(-1),
+        now.AddDays(2)
+    )
 );
 await grants.CreateGrantAsync(
     new CreateGrantRequest(
         accountId,
         generation,
-        token,
+        GrantKind.Consumable,
         1_000_000,
         now.AddDays(-1),
         now.AddDays(30)
@@ -57,17 +64,11 @@ using (accessor.BeginScope(new OperationContext(Guid.CreateVersion7(), "batch:de
     );
 }
 
-var list = await grants.ListGrantsAsync(new ListGrantsRequest(accountId));
-var totals = await consumption.GetGrantConsumptionTotalsAsync(
-    accountId,
-    [.. list.Data!.Items.Select(g => g.GrantId)]
-);
+var list = await grants.ListGrantsAsync(new ListGrantsRequest([accountId]));
 
-foreach (var grant in list.Data.Items.OrderBy(g => g.ValidToUtc))
+foreach (var grant in list.Data!.Items.OrderBy(g => g.ValidToUtc))
 {
-    var used =
-        totals.Item!.SingleOrDefault(t => t.GrantId == grant.GrantId)?.TotalConsumedQuantity ?? 0;
     Console.WriteLine(
-        $"Grant of {grant.Quantity:N0}, expiring {grant.ValidToUtc:d}: {used:N0} used"
+        $"Grant of {grant.Quantity:N0}, expiring {grant.ValidToUtc:d}: {grant.Used:N0} used, {grant.Remaining:N0} left"
     );
 }

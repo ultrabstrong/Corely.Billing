@@ -6,7 +6,7 @@
 
 - **Static factory**: `Create()` enforces required parameters via method signature
 - **Fluent chaining**: optional configuration methods return `this`
-- **Registered vocabulary**: operations and units are declared once, at startup
+- **Registered vocabulary**: operations, their grant kind and their unit are declared once, at startup
 - **Pluggable telemetry**: a no-op default; supply your own metrics sink
 - **Host decorators**: wrap the public services with authorization or anything else
 - **Two paths**: EF production path and mock testing path from the same API
@@ -17,8 +17,8 @@
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("text_generation", "Text Generation")
-    .RegisterUnit("token", "token");
+    .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token");
 services.AddBillingServices(options);
 ```
 
@@ -30,8 +30,8 @@ their own.
 
 ```csharp
 var options = BillingOptions.Create(configuration)
-    .RegisterOperation("text_generation", "Text Generation")
-    .RegisterUnit("token", "token");
+    .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token");
 services.AddBillingServices(options);
 ```
 
@@ -41,8 +41,8 @@ The `Create()` overload without `efConfigurationFactory` registers in-memory moc
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("text_generation", "Text Generation")
     .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token")
     .UseTelemetry(sp => sp.GetRequiredService<MyBillingTelemetry>())
     .DecorateServices(s => s.Decorate<IQuotaService, QuotaAuthorizationDecorator>());
 ```
@@ -58,7 +58,7 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 
 | Method | Parameters | Description |
 |--------|-----------|-------------|
-| `RegisterOperation` | `value`, `displayName` | Adds an operation to the vocabulary |
+| `RegisterOperation` | `value`, `displayName`, `kind`, `unit` | Adds an operation, declaring its grant kind and its unit; a feature takes no unit |
 | `RegisterUnit` | `value`, `displayName` | Adds a unit to the vocabulary |
 | `UseTelemetry` | `Func<IServiceProvider, IBillingTelemetry>` | Replaces the no-op telemetry |
 | `DecorateServices` | `Action<IServiceCollection>` | Wraps the public services; may be called more than once |
@@ -70,14 +70,14 @@ A duplicate operation or unit overwrites the earlier display name. See the [Usag
 | Service | Lifetime | Purpose |
 |---------|----------|---------|
 | `IGrantService` | Scoped | Create, read, update, delete and list grants |
-| `IQuotaService` | Scoped | Availability, reserve, settle, release |
+| `IQuotaService` | Scoped | A read per grant kind, reserve and settle, register and release |
 | `IConsumptionService` | Scoped | Ledger reporting |
 | `IUsageVocabulary` | Singleton | The registered operations and units |
 | `IOperationContextAccessor` | Singleton | The ambient unit of work (kept if already registered) |
 | `IBillingTelemetry` | Singleton | Metrics sink |
 | `TimeProvider` | Singleton | `TimeProvider.System`, kept if already registered |
 
-`AddBillingServices` throws `InvalidOperationException` when no operation or no unit is registered.
+`AddBillingServices` throws `InvalidOperationException` when no operation is registered, when an operation names a unit that is not registered, when a feature names a unit, or when any other kind names none.
 
 ## Configuration Sections
 

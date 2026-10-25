@@ -17,7 +17,7 @@ public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
                     new CreateGrantRequest(
                         accountId,
                         TestUsage.Extraction,
-                        TestUsage.Page,
+                        GrantKind.Consumable,
                         quantity,
                         now.AddDays(-2),
                         now.AddDays(expiresInDays)
@@ -91,10 +91,8 @@ public sealed class LedgerDriver(IBillingTestHost host, Guid accountId)
     public async Task<long> BalanceAsync(Guid grantId)
     {
         var result = await host.WithScopeAsync(services =>
-            services
-                .GetRequiredService<IConsumptionService>()
-                .GetGrantConsumptionTotalsAsync(accountId, [grantId])
+            services.GetRequiredService<IGrantService>().GetGrantAsync(accountId, grantId)
         );
-        return result.Item?.FirstOrDefault(t => t.GrantId == grantId)?.TotalConsumedQuantity ?? 0L;
+        return result.Item?.Used ?? 0L;
     }
 }

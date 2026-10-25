@@ -52,7 +52,7 @@
         <ul class="cbw-grant-rows" aria-label="Grants">
             <li class="cbw-grant-head" aria-hidden="true">
                 <span>Grant</span>
-                <span>Balance</span>
+                <span>State</span>
                 <span>Valid</span>
                 <span>Status</span>
                 <span></span>
@@ -90,21 +90,21 @@
                 var status = grant.Status(Now);
                 <li class="cbw-grant-row" data-grant-id="@grant.GrantId">
                     <div class="cbw-grant-name">
-                        <span class="cbw-grant-allowance">@grant.Allowance(Vocabulary)</span>
+                        <span class="cbw-grant-allowance">@grant.Headline(Vocabulary)</span>
                         <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(grant.Operation)</span>
                     </div>
                     <div class="cbw-grant-balance">
-                        @if (BalanceOf(grant) is { } balance)
+                        @if (grant.GetGrantType() == GrantType.Balance)
                         {
-                            <BalanceMeter Balance="balance" UnitDisplayName="@Vocabulary.DisplayName(grant.Unit)" />
+                            <BalanceMeter Balance="GrantBalance.For(grant)" UnitDisplayName="@grant.UnitName(Vocabulary)" />
                         }
                         else
                         {
-                            <span class="text-body-secondary">Balance unavailable</span>
+                            <span class="cbw-grant-state" data-grant-type="@grant.GetGrantType()">@grant.StateText(Vocabulary, Now)</span>
                         }
                     </div>
                     <div class="cbw-grant-window">
-                        <span>@grant.ValidFromUtc.ToString("MMM d, yyyy") – @grant.ValidToUtc.ToString("MMM d, yyyy")</span>
+                        <span>@grant.WindowText()</span>
                         <span class="cbw-grant-when text-body-secondary">@grant.WhenText(Now)</span>
                     </div>
                     <div class="cbw-grant-status">

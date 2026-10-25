@@ -11,6 +11,7 @@ internal class GrantValidator : AbstractValidator<Grant>
     {
         RuleFor(x => x.GrantId).NotEmpty();
         RuleFor(x => x.AccountId).NotEmpty();
+        RuleFor(x => x.Kind).IsInEnum();
         RuleFor(x => x.Quantity).GreaterThanOrEqualTo(GrantConstants.QUANTITY_MIN_VALUE);
         RuleFor(x => x.ValidToUtc)
             .GreaterThan(x => x.ValidFromUtc)
@@ -19,7 +20,19 @@ internal class GrantValidator : AbstractValidator<Grant>
             .Must(vocabulary.Knows)
             .WithMessage(x => $"Operation '{x.Operation}' is not a registered usage operation.");
         RuleFor(x => x.Unit)
-            .Must(vocabulary.Knows)
+            .Must(unit => unit is not { } known || vocabulary.Knows(known))
             .WithMessage(x => $"Unit '{x.Unit}' is not a registered usage unit.");
+        RuleFor(x => x.Unit)
+            .NotNull()
+            .When(x => x.Kind != GrantKind.Feature)
+            .WithMessage(x => $"A {x.Kind} grant is counted in a unit.");
+        When(
+            x => x.Kind == GrantKind.Feature,
+            () =>
+            {
+                RuleFor(x => x.Quantity).Null().WithMessage("A feature grant has no quantity.");
+                RuleFor(x => x.Unit).Null().WithMessage("A feature grant has no unit.");
+            }
+        );
     }
 }

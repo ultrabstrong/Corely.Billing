@@ -41,7 +41,7 @@ internal sealed class GrantRequestAuditDecorator(
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            OnGrantRequest(AuthAction.Read, request.AccountId),
+            OnGrantRequest(AuthAction.Read, request.AccountIds is [var only] ? only : null),
             () => inner.ListGrantRequestsAsync(request, authorizedResourceIds, ct),
             r => AuditOutcome.Of(r.ResultCode)
         );
@@ -68,7 +68,7 @@ internal sealed class GrantRequestAuditDecorator(
 
     private static AuditCall OnGrantRequest(
         AuthAction action,
-        Guid accountId,
+        Guid? accountId,
         params Guid[] grantRequestIds
     ) =>
         new(SERVICE, action, BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE)

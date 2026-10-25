@@ -5,6 +5,7 @@ using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Models;
+using Corely.Billing.Usage;
 using Corely.Billing.Validators;
 using Corely.Common.Extensions;
 using Corely.DataAccess.Interfaces.Repos;
@@ -16,6 +17,7 @@ namespace Corely.Billing.GrantRequests.Processors;
 internal class GrantRequestProcessor(
     IRepo<GrantRequestEntity> grantRequestRepo,
     IGrantProcessor grantProcessor,
+    IUsageVocabulary vocabulary,
     IUnitOfWorkProvider uowProvider,
     IValidationProvider validationProvider,
     TimeProvider timeProvider,
@@ -28,6 +30,7 @@ internal class GrantRequestProcessor(
     private readonly IGrantProcessor _grantProcessor = grantProcessor.ThrowIfNull(
         nameof(grantProcessor)
     );
+    private readonly IUsageVocabulary _vocabulary = vocabulary.ThrowIfNull(nameof(vocabulary));
     private readonly IUnitOfWorkProvider _uowProvider = uowProvider.ThrowIfNull(
         nameof(uowProvider)
     );
@@ -44,7 +47,19 @@ internal class GrantRequestProcessor(
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
-        var grantRequest = request.ToGrantRequest(_timeProvider.GetUtcNow().UtcDateTime);
+        if (_vocabulary.Definition(request.Operation) is not { } definition)
+        {
+            return new RequestGrantResult(
+                RequestGrantResultCode.ValidationError,
+                $"Operation '{request.Operation}' is not a registered usage operation.",
+                Guid.Empty
+            );
+        }
+
+        var grantRequest = request.ToGrantRequest(
+            definition,
+            _timeProvider.GetUtcNow().UtcDateTime
+        );
         var validation = _validationProvider.ValidateAndLog(grantRequest);
         if (!validation.IsValid)
         {
@@ -59,7 +74,6 @@ internal class GrantRequestProcessor(
             e =>
                 e.AccountId == request.AccountId
                 && e.Operation == request.Operation
-                && e.Unit == request.Unit
                 && e.Status == GrantRequestStatus.Pending,
             ct
         );
@@ -67,7 +81,7 @@ internal class GrantRequestProcessor(
         {
             return new RequestGrantResult(
                 RequestGrantResultCode.AlreadyPendingError,
-                "A request for this operation and unit is already pending",
+                "A request for this operation is already pending",
                 Guid.Empty
             );
         }
@@ -118,13 +132,17 @@ internal class GrantRequestProcessor(
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
-        var accountId = request.AccountId;
+        List<Guid> accountIds = [.. request.AccountIds];
         List<Guid>? authorizedIds = authorizedResourceIds is null
             ? null
             : [.. authorizedResourceIds];
-        Expression<Func<GrantRequestEntity, bool>> scope = authorizedIds is null
-            ? e => e.AccountId == accountId
-            : e => e.AccountId == accountId && authorizedIds.Contains(e.GrantRequestId);
+        var operation = request.Operation;
+        var status = request.Status;
+        Expression<Func<GrantRequestEntity, bool>> scope = e =>
+            accountIds.Contains(e.AccountId)
+            && (authorizedIds == null || authorizedIds.Contains(e.GrantRequestId))
+            && (operation == null || e.Operation == operation)
+            && (status == null || e.Status == status);
 
         return ListQueryHelper.ExecuteListAsync(
             _grantRequestRepo,

@@ -38,8 +38,26 @@ public class GrantRequestValidatorTests
         Assert.False(_validator.Validate(Valid(r => r.Operation = TestUsage.Unregistered)).IsValid);
 
     [Fact]
-    public void Validate_Fails_ForAnUnregisteredUnit() =>
-        Assert.False(_validator.Validate(Valid(r => r.Unit = TestUsage.UnregisteredUnit)).IsValid);
+    public void Validate_Fails_ForAFeatureWithAQuantity() =>
+        Assert.False(
+            _validator
+                .Validate(Valid(r => r.Kind = Corely.Billing.Grants.Models.GrantKind.Feature))
+                .IsValid
+        );
+
+    [Fact]
+    public void Validate_Passes_ForAFeatureWithNoQuantity() =>
+        Assert.True(
+            _validator
+                .Validate(
+                    Valid(r =>
+                    {
+                        r.Kind = Corely.Billing.Grants.Models.GrantKind.Feature;
+                        r.Quantity = null;
+                    })
+                )
+                .IsValid
+        );
 
     [Fact]
     public void Validate_Fails_ForAnEmptyAccount() =>

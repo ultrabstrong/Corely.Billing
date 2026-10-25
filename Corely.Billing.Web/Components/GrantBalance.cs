@@ -6,7 +6,7 @@ public sealed record GrantBalance(long? Quantity, long Used)
 {
     private const double RUNNING_LOW_RATIO = 0.10;
 
-    public static GrantBalance For(Grant grant, long used) => new(grant.Quantity, used);
+    public static GrantBalance For(Grant grant) => new(grant.Quantity, grant.Used ?? 0);
 
     public bool IsUnlimited => Quantity is null;
 

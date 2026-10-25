@@ -26,7 +26,7 @@ public class GrantProcessorTelemetryDecoratorTests
     }
 
     private static CreateGrantRequest CreateRequest() =>
-        new(AccountId, TestUsage.Extraction, TestUsage.Page, 100, From, From.AddDays(30));
+        new(AccountId, TestUsage.Extraction, GrantKind.Consumable, 100, From, From.AddDays(30));
 
     [Fact]
     public async Task CreateGrantAsync_RecordsTheGrant_ForASuccessfulCreate()
@@ -112,7 +112,7 @@ public class GrantProcessorTelemetryDecoratorTests
             .ReturnsAsync(new ModifyResult(ModifyResultCode.Success, ""));
 
         await _decorator.UpdateGrantAsync(
-            new UpdateGrantRequest(AccountId, GrantId, TestUsage.Page, 40, From, From.AddDays(1))
+            new UpdateGrantRequest(AccountId, GrantId, 40, From, From.AddDays(1))
         );
 
         _telemetry.Verify(t => t.Increment(BillingMetricNames.Grants.GRANT_UPDATED), Times.Once);
@@ -144,7 +144,7 @@ public class GrantProcessorTelemetryDecoratorTests
                 )
             );
 
-        await _decorator.ListGrantsAsync(new ListGrantsRequest(AccountId));
+        await _decorator.ListGrantsAsync(new ListGrantsRequest([AccountId]));
 
         _telemetry.Verify(
             t => t.Record(BillingMetricNames.Grants.GRANT_TOTAL_COUNT, 7),
@@ -160,7 +160,7 @@ public class GrantProcessorTelemetryDecoratorTests
                 p.ListActiveGrantsAsync(
                     AccountId,
                     TestUsage.Extraction,
-                    TestUsage.Page,
+                    GrantKind.Consumable,
                     From,
                     default
                 )
@@ -170,7 +170,7 @@ public class GrantProcessorTelemetryDecoratorTests
         await _decorator.ListActiveGrantsAsync(
             AccountId,
             TestUsage.Extraction,
-            TestUsage.Page,
+            GrantKind.Consumable,
             From
         );
 

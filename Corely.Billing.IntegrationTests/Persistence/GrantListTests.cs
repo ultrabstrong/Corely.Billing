@@ -29,7 +29,7 @@ public sealed class GrantListTests : IDisposable
                         new CreateGrantRequest(
                             AccountId,
                             TestUsage.Extraction,
-                            TestUsage.Page,
+                            GrantKind.Consumable,
                             quantities[i],
                             validFrom,
                             validFrom.AddYears(1)
@@ -51,7 +51,7 @@ public sealed class GrantListTests : IDisposable
     {
         await SeedAsync(10, 20, 30);
 
-        var result = await ListAsync(new ListGrantsRequest(AccountId));
+        var result = await ListAsync(new ListGrantsRequest([AccountId]));
 
         Assert.Equal([30, 20, 10], result.Data!.Items.Select(g => g.Quantity));
     }
@@ -61,7 +61,7 @@ public sealed class GrantListTests : IDisposable
     {
         await SeedAsync(10, 20, 30, 40, 50);
 
-        var result = await ListAsync(new ListGrantsRequest(AccountId, Skip: 2, Take: 2));
+        var result = await ListAsync(new ListGrantsRequest([AccountId], Skip: 2, Take: 2));
 
         Assert.Equal(5, result.Data!.TotalCount);
         Assert.Equal(2, result.Data.CurrentPage);
@@ -76,7 +76,7 @@ public sealed class GrantListTests : IDisposable
 
         var result = await ListAsync(
             new ListGrantsRequest(
-                AccountId,
+                [AccountId],
                 Filter: Filter
                     .For<Grant>()
                     .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(25))
@@ -94,7 +94,7 @@ public sealed class GrantListTests : IDisposable
 
         var result = await ListAsync(
             new ListGrantsRequest(
-                AccountId,
+                [AccountId],
                 Filter: Filter.For<Grant>().Where(g => g.Quantity, ComparableFilter<long>.IsNull())
             )
         );
@@ -107,7 +107,7 @@ public sealed class GrantListTests : IDisposable
     public async Task ListGrantsAsync_ReturnsOnlyAuthorizedGrants_ForAnAuthorizedSet()
     {
         await SeedAsync(10, 20, 30, 40);
-        var all = (await ListAsync(new ListGrantsRequest(AccountId))).Data!.Items;
+        var all = (await ListAsync(new ListGrantsRequest([AccountId]))).Data!.Items;
         HashSet<Guid> authorized = [all[0].GrantId, all[2].GrantId];
 
         var result = await _host.WithScopeAsync(services =>
@@ -115,7 +115,7 @@ public sealed class GrantListTests : IDisposable
                 .GetRequiredService<IGrantService>()
                 .ListGrantsAsync(
                     new ListGrantsRequest(
-                        AccountId,
+                        [AccountId],
                         Filter: Filter
                             .For<Grant>()
                             .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20))
@@ -136,7 +136,7 @@ public sealed class GrantListTests : IDisposable
         var result = await _host.WithScopeAsync(services =>
             services
                 .GetRequiredService<IGrantService>()
-                .ListGrantsAsync(new ListGrantsRequest(AccountId), new HashSet<Guid>())
+                .ListGrantsAsync(new ListGrantsRequest([AccountId]), new HashSet<Guid>())
         );
 
         Assert.Equal(0, result.Data!.TotalCount);
@@ -150,7 +150,7 @@ public sealed class GrantListTests : IDisposable
         var result = await _host.WithScopeAsync(services =>
             services
                 .GetRequiredService<IGrantService>()
-                .ListGrantsAsync(new ListGrantsRequest(AccountId), null)
+                .ListGrantsAsync(new ListGrantsRequest([AccountId]), null)
         );
 
         Assert.Equal(3, result.Data!.TotalCount);
@@ -163,7 +163,7 @@ public sealed class GrantListTests : IDisposable
 
         var result = await ListAsync(
             new ListGrantsRequest(
-                AccountId,
+                [AccountId],
                 Order: Order.For<Grant>().By(g => g.Quantity, SortDirection.Ascending)
             )
         );
@@ -176,7 +176,7 @@ public sealed class GrantListTests : IDisposable
     {
         await SeedAsync(10);
 
-        var result = await ListAsync(new ListGrantsRequest(Guid.CreateVersion7()));
+        var result = await ListAsync(new ListGrantsRequest([Guid.CreateVersion7()]));
 
         Assert.Empty(result.Data!.Items);
         Assert.Equal(0, result.Data.TotalCount);

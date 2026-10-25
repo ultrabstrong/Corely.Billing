@@ -73,7 +73,7 @@ internal static class DemoSeed
                 new CreateGrantRequest(
                     accountId,
                     DemoUsage.TextGeneration,
-                    DemoUsage.Token,
+                    GrantKind.Consumable,
                     2_000_000,
                     today.AddDays(-30),
                     today.AddDays(335)
@@ -83,7 +83,7 @@ internal static class DemoSeed
                 new CreateGrantRequest(
                     accountId,
                     DemoUsage.TextGeneration,
-                    DemoUsage.Token,
+                    GrantKind.Consumable,
                     250_000,
                     today.AddDays(-5),
                     today.AddDays(9)
@@ -105,7 +105,6 @@ internal static class DemoSeed
                     new RequestGrantRequest(
                         accountId,
                         DemoUsage.TextGeneration,
-                        DemoUsage.Token,
                         500_000,
                         "Quarter end reports",
                         owner.Value

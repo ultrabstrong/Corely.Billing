@@ -1,10 +1,14 @@
+using Corely.Billing.Usage;
 using Corely.Common.Filtering;
 using Corely.Common.Filtering.Ordering;
 
 namespace Corely.Billing.Grants.Models;
 
 public record ListGrantsRequest(
-    Guid AccountId,
+    IReadOnlyList<Guid> AccountIds,
+    GrantKind? Kind = null,
+    UsageOperation? Operation = null,
+    DateTime? ActiveAtUtc = null,
     FilterBuilder<Grant>? Filter = null,
     OrderBuilder<Grant>? Order = null,
     int Skip = 0,

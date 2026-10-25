@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Constants;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -16,8 +17,15 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.AccountId).IsRequired();
         builder
             .Property(e => e.Unit)
-            .HasConversion(unit => unit.Value, value => UsageUnit.From(value))
-            .HasMaxLength(UsageUnit.MAX_LENGTH)
+            .HasConversion<string?>(
+                unit => unit == null ? null : unit.Value.Value,
+                value => value == null ? null : UsageUnit.From(value)
+            )
+            .HasMaxLength(UsageUnit.MAX_LENGTH);
+        builder
+            .Property(e => e.Kind)
+            .HasConversion<string>()
+            .HasMaxLength(GrantConstants.KIND_MAX_LENGTH)
             .IsRequired();
         builder
             .Property(e => e.Operation)
@@ -29,6 +37,6 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.ValidToUtc);
         builder.Property(e => e.Disabled).IsRequired();
 
-        builder.HasIndex(e => e.AccountId);
+        builder.HasIndex(e => new { e.AccountId, e.Operation });
     }
 }

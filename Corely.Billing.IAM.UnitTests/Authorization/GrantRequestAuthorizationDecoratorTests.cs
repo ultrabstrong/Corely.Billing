@@ -54,7 +54,11 @@ public class GrantRequestAuthorizationDecoratorTests
         new(
             _inner.Object,
             _authorization.Object,
-            Mock.Of<IUserContextProvider>(p => p.GetUserContext() == _userContext)
+            Mock.Of<IUserContextProvider>(p => p.GetUserContext() == _userContext),
+            new AccountReadScope(
+                _authorization.Object,
+                Mock.Of<IUserContextProvider>(p => p.GetUserContext() == _userContext)
+            )
         );
 
     private static readonly Guid SignedInUserId = Guid.Parse(
@@ -113,7 +117,7 @@ public class GrantRequestAuthorizationDecoratorTests
 
         await Decorator()
             .RequestGrantAsync(
-                new(AccountId, Extraction, Page, 10, RequestedByUserId: Guid.CreateVersion7())
+                new(AccountId, Extraction, 10, RequestedByUserId: Guid.CreateVersion7())
             );
 
         _inner.Verify(s =>
@@ -143,7 +147,7 @@ public class GrantRequestAuthorizationDecoratorTests
             )
             .ReturnsAsync(new RequestGrantResult(RequestGrantResultCode.Success, "", RequestId));
 
-        var result = await Decorator().RequestGrantAsync(new(AccountId, Extraction, Page, 10));
+        var result = await Decorator().RequestGrantAsync(new(AccountId, Extraction, 10));
 
         Assert.Equal(RequestGrantResultCode.Success, result.ResultCode);
         _authorization.Verify(
@@ -157,7 +161,7 @@ public class GrantRequestAuthorizationDecoratorTests
     {
         Deny(AuthAction.Create, GRANT_REQUEST);
 
-        var result = await Decorator().RequestGrantAsync(new(AccountId, Extraction, Page, 10));
+        var result = await Decorator().RequestGrantAsync(new(AccountId, Extraction, 10));
 
         Assert.Equal(RequestGrantResultCode.UnauthorizedError, result.ResultCode);
     }
@@ -256,7 +260,7 @@ public class GrantRequestAuthorizationDecoratorTests
                 )
             );
 
-        await Decorator().ListGrantRequestsAsync(new(AccountId));
+        await Decorator().ListGrantRequestsAsync(new([AccountId]));
 
         _inner.Verify(
             s =>

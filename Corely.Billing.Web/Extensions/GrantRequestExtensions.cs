@@ -8,7 +8,9 @@ internal static class GrantRequestExtensions
     extension(GrantRequest request)
     {
         public string Asked(IUsageVocabulary vocabulary) =>
-            UsageText.Count(request.Quantity, vocabulary.DisplayName(request.Unit));
+            request.Unit is { } unit && request.Quantity is { } quantity
+                ? UsageText.Count(quantity, vocabulary.DisplayName(unit))
+                : vocabulary.DisplayName(request.Operation);
 
         public string RequestedText(DateTime utcNow) =>
             $"Requested {(utcNow - request.RequestedUtc).AgoText()}";

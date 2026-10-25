@@ -27,8 +27,8 @@ internal class QuotaAuthorizationDecorator(IQuotaService inner, ICallerAccess ac
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("text_generation", "Text Generation")
     .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token")
     .DecorateServices(services =>
     {
         services.Decorate<IGrantService, GrantAuthorizationDecorator>();

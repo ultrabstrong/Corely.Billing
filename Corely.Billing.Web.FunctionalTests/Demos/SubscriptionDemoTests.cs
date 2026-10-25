@@ -24,7 +24,7 @@ public sealed partial class SubscriptionDemoTests : IDisposable
     }
 
     [Fact]
-    public async Task MembersArea_OpensOnlyDuringATerm_ForSubscribeThenCancel()
+    public async Task MembersArea_OpensOnlyWhileSubscribedAndKeepsItsSeats_ForSubscribeCancelRenew()
     {
         Assert.Equal("/", await MembersRedirectAsync());
 
@@ -33,10 +33,15 @@ public sealed partial class SubscriptionDemoTests : IDisposable
         var secondVisit = await GetAsync("/members");
 
         await PostAsync("Cancel");
+        var lapsed = await MembersRedirectAsync();
 
-        Assert.Contains("visited once this term", firstVisit);
-        Assert.Contains("visited 2 times this term", secondVisit);
-        Assert.Equal("/", await MembersRedirectAsync());
+        await PostAsync("Subscribe");
+        var renewed = await GetAsync("/members");
+
+        Assert.Contains("1 of 3 seats in use", firstVisit);
+        Assert.Contains("1 of 3 seats in use", secondVisit);
+        Assert.Equal("/", lapsed);
+        Assert.Contains("1 of 3 seats in use", renewed);
     }
 
     private async Task<string?> MembersRedirectAsync()

@@ -1,6 +1,7 @@
 using Corely.Billing.Grants.Entities;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Serialization;
+using Corely.Billing.Usage;
 
 namespace Corely.Billing.Grants.Mappers;
 
@@ -8,13 +9,14 @@ internal static class GrantMapper
 {
     extension(CreateGrantRequest request)
     {
-        public Grant ToGrant() =>
+        public Grant ToGrant(UsageUnit? declaredUnit) =>
             new()
             {
                 GrantId = Guid.CreateVersion7(),
                 AccountId = request.AccountId,
                 Operation = request.Operation,
-                Unit = request.Unit,
+                Kind = request.Kind,
+                Unit = request.Unit ?? declaredUnit,
                 Quantity = request.Quantity,
                 ValidFromUtc = request.ValidFromUtc,
                 ValidToUtc = request.ValidToUtc,
@@ -30,6 +32,7 @@ internal static class GrantMapper
                 GrantId = grant.GrantId,
                 AccountId = grant.AccountId,
                 Operation = grant.Operation,
+                Kind = grant.Kind,
                 Unit = grant.Unit,
                 Quantity = grant.Quantity,
                 ValidFromUtc = grant.ValidFromUtc,
@@ -47,6 +50,7 @@ internal static class GrantMapper
                 GrantId = entity.GrantId,
                 AccountId = entity.AccountId,
                 Operation = entity.Operation,
+                Kind = entity.Kind,
                 Unit = entity.Unit,
                 Quantity = entity.Quantity,
                 ValidFromUtc = entity.ValidFromUtc,
@@ -64,7 +68,8 @@ internal static class GrantMapper
                 GrantId = entity.GrantId,
                 AccountId = entity.AccountId,
                 Operation = entity.Operation,
-                Unit = request.Unit,
+                Kind = entity.Kind,
+                Unit = entity.Unit,
                 Quantity = request.Quantity,
                 ValidFromUtc = request.ValidFromUtc,
                 ValidToUtc = request.ValidToUtc,

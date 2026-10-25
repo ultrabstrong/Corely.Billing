@@ -7,4 +7,5 @@ public enum GrantAction
     Delete,
     Request,
     Decide,
+    ManageRegistrations,
 }

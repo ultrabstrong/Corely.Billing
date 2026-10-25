@@ -176,7 +176,8 @@ internal class ConsumptionReportProcessor(
         var (entities, totalCount) = await _consumptionEventRepo.EvaluateAsync(
             async (q, token) =>
             {
-                q = q.Where(e => e.AccountId == request.AccountId);
+                List<Guid> accountIds = [.. request.AccountIds];
+                q = q.Where(e => accountIds.Contains(e.AccountId));
                 q = ApplyOptionalFilters(
                     q,
                     request.Units,

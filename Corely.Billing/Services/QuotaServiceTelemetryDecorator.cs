@@ -1,5 +1,7 @@
 using Corely.Billing.Extensions;
+using Corely.Billing.Models;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Models;
 using Corely.Billing.Usage;
 using Corely.Common.Extensions;
 using Microsoft.Extensions.Logging;
@@ -16,17 +18,15 @@ internal class QuotaServiceTelemetryDecorator(
         nameof(logger)
     );
 
-    public Task<QuotaAvailability> GetAvailabilityAsync(
+    public Task<GetBalanceResult> GetBalanceAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
         CancellationToken ct = default
     ) =>
         _logger.ExecuteWithLoggingAsync(
             nameof(QuotaService),
             accountId,
-            () => _inner.GetAvailabilityAsync(accountId, operation, unit, ct),
-            logResult: true
+            () => _inner.GetBalanceAsync(accountId, operation, ct)
         );
 
     public Task<ReserveQuotaResult> ReserveAsync(
@@ -60,5 +60,82 @@ internal class QuotaServiceTelemetryDecorator(
             request,
             () => _inner.ReleaseAsync(request, ct),
             logResult: true
+        );
+
+    public Task<GetAllowanceResult> GetAllowanceAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            accountId,
+            () => _inner.GetAllowanceAsync(accountId, operation, ct)
+        );
+
+    public Task<HasFeatureResult> HasFeatureAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            accountId,
+            () => _inner.HasFeatureAsync(accountId, operation, ct)
+        );
+
+    public Task<GetCapacityResult> GetCapacityAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            accountId,
+            () => _inner.GetCapacityAsync(accountId, operation, ct)
+        );
+
+    public Task<RegisterResult> RegisterAsync(
+        RegisterRequest request,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            request,
+            () => _inner.RegisterAsync(request, ct),
+            logResult: true
+        );
+
+    public Task<ModifyResult> ReleaseRegistrationAsync(
+        Guid accountId,
+        Guid registrationId,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            registrationId,
+            () => _inner.ReleaseRegistrationAsync(accountId, registrationId, ct),
+            logResult: true
+        );
+
+    public Task<MoveRegistrationsResult> MoveRegistrationsAsync(
+        MoveRegistrationsRequest request,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            request,
+            () => _inner.MoveRegistrationsAsync(request, ct),
+            logResult: true
+        );
+
+    public Task<RetrieveListResult<Registration>> ListRegistrationsAsync(
+        ListRegistrationsRequest request,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaService),
+            request,
+            () => _inner.ListRegistrationsAsync(request, ct)
         );
 }

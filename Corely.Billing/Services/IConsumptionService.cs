@@ -10,12 +10,6 @@ public interface IConsumptionService
         CancellationToken ct = default
     );
 
-    Task<RetrieveSingleResult<List<GrantTotalConsumptions>>> GetGrantConsumptionTotalsAsync(
-        Guid accountId,
-        IReadOnlyList<Guid> grantIds,
-        CancellationToken ct = default
-    );
-
     Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default

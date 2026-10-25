@@ -4,8 +4,6 @@ using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
-using Corely.Common.Filtering;
-using Corely.Common.Filtering.Filters;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,9 +17,6 @@ public partial class GrantList
 
     private IGrantRequestService GrantRequestService =>
         ScopedServices.GetRequiredService<IGrantRequestService>();
-
-    private IConsumptionService ConsumptionService =>
-        ScopedServices.GetRequiredService<IConsumptionService>();
 
     private IBillingAccountAccessor AccountAccessor =>
         ScopedServices.GetRequiredService<IBillingAccountAccessor>();
@@ -52,7 +47,6 @@ public partial class GrantList
 
     private List<Grant> _grants = [];
     private List<GrantRequest> _requests = [];
-    private Dictionary<Guid, long>? _used;
     private bool _loading = true;
     private bool _deleting;
     private bool _deciding;
@@ -93,7 +87,7 @@ public partial class GrantList
         _error = null;
 
         var result = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest(AccountId, Take: int.MaxValue)
+            new ListGrantsRequest([AccountId], Take: int.MaxValue)
         );
         if (result.ResultCode != RetrieveResultCode.Success)
         {
@@ -105,7 +99,6 @@ public partial class GrantList
         }
 
         _grants = result.Data?.Items ?? [];
-        _used = await ConsumptionService.UsedByGrantAsync(AccountId, _grants);
         _requests = await PendingRequestsAsync();
         _loading = false;
     }
@@ -114,21 +107,13 @@ public partial class GrantList
     {
         var result = await GrantRequestService.ListGrantRequestsAsync(
             new ListGrantRequestsRequest(
-                AccountId,
-                Filter: Filter
-                    .For<GrantRequest>()
-                    .Where(
-                        r => r.Status,
-                        EnumFilter<GrantRequestStatus>.Equals(GrantRequestStatus.Pending)
-                    ),
+                [AccountId],
+                Status: GrantRequestStatus.Pending,
                 Take: int.MaxValue
             )
         );
         return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
-
-    private GrantBalance? BalanceOf(Grant grant) =>
-        _used is null ? null : GrantBalance.For(grant, _used.GetValueOrDefault(grant.GrantId));
 
     private void ConfirmDelete(Grant grant) => _confirmingDelete = grant.GrantId;
 

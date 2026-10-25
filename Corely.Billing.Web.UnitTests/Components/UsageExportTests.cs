@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -78,6 +79,22 @@ public class UsageExportTests : BillingWebTestContext
             )
         )
             Assert.Contains($"`{column}`", readme);
+    }
+
+    [Fact]
+    public void Readme_DescribesEveryGrantColumnAndNoOther_ForAnExportWithGrants()
+    {
+        var readme = Export(included: 1, matched: 1, chartCsv: null).Readme(Vocabulary());
+        var grants = readme[readme.IndexOf($"## {UsageExport.GRANTS_FILE}")..].Split("\n## ")[0];
+        var described = Regex
+            .Matches(grants, @"^\| `([a-z_]+)`(?:, `([a-z_]+)`)*", RegexOptions.Multiline)
+            .SelectMany(m => m.Groups[1].Captures.Concat(m.Groups[2].Captures))
+            .Select(c => c.Value);
+
+        Assert.Equal(
+            Corely.Billing.Web.Extensions.GrantExtensions.CSV_HEADER.Split(',').Order(),
+            described.Order()
+        );
     }
 
     [Fact]

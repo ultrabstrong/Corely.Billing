@@ -26,17 +26,6 @@ internal class ConsumptionServiceTelemetryDecorator(
             () => _inner.GetConsumptionTotalAsync(request, ct)
         );
 
-    public Task<RetrieveSingleResult<List<GrantTotalConsumptions>>> GetGrantConsumptionTotalsAsync(
-        Guid accountId,
-        IReadOnlyList<Guid> grantIds,
-        CancellationToken ct = default
-    ) =>
-        _logger.ExecuteWithLoggingAsync(
-            nameof(ConsumptionService),
-            accountId,
-            () => _inner.GetGrantConsumptionTotalsAsync(accountId, grantIds, ct)
-        );
-
     public Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default

@@ -4,6 +4,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Quota.Processors;
+using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Usage;
 using Corely.Billing.Validators;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -20,10 +21,13 @@ public class QuotaProcessorTests
     private readonly Mock<IGrantProcessor> _grants = new();
     private readonly Mock<IConsumptionProcessor> _consumption = new();
     private readonly Mock<IConsumptionReportProcessor> _consumptionReport = new();
+    private readonly Mock<IRegistrationProcessor> _registrations = new();
 
     public QuotaProcessorTests()
     {
-        HaveGrants();
+        foreach (var kind in Enum.GetValues<GrantKind>())
+            HaveGrants(kind);
+        HaveInUse();
         HaveTotals();
         HaveOutstanding();
 
@@ -77,6 +81,8 @@ public class QuotaProcessorTests
             _consumption.Object,
             _consumptionReport.Object,
             new ExpiringFirstGrantSelectionPolicy(),
+            _registrations.Object,
+            TestUsage.Vocabulary,
             _serviceFactory.GetRequiredService<IValidationProvider>(),
             _serviceFactory.TimeProvider,
             NullLogger<QuotaProcessor>.Instance
@@ -352,66 +358,187 @@ public class QuotaProcessorTests
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReportsAvailable_ForAGrantWithRoom()
+    public async Task GetBalanceAsync_SumsWhatIsLeft_ForGrantsWithRoom()
     {
-        HaveGrants(Grant(GrantId1, 100));
+        HaveGrants(Grant(GrantId1, 100), Grant(GrantId2, 50));
+        HaveTotals(new GrantTotalConsumptions(GrantId1, 30));
 
-        Assert.Equal(QuotaAvailability.Available, await Availability());
+        var result = await Processor().GetBalanceAsync(AccountId, TestUsage.Extraction);
+
+        Assert.Equal(QuotaReadResultCode.Success, result.ResultCode);
+        Assert.Equal(120, result.Remaining);
+        Assert.Equal(70, result.Grants.Single(g => g.GrantId == GrantId1).Remaining);
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReportsExhausted_ForAnAccountWithNoGrants() =>
-        Assert.Equal(QuotaAvailability.Exhausted, await Availability());
-
-    [Fact]
-    public async Task GetAvailabilityAsync_ReportsExhausted_ForGrantsWithNothingLeft()
+    public async Task GetBalanceAsync_ReportsNothingLeft_ForGrantsUsedUp()
     {
         HaveGrants(Grant(GrantId1, 10));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
 
-        Assert.Equal(QuotaAvailability.Exhausted, await Availability());
+        var result = await Processor().GetBalanceAsync(AccountId, TestUsage.Extraction);
+
+        Assert.Equal(0, result.Remaining);
+        Assert.False(result.HasAny);
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReportsAvailable_ForAnUnlimitedGrantBesideASpentOne()
+    public async Task GetBalanceAsync_IsUnlimited_ForAnUnlimitedGrantBesideASpentOne()
     {
         HaveGrants(Grant(GrantId1, 10), Grant(GrantId2, null));
         HaveTotals(new GrantTotalConsumptions(GrantId1, 10));
 
-        Assert.Equal(QuotaAvailability.Available, await Availability());
+        var result = await Processor().GetBalanceAsync(AccountId, TestUsage.Extraction);
+
+        Assert.Null(result.Remaining);
+        Assert.True(result.HasAny);
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReportsUnknown_ForAGrantStoreThatThrows()
+    public async Task GetBalanceAsync_RefusesWithoutReading_ForAnOperationOfAnotherKind()
     {
-        _grants
-            .Setup(p =>
-                p.ListActiveGrantsAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<UsageOperation>(),
-                    It.IsAny<UsageUnit>(),
-                    It.IsAny<DateTime>(),
-                    It.IsAny<IReadOnlyCollection<Guid>?>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new InvalidOperationException("database is down"));
+        var result = await Processor().GetBalanceAsync(AccountId, TestUsage.Retention);
 
-        Assert.Equal(QuotaAvailability.Unknown, await Availability());
+        Assert.Equal(QuotaReadResultCode.WrongKindError, result.ResultCode);
+        VerifyNoGrantsRead();
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_WritesNothing_ForAnyOutcome()
+    public async Task GetBalanceAsync_WritesNothing_ForAnyOutcome()
     {
         HaveGrants(Grant(GrantId1, 100));
 
-        await Availability();
+        await Processor().GetBalanceAsync(AccountId, TestUsage.Extraction);
 
         VerifyNothingReserved();
     }
 
-    private Task<QuotaAvailability> Availability() =>
-        Processor().GetAvailabilityAsync(AccountId, TestUsage.Extraction, TestUsage.Page);
+    [Fact]
+    public async Task GetAllowanceAsync_AddsTheActiveAllowances_ForSeveralGrants()
+    {
+        HaveGrants(
+            GrantKind.Allowance,
+            Grant(GrantId1, 60, kind: GrantKind.Allowance),
+            Grant(GrantId2, 30, kind: GrantKind.Allowance)
+        );
+
+        var result = await Processor().GetAllowanceAsync(AccountId, TestUsage.Retention);
+
+        Assert.Equal(QuotaReadResultCode.Success, result.ResultCode);
+        Assert.Equal(90, result.Total);
+    }
+
+    [Fact]
+    public async Task GetAllowanceAsync_IsUnlimited_ForAnUnlimitedAllowance()
+    {
+        HaveGrants(
+            GrantKind.Allowance,
+            Grant(GrantId1, 60, kind: GrantKind.Allowance),
+            Grant(GrantId2, null, kind: GrantKind.Allowance)
+        );
+
+        Assert.Null((await Processor().GetAllowanceAsync(AccountId, TestUsage.Retention)).Total);
+    }
+
+    [Fact]
+    public async Task GetAllowanceAsync_ReadsOnlyAllowances_ForAnAccountWithFeaturesToo()
+    {
+        HaveGrants(GrantKind.Feature, Grant(GrantId1, null, kind: GrantKind.Feature));
+
+        var result = await Processor().GetAllowanceAsync(AccountId, TestUsage.Retention);
+
+        Assert.Equal(0, result.Total);
+        Assert.Empty(result.Grants);
+    }
+
+    [Fact]
+    public async Task GetAllowanceAsync_RefusesWithoutReading_ForAFeatureOperation()
+    {
+        var result = await Processor().GetAllowanceAsync(AccountId, TestUsage.Sftp);
+
+        Assert.Equal(QuotaReadResultCode.WrongKindError, result.ResultCode);
+        VerifyNoGrantsRead();
+    }
+
+    [Fact]
+    public async Task HasFeatureAsync_IsTrue_ForAnActiveFeatureGrant()
+    {
+        HaveGrants(GrantKind.Feature, Grant(GrantId1, null, kind: GrantKind.Feature));
+
+        Assert.True((await Processor().HasFeatureAsync(AccountId, TestUsage.Sftp)).HasFeature);
+    }
+
+    [Fact]
+    public async Task HasFeatureAsync_IsFalse_ForAnAccountWithOnlyAllowances()
+    {
+        HaveGrants(GrantKind.Allowance, Grant(GrantId1, 60, kind: GrantKind.Allowance));
+
+        var result = await Processor().HasFeatureAsync(AccountId, TestUsage.Sftp);
+
+        Assert.Equal(QuotaReadResultCode.Success, result.ResultCode);
+        Assert.False(result.HasFeature);
+    }
+
+    [Fact]
+    public async Task HasFeatureAsync_RefusesWithoutReading_ForAnAllowanceOperation()
+    {
+        var result = await Processor().HasFeatureAsync(AccountId, TestUsage.Retention);
+
+        Assert.Equal(QuotaReadResultCode.WrongKindError, result.ResultCode);
+        VerifyNoGrantsRead();
+    }
+
+    [Fact]
+    public async Task GetCapacityAsync_AddsSeatsAndCountsThoseHeld_ForSeveralGrants()
+    {
+        HaveGrants(
+            GrantKind.Capacity,
+            Grant(GrantId1, 5, kind: GrantKind.Capacity),
+            Grant(GrantId2, 2, kind: GrantKind.Capacity)
+        );
+        HaveInUse((GrantId1, 3), (GrantId2, 1));
+
+        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Seats);
+
+        Assert.Equal(7, result.Granted);
+        Assert.Equal(4, result.InUse);
+        Assert.Equal(3, result.Free);
+    }
+
+    [Fact]
+    public async Task GetCapacityAsync_IsUnlimited_ForAnUnlimitedCapacity()
+    {
+        HaveGrants(GrantKind.Capacity, Grant(GrantId1, null, kind: GrantKind.Capacity));
+
+        var result = await Processor().GetCapacityAsync(AccountId, TestUsage.Seats);
+
+        Assert.Null(result.Granted);
+        Assert.Null(result.Free);
+    }
+
+    private void VerifyNoGrantsRead() =>
+        _grants.Verify(
+            p =>
+                p.ListActiveGrantsAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<UsageOperation>(),
+                    It.IsAny<GrantKind>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<IReadOnlyCollection<Guid>?>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+
+    private void HaveInUse(params (Guid GrantId, long InUse)[] held) =>
+        _registrations
+            .Setup(p =>
+                p.CountInUseAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(held.ToDictionary(h => h.GrantId, h => h.InUse));
 
     private void VerifyReserved(Guid grantId, long quantity) =>
         _consumption.Verify(
@@ -451,13 +578,15 @@ public class QuotaProcessorTests
     private static SettleQuotaRequest Settle(long actual) =>
         new(AccountId, TestUsage.Extraction, TestUsage.Page, actual);
 
-    private void HaveGrants(params Grant[] grants) =>
+    private void HaveGrants(params Grant[] grants) => HaveGrants(GrantKind.Consumable, grants);
+
+    private void HaveGrants(GrantKind kind, params Grant[] grants) =>
         _grants
             .Setup(p =>
                 p.ListActiveGrantsAsync(
                     It.IsAny<Guid>(),
                     It.IsAny<UsageOperation>(),
-                    It.IsAny<UsageUnit>(),
+                    kind,
                     It.IsAny<DateTime>(),
                     It.IsAny<IReadOnlyCollection<Guid>?>(),
                     It.IsAny<CancellationToken>()
@@ -488,12 +617,18 @@ public class QuotaProcessorTests
             )
             .ReturnsAsync([.. outstanding]);
 
-    private Grant Grant(Guid grantId, long? quantity, int expiresInDays = 30) =>
+    private Grant Grant(
+        Guid grantId,
+        long? quantity,
+        int expiresInDays = 30,
+        GrantKind kind = GrantKind.Consumable
+    ) =>
         new()
         {
             GrantId = grantId,
             AccountId = AccountId,
             Operation = TestUsage.Extraction,
+            Kind = kind,
             Unit = TestUsage.Page,
             Quantity = quantity,
             ValidFromUtc = Now.AddDays(-1),

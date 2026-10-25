@@ -108,7 +108,7 @@ internal sealed class UsageExporter(
         {
             var page = await consumptionService.ListConsumptionEventsAsync(
                 new ListConsumptionEventsRequest(
-                    accountId,
+                    [accountId],
                     filter.FromUtc,
                     filter.ToUtc,
                     filter.Units,
@@ -140,21 +140,18 @@ internal sealed class UsageExporter(
     private async Task<(string Csv, string? Error)> ReadGrantsAsync(Guid accountId)
     {
         var result = await grantService.ListGrantsAsync(
-            new ListGrantsRequest(accountId, Take: int.MaxValue)
+            new ListGrantsRequest([accountId], Take: int.MaxValue)
         );
         if (result.ResultCode != RetrieveResultCode.Success)
             return (string.Empty, result.ResultCode.ErrorMessage("export grants", result.Message));
 
         List<Grant> grants = result.Data?.Items ?? [];
-        var used = await consumptionService.UsedByGrantAsync(accountId, grants);
 
         var now = Now;
         return (
             Join([
                 GrantExtensions.CSV_HEADER,
-                .. grants
-                    .OrderBy(g => g.ValidFromUtc)
-                    .Select(g => g.ToCsvRow(vocabulary, used?.GetValueOrDefault(g.GrantId), now)),
+                .. grants.OrderBy(g => g.ValidFromUtc).Select(g => g.ToCsvRow(vocabulary, now)),
             ]),
             null
         );

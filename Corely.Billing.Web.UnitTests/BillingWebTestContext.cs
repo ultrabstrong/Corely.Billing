@@ -19,10 +19,16 @@ public abstract class BillingWebTestContext : BunitContext
         "document_extraction"
     );
     protected static readonly UsageUnit Page = UsageUnit.From("page");
+    protected static readonly UsageOperation Retention = UsageOperation.From("document_retention");
+    protected static readonly UsageOperation Sftp = UsageOperation.From("sftp_access");
+    protected static readonly UsageOperation Seats = UsageOperation.From("seats");
+    protected static readonly UsageUnit Day = UsageUnit.From("day");
+    protected static readonly UsageUnit User = UsageUnit.From("user");
 
     protected Mock<IGrantService> Grants { get; } = new();
     protected Mock<IGrantRequestService> GrantRequests { get; } = new();
     protected Mock<IConsumptionService> Consumption { get; } = new();
+    protected Mock<IQuotaService> Quota { get; } = new();
     protected RecordingGrantActionGate ActionGate { get; } = new();
 
     protected BillingWebTestContext()
@@ -39,12 +45,12 @@ public abstract class BillingWebTestContext : BunitContext
         Services.AddSingleton(Grants.Object);
         Services.AddSingleton(GrantRequests.Object);
         Services.AddSingleton(Consumption.Object);
+        Services.AddSingleton(Quota.Object);
         Services.AddSingleton<IUsageVocabulary>(new TestVocabulary());
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
 
         HaveGrants();
         HaveRequests();
-        HaveUsed();
         HaveSeries();
         Consumption
             .Setup(c =>
@@ -132,46 +138,13 @@ public abstract class BillingWebTestContext : BunitContext
             GrantRequestId = Guid.CreateVersion7(),
             AccountId = AccountId,
             Operation = Extraction,
+            Kind = GrantKind.Consumable,
             Unit = Page,
             Quantity = quantity,
             Note = note,
             RequestedUtc = Now.AddDays(-daysAgo),
             Status = GrantRequestStatus.Pending,
         };
-
-    protected void HaveUsed(params GrantTotalConsumptions[] totals) =>
-        Consumption
-            .Setup(c =>
-                c.GetGrantConsumptionTotalsAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<IReadOnlyList<Guid>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new RetrieveSingleResult<List<GrantTotalConsumptions>>(
-                    RetrieveResultCode.Success,
-                    string.Empty,
-                    [.. totals]
-                )
-            );
-
-    protected void DenyUsed() =>
-        Consumption
-            .Setup(c =>
-                c.GetGrantConsumptionTotalsAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<IReadOnlyList<Guid>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new RetrieveSingleResult<List<GrantTotalConsumptions>>(
-                    RetrieveResultCode.UnauthorizedError,
-                    "no",
-                    null
-                )
-            );
 
     protected void HaveSeries(params ConsumptionSeries[] series) =>
         Consumption
@@ -189,32 +162,86 @@ public abstract class BillingWebTestContext : BunitContext
                 )
             );
 
-    protected static Grant Grant(long? quantity, int fromDays = -10, int toDays = 30) =>
-        new()
+    protected static Grant Grant(long? quantity, int fromDays = -10, int toDays = 30, long used = 0)
+    {
+        var grant = new Grant
         {
             GrantId = Guid.CreateVersion7(),
             AccountId = AccountId,
             Operation = Extraction,
+            Kind = GrantKind.Consumable,
             Unit = Page,
             Quantity = quantity,
             ValidFromUtc = Now.AddDays(fromDays),
             ValidToUtc = Now.AddDays(toDays),
         };
+        grant.WithUse(used);
+        return grant;
+    }
+
+    protected static Grant Retained(long? days, int toDays = 30) =>
+        new()
+        {
+            GrantId = Guid.CreateVersion7(),
+            AccountId = AccountId,
+            Operation = Retention,
+            Kind = GrantKind.Allowance,
+            Unit = Day,
+            Quantity = days,
+            ValidFromUtc = Now.AddDays(-10),
+            ValidToUtc = Now.AddDays(toDays),
+        };
+
+    protected static Grant Feature(bool disabled = false) =>
+        new()
+        {
+            GrantId = Guid.CreateVersion7(),
+            AccountId = AccountId,
+            Operation = Sftp,
+            Kind = GrantKind.Feature,
+            ValidFromUtc = Now.AddDays(-10),
+            ValidToUtc = Now.AddDays(30),
+            Disabled = disabled,
+        };
+
+    protected static Grant Capacity(long? seats, long inUse) =>
+        new()
+        {
+            GrantId = Guid.CreateVersion7(),
+            AccountId = AccountId,
+            Operation = Seats,
+            Kind = GrantKind.Capacity,
+            Unit = User,
+            Quantity = seats,
+            InUse = inUse,
+            ValidFromUtc = Now.AddDays(-10),
+            ValidToUtc = Now.AddDays(30),
+        };
 
     private sealed class TestVocabulary : IUsageVocabulary
     {
         public IReadOnlyList<UsageOperationDefinition> Operations { get; } =
-        [new(Extraction, "Document extraction")];
+        [
+            new(Extraction, "Document extraction", GrantKind.Consumable, Page),
+            new(Seats, "Seats", GrantKind.Capacity, User),
+            new(Retention, "Document retention", GrantKind.Allowance, Day),
+            new(Sftp, "SFTP access", GrantKind.Feature, null),
+        ];
 
-        public IReadOnlyList<UsageUnitDefinition> Units { get; } = [new(Page, "page")];
+        public IReadOnlyList<UsageUnitDefinition> Units { get; } =
+        [new(Page, "page"), new(Day, "day"), new(User, "user")];
 
-        public bool Knows(UsageOperation operation) => operation == Extraction;
+        public bool Knows(UsageOperation operation) => Definition(operation) is not null;
 
-        public bool Knows(UsageUnit unit) => unit == Page;
+        public bool Knows(UsageUnit unit) => Units.Any(u => u.Unit == unit);
+
+        public UsageOperationDefinition? Definition(UsageOperation operation) =>
+            Operations.FirstOrDefault(o => o.Operation == operation);
 
         public string DisplayName(UsageOperation operation) =>
-            operation == Extraction ? "Document extraction" : operation.Value;
+            Definition(operation)?.DisplayName ?? operation.Value;
 
-        public string DisplayName(UsageUnit unit) => unit == Page ? "page" : unit.Value;
+        public string DisplayName(UsageUnit unit) =>
+            Units.FirstOrDefault(u => u.Unit == unit)?.DisplayName ?? unit.Value;
     }
 }

@@ -26,6 +26,14 @@ public static class BillingMetricNames
         public const string GRANT_TOTAL_COUNT = "entitlements.grant.total_count";
     }
 
+    public static class Registrations
+    {
+        public const string REGISTERED = "entitlements.registration.registered";
+        public const string REFUSED = "entitlements.registration.refused";
+        public const string RELEASED = "entitlements.registration.released";
+        public const string MOVED = "entitlements.registration.moved";
+    }
+
     public static class GrantRequests
     {
         public const string GRANT_REQUEST_CREATED = "entitlements.grant_request.created";

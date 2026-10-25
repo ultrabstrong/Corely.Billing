@@ -2,6 +2,7 @@ using Corely.Billing.GrantRequests.Entities;
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Serialization;
+using Corely.Billing.Usage;
 
 namespace Corely.Billing.GrantRequests.Mappers;
 
@@ -9,13 +10,17 @@ internal static class GrantRequestMapper
 {
     extension(RequestGrantRequest request)
     {
-        public GrantRequest ToGrantRequest(DateTime requestedUtc) =>
+        public GrantRequest ToGrantRequest(
+            UsageOperationDefinition definition,
+            DateTime requestedUtc
+        ) =>
             new()
             {
                 GrantRequestId = Guid.CreateVersion7(),
                 AccountId = request.AccountId,
                 Operation = request.Operation,
-                Unit = request.Unit,
+                Kind = definition.Kind,
+                Unit = definition.Unit,
                 Quantity = request.Quantity,
                 Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim(),
                 RequestedByUserId = request.RequestedByUserId,
@@ -33,6 +38,7 @@ internal static class GrantRequestMapper
                 GrantRequestId = grantRequest.GrantRequestId,
                 AccountId = grantRequest.AccountId,
                 Operation = grantRequest.Operation,
+                Kind = grantRequest.Kind,
                 Unit = grantRequest.Unit,
                 Quantity = grantRequest.Quantity,
                 Note = grantRequest.Note,
@@ -55,6 +61,7 @@ internal static class GrantRequestMapper
                 GrantRequestId = entity.GrantRequestId,
                 AccountId = entity.AccountId,
                 Operation = entity.Operation,
+                Kind = entity.Kind,
                 Unit = entity.Unit,
                 Quantity = entity.Quantity,
                 Note = entity.Note,
@@ -72,10 +79,11 @@ internal static class GrantRequestMapper
             new(
                 entity.AccountId,
                 entity.Operation,
-                entity.Unit,
+                entity.Kind,
                 entity.Quantity,
                 approval.ValidFromUtc,
                 approval.ValidToUtc,
+                entity.Unit,
                 TagSerializer.Deserialize(entity.TagsJson)
             );
     }

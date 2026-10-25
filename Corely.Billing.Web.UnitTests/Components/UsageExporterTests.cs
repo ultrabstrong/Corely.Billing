@@ -85,17 +85,18 @@ public class UsageExporterTests : BillingWebTestContext
     }
 
     [Fact]
-    public async Task DownloadGrantsAsync_LeavesTheBalanceBlank_ForARefusedConsumptionRead()
+    public async Task DownloadGrantsAsync_WritesEachGrantsState_ForGrantsOfEveryKind()
     {
-        var grant = Grant(5_000);
-        HaveGrants(grant);
-        DenyUsed();
+        var balance = Grant(5_000, used: 1_200);
+        HaveGrants(balance, Retained(60), Feature(), Capacity(7, inUse: 2));
 
         await Exporter().DownloadGrantsAsync(AccountId);
 
-        var row = DownloadedCsv().Split("\r\n")[1].Split(',');
-        Assert.Equal(grant.GrantId.ToString(), row[0]);
-        Assert.Equal(["", "", ""], row[10..13]);
+        var rows = DownloadedCsv().Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        Assert.Equal(5, rows.Length);
+        var first = rows[1].Split(',');
+        Assert.Equal(balance.GrantId.ToString(), first[0]);
+        Assert.Equal(["1200", "3800"], first[12..14]);
     }
 
     private string DownloadedCsv()

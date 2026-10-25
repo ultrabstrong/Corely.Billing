@@ -1,5 +1,6 @@
 using Corely.Billing;
 using Corely.Billing.Demos.Subscription;
+using Corely.Billing.Grants.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +12,13 @@ var connectionString =
 builder.Services.AddBillingServices(
     BillingOptions
         .Create(builder.Configuration, _ => new BillingSqlServerConfiguration(connectionString))
-        .RegisterOperation(Membership.Access.Value, "Members area")
-        .RegisterUnit(Membership.Visit.Value, "visit")
+        .RegisterUnit(Membership.Member.Value, "member")
+        .RegisterOperation(
+            Membership.Access.Value,
+            "Members area",
+            GrantKind.Capacity,
+            Membership.Member.Value
+        )
 );
 builder.Services.AddScoped<Membership>();
 

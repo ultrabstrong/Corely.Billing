@@ -58,5 +58,5 @@ When the actual quantity exceeds every live grant's remainder, settlement still 
 ## Notes
 
 - `SettleQuotaResult.RemainingRatio` is what is left across live grants after the charge, from 0 to 1, and 1 while an unlimited grant is live
-- `GetAvailabilityAsync` answers without a quantity and returns `Unknown` rather than failing when the database is unreachable
+- `GetBalanceAsync` answers what is left without holding anything; `ReserveAsync` is the accurate check
 - `IConsumptionService.CountAbandonedReservationsAsync` counts holds that expired unresolved. A rising number means work is dying between reserve and settle

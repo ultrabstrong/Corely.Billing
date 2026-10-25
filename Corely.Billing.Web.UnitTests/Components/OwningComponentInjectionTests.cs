@@ -27,8 +27,13 @@ public class OwningComponentInjectionTests
         services.AddBillingServices(
             BillingOptions
                 .Create(new ConfigurationManager())
-                .RegisterOperation("extraction", "Extraction")
                 .RegisterUnit("page", "page")
+                .RegisterOperation(
+                    "extraction",
+                    "Extraction",
+                    Corely.Billing.Grants.Models.GrantKind.Consumable,
+                    "page"
+                )
         );
         services.AddBillingWeb<NoAccountAccessor>();
         return services;

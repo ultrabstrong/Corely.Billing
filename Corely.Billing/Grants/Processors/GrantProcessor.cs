@@ -1,8 +1,10 @@
 using System.Linq.Expressions;
+using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Grants.Entities;
 using Corely.Billing.Grants.Mappers;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Serialization;
 using Corely.Billing.Usage;
 using Corely.Billing.Validators;
@@ -14,11 +16,19 @@ namespace Corely.Billing.Grants.Processors;
 
 internal class GrantProcessor(
     IRepo<GrantEntity> grantRepo,
+    IConsumptionReportProcessor consumptionReportProcessor,
+    IRegistrationProcessor registrationProcessor,
+    IUsageVocabulary vocabulary,
     IValidationProvider validationProvider,
     ILogger<GrantProcessor> logger
 ) : IGrantProcessor
 {
     private readonly IRepo<GrantEntity> _grantRepo = grantRepo.ThrowIfNull(nameof(grantRepo));
+    private readonly IConsumptionReportProcessor _consumptionReportProcessor =
+        consumptionReportProcessor.ThrowIfNull(nameof(consumptionReportProcessor));
+    private readonly IRegistrationProcessor _registrationProcessor =
+        registrationProcessor.ThrowIfNull(nameof(registrationProcessor));
+    private readonly IUsageVocabulary _vocabulary = vocabulary.ThrowIfNull(nameof(vocabulary));
     private readonly IValidationProvider _validationProvider = validationProvider.ThrowIfNull(
         nameof(validationProvider)
     );
@@ -31,7 +41,24 @@ internal class GrantProcessor(
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
-        var grant = request.ToGrant();
+        var definition = _vocabulary.Definition(request.Operation);
+        if (
+            definition is not null
+            && !definition.Declares(request.Kind, request.Unit ?? definition.Unit)
+        )
+        {
+            return new CreateGrantResult(
+                CreateGrantResultCode.DeclarationMismatchError,
+                $"Operation '{request.Operation}' is declared as {definition.Kind}"
+                    + (definition.Unit is { } unit ? $" in '{unit}'" : " with no unit")
+                    + $", not {request.Kind}"
+                    + (request.Unit is { } asked ? $" in '{asked}'" : string.Empty)
+                    + ".",
+                Guid.Empty
+            );
+        }
+
+        var grant = request.ToGrant(definition?.Unit);
         var validation = _validationProvider.ValidateAndLog(grant);
         if (!validation.IsValid)
         {
@@ -78,7 +105,6 @@ internal class GrantProcessor(
         if (!validation.IsValid)
             return new ModifyResult(ModifyResultCode.ValidationError, validation.Message);
 
-        entity.Unit = grant.Unit;
         entity.Quantity = grant.Quantity;
         entity.ValidFromUtc = grant.ValidFromUtc;
         entity.ValidToUtc = grant.ValidToUtc;
@@ -122,21 +148,21 @@ internal class GrantProcessor(
             e => e.AccountId == accountId && e.GrantId == grantId,
             cancellationToken: ct
         );
-
-        return entity is null
-            ? new RetrieveSingleResult<Grant>(
+        if (entity is null)
+        {
+            return new RetrieveSingleResult<Grant>(
                 RetrieveResultCode.NotFoundError,
                 "Grant not found",
                 null
-            )
-            : new RetrieveSingleResult<Grant>(
-                RetrieveResultCode.Success,
-                string.Empty,
-                entity.ToModel()
             );
+        }
+
+        var grant = entity.ToModel();
+        await WithStateAsync([grant], ct);
+        return new RetrieveSingleResult<Grant>(RetrieveResultCode.Success, string.Empty, grant);
     }
 
-    public Task<RetrieveListResult<Grant>> ListGrantsAsync(
+    public async Task<RetrieveListResult<Grant>> ListGrantsAsync(
         ListGrantsRequest request,
         IReadOnlySet<Guid>? authorizedResourceIds = null,
         CancellationToken ct = default
@@ -144,15 +170,24 @@ internal class GrantProcessor(
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
-        var accountId = request.AccountId;
+        List<Guid> accountIds = [.. request.AccountIds];
         List<Guid>? authorizedIds = authorizedResourceIds is null
             ? null
             : [.. authorizedResourceIds];
-        Expression<Func<GrantEntity, bool>> scope = authorizedIds is null
-            ? e => e.AccountId == accountId
-            : e => e.AccountId == accountId && authorizedIds.Contains(e.GrantId);
+        var kind = request.Kind;
+        var operation = request.Operation;
+        var activeAt = request.ActiveAtUtc;
+        Expression<Func<GrantEntity, bool>> scope = e =>
+            accountIds.Contains(e.AccountId)
+            && (authorizedIds == null || authorizedIds.Contains(e.GrantId))
+            && (kind == null || e.Kind == kind)
+            && (operation == null || e.Operation == operation)
+            && (
+                activeAt == null
+                || (!e.Disabled && e.ValidFromUtc <= activeAt && e.ValidToUtc >= activeAt)
+            );
 
-        return ListQueryHelper.ExecuteListAsync(
+        var result = await ListQueryHelper.ExecuteListAsync(
             _grantRepo,
             scope,
             request.Filter,
@@ -163,6 +198,9 @@ internal class GrantProcessor(
             e => e.ToModel(),
             ct
         );
+        if (result.Data is { } page)
+            await WithStateAsync(page.Items, ct);
+        return result;
     }
 
     public async Task<ModifyResult> SetGrantDisabledAsync(
@@ -199,7 +237,7 @@ internal class GrantProcessor(
     public async Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
+        GrantKind kind,
         DateTime atUtc,
         IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default
@@ -210,7 +248,7 @@ internal class GrantProcessor(
             e =>
                 e.AccountId == accountId
                 && e.Operation == operation
-                && e.Unit == unit
+                && e.Kind == kind
                 && e.ValidFromUtc <= atUtc
                 && e.ValidToUtc >= atUtc
                 && (!e.Disabled || held.Contains(e.GrantId)),
@@ -218,5 +256,33 @@ internal class GrantProcessor(
         );
 
         return [.. entities.Select(e => e.ToModel())];
+    }
+
+    private async Task WithStateAsync(IReadOnlyList<Grant> grants, CancellationToken ct)
+    {
+        var consumables = grants.Where(g => g.Kind == GrantKind.Consumable).ToList();
+        foreach (var account in consumables.GroupBy(g => g.AccountId))
+        {
+            var used = (
+                await _consumptionReportProcessor.GetGrantConsumptionTotalsAsync(
+                    account.Key,
+                    [.. account.Select(g => g.GrantId)],
+                    ct
+                )
+            ).ToDictionary(t => t.GrantId, t => t.TotalConsumedQuantity);
+            foreach (var grant in account)
+                grant.WithUse(used.GetValueOrDefault(grant.GrantId));
+        }
+
+        var capacities = grants.Where(g => g.Kind == GrantKind.Capacity).ToList();
+        if (capacities.Count == 0)
+            return;
+
+        var inUse = await _registrationProcessor.CountInUseAsync(
+            [.. capacities.Select(g => g.GrantId)],
+            ct
+        );
+        foreach (var grant in capacities)
+            grant.InUse = inUse.GetValueOrDefault(grant.GrantId);
     }
 }

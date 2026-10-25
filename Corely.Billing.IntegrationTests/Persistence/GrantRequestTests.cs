@@ -30,7 +30,6 @@ public sealed class GrantRequestTests : IDisposable
                     new RequestGrantRequest(
                         AccountId,
                         TestUsage.Extraction,
-                        TestUsage.Page,
                         quantity,
                         "Month end batch"
                     )
@@ -120,7 +119,7 @@ public sealed class GrantRequestTests : IDisposable
         var result = await WithRequestsAsync(s =>
             s.ListGrantRequestsAsync(
                 new ListGrantRequestsRequest(
-                    AccountId,
+                    [AccountId],
                     Filter: Filter
                         .For<GrantRequest>()
                         .Where(

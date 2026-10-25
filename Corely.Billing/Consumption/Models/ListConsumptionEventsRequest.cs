@@ -4,7 +4,7 @@ using Corely.Common.Filtering.Ordering;
 namespace Corely.Billing.Consumption.Models;
 
 public record ListConsumptionEventsRequest(
-    Guid AccountId,
+    IReadOnlyList<Guid> AccountIds,
     DateTime? FromUtc = null,
     DateTime? ToUtc = null,
     IReadOnlyList<UsageUnit>? Units = null,

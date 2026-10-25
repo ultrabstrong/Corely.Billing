@@ -8,31 +8,30 @@
     private RenderFragment Form =>
         @<form @onsubmit="SendAsync" novalidate>
             <fieldset disabled="@_sending">
-                <div class="row">
-                    <div class="col-sm-6 mb-3">
-                        <label for="cbw-request-operation" class="form-label">Operation</label>
-                        <select id="cbw-request-operation" class="form-select" @bind="OperationValue">
-                            @foreach (var definition in Vocabulary.Operations)
-                            {
-                                <option value="@definition.Operation.Value">@definition.DisplayName</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <label for="cbw-request-unit" class="form-label">Unit</label>
-                        <select id="cbw-request-unit" class="form-select" @bind="UnitValue">
-                            @foreach (var definition in Vocabulary.Units)
-                            {
-                                <option value="@definition.Unit.Value">@definition.DisplayName</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-
                 <div class="mb-3">
-                    <label for="cbw-request-quantity" class="form-label">How many</label>
-                    <input id="cbw-request-quantity" type="number" min="1" class="form-control" @bind="_quantity" />
+                    <label for="cbw-request-operation" class="form-label">What you need</label>
+                    <select id="cbw-request-operation" class="form-select" @bind="OperationValue">
+                        @foreach (var kind in Vocabulary.ByKind())
+                        {
+                            <optgroup label="@kind.Key.GroupLabel()">
+                                @foreach (var definition in kind)
+                                {
+                                    <option value="@definition.Operation.Value">@definition.DisplayName</option>
+                                }
+                            </optgroup>
+                        }
+                    </select>
                 </div>
+                @if (Definition?.Kind != GrantKind.Feature)
+                {
+                    <div class="mb-3">
+                        <label for="cbw-request-quantity" class="form-label">How many</label>
+                        <div class="input-group">
+                            <input id="cbw-request-quantity" type="number" min="1" class="form-control" @bind="_quantity" />
+                            <span class="input-group-text" data-unit>@UnitPlural</span>
+                        </div>
+                    </div>
+                }
 
                 <div class="mb-3">
                     <label for="cbw-request-note" class="form-label">What it is for <span class="text-body-secondary">(optional)</span></label>

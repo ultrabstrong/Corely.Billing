@@ -1,6 +1,6 @@
 # Corely.Billing Documentation
 
-Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left. It serves a metered pipeline with reservations and retries, and just as well a subscription, prepaid credits, a trial, or feature access. Supports SQL Server and MySQL.
+Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left. It serves a metered pipeline with reservations and retries, and just as well seats, a subscription, prepaid credits, a trial, an extra amount or feature access. Supports SQL Server and MySQL.
 
 ```mermaid
 flowchart LR
@@ -26,13 +26,14 @@ flowchart LR
 
 Blue is what the host configures, green is the public API, amber is internal, grey is the schema and the tool that owns it.
 
-- **Grants**: an account's allowance of a unit for an operation, valid for a window, limited or unlimited
-- **Usage shapes**: metered, subscription, prepaid credits, trial, or seats, from the same schema
+- **Grant kinds**: a consumable balance, a capacity of seats, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
+- **Usage shapes**: metered, prepaid credits, trial, seats, subscription, an extra amount or feature access, from the same schema
+- **Registrations**: a seat is held on a capacity grant until released, atomically against the last one
 - **Reservations**: quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting**: work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries**: a retried unit of work recognises its own earlier rows instead of charging twice
 - **Overdraft-once**: work already paid for is always recorded, and the overrun stays visible
-- **Registered vocabulary**: operations and units are host-defined tokens, validated on every write
+- **Registered vocabulary**: operations declare their kind and unit, and every write is checked against them
 - **Host-owned authorization**: decorate the three services; nothing about users or permissions is assumed
 
 ## Topics
@@ -46,6 +47,7 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 - [Reservations](reservations.md)
 - [Services](services/index.md)
     - [Grant Service](services/grant-service.md)
+    - [Grant Request Service](services/grant-request-service.md)
     - [Quota Service](services/quota-service.md)
     - [Consumption Service](services/consumption-service.md)
 - [Authorization](authorization.md)
@@ -64,8 +66,8 @@ Blue is what the host configures, green is the public API, amber is internal, gr
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("text_generation", "Text Generation")
-    .RegisterUnit("token", "token");
+    .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token");
 services.AddBillingServices(options);
 
 using var operation = accessor.BeginScope(new OperationContext(correlationId, "chat:42/turn:3"));

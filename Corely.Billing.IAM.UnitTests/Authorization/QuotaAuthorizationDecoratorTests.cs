@@ -1,9 +1,12 @@
 using Corely.Billing.IAM.Authorization;
+using Corely.Billing.Models;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
+using Corely.IAM.Users.Providers;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
 
 namespace Corely.Billing.IAM.UnitTests.Authorization;
@@ -20,14 +23,13 @@ public class QuotaAuthorizationDecoratorTests
         _authorization.Setup(p => p.HasAccountContext(AccountId)).Returns(true);
         _inner
             .Setup(s =>
-                s.GetAvailabilityAsync(
+                s.GetBalanceAsync(
                     It.IsAny<Guid>(),
                     It.IsAny<UsageOperation>(),
-                    It.IsAny<UsageUnit>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(QuotaAvailability.Available);
+            .ReturnsAsync(new GetBalanceResult(QuotaReadResultCode.Success, "", 10, []));
         _inner
             .Setup(s =>
                 s.ReserveAsync(It.IsAny<ReserveQuotaRequest>(), It.IsAny<CancellationToken>())
@@ -43,9 +45,17 @@ public class QuotaAuthorizationDecoratorTests
                 s.ReleaseAsync(It.IsAny<ReleaseQuotaRequest>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(new SettleQuotaResult(SettleQuotaResultCode.Success, ""));
+        _inner
+            .Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new RegisterResult(RegisterResultCode.Registered, ""));
     }
 
-    private QuotaAuthorizationDecorator Decorator() => new(_inner.Object, _authorization.Object);
+    private QuotaAuthorizationDecorator Decorator() =>
+        new(
+            _inner.Object,
+            _authorization.Object,
+            new AccountReadScope(_authorization.Object, Mock.Of<IUserContextProvider>())
+        );
 
     private void AllowOnly(params AuthAction[] actions) =>
         _authorization
@@ -54,8 +64,8 @@ public class QuotaAuthorizationDecoratorTests
             )
             .ReturnsAsync((AuthAction a, string r, Guid[] _) => r == QUOTA && actions.Contains(a));
 
-    private Task<QuotaAvailability> AvailabilityAsync() =>
-        Decorator().GetAvailabilityAsync(AccountId, Extraction, Page);
+    private Task<GetBalanceResult> BalanceAsync() =>
+        Decorator().GetBalanceAsync(AccountId, Extraction);
 
     private Task<ReserveQuotaResult> ReserveAsync() =>
         Decorator().ReserveAsync(new ReserveQuotaRequest(AccountId, Extraction, Page, 1, "prov"));
@@ -67,28 +77,28 @@ public class QuotaAuthorizationDecoratorTests
         Decorator().ReleaseAsync(new ReleaseQuotaRequest(AccountId, Extraction, Page));
 
     [Fact]
-    public async Task GetAvailabilityAsync_CallsInner_ForReadOnQuotaAlone()
+    public async Task GetBalanceAsync_CallsInner_ForReadOnQuotaAlone()
     {
         AllowOnly(AuthAction.Read);
 
-        Assert.Equal(QuotaAvailability.Available, await AvailabilityAsync());
+        Assert.Equal(QuotaReadResultCode.Success, (await BalanceAsync()).ResultCode);
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReturnsUnauthorized_ForExecuteWithoutRead()
+    public async Task GetBalanceAsync_ReturnsUnauthorized_ForExecuteWithoutRead()
     {
         AllowOnly(AuthAction.Execute);
 
-        Assert.Equal(QuotaAvailability.Unauthorized, await AvailabilityAsync());
+        Assert.Equal(QuotaReadResultCode.UnauthorizedError, (await BalanceAsync()).ResultCode);
     }
 
     [Fact]
-    public async Task GetAvailabilityAsync_ReturnsUnauthorized_ForAnotherAccount()
+    public async Task GetBalanceAsync_ReturnsUnauthorized_ForAnotherAccount()
     {
         AllowOnly(AuthAction.Read);
         _authorization.Setup(p => p.HasAccountContext(AccountId)).Returns(false);
 
-        Assert.Equal(QuotaAvailability.Unauthorized, await AvailabilityAsync());
+        Assert.Equal(QuotaReadResultCode.UnauthorizedError, (await BalanceAsync()).ResultCode);
     }
 
     [Fact]
@@ -139,5 +149,29 @@ public class QuotaAuthorizationDecoratorTests
         _authorization.Setup(p => p.HasAccountContext(AccountId)).Returns(false);
 
         Assert.Equal(ReserveQuotaResultCode.UnauthorizedError, (await ReserveAsync()).ResultCode);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_ReturnsUnauthorizedWithoutCallingInner_ForReadWithoutExecute()
+    {
+        AllowOnly(AuthAction.Read);
+
+        var result = await Decorator().RegisterAsync(new RegisterRequest(AccountId, Extraction));
+
+        Assert.Equal(RegisterResultCode.UnauthorizedError, result.ResultCode);
+        _inner.Verify(
+            s => s.RegisterAsync(It.IsAny<RegisterRequest>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task ReleaseRegistrationAsync_ReturnsUnauthorized_ForReadWithoutExecute()
+    {
+        AllowOnly(AuthAction.Read);
+
+        var result = await Decorator().ReleaseRegistrationAsync(AccountId, Guid.CreateVersion7());
+
+        Assert.Equal(ModifyResultCode.UnauthorizedError, result.ResultCode);
     }
 }

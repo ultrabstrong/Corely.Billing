@@ -24,8 +24,8 @@ public class RegistrationTests
     private static BillingOptions Billing() =>
         BillingOptions
             .Create(Configuration)
-            .RegisterOperation(Extraction.Value, "Extraction")
-            .RegisterUnit(Page.Value, "page");
+            .RegisterUnit(Page.Value, "page")
+            .RegisterOperation(Extraction.Value, "Extraction", GrantKind.Consumable, Page.Value);
 
     [Fact]
     public void RegisterBillingResourceTypes_RegistersEveryType_WithIam()
@@ -129,7 +129,7 @@ public class RegistrationTests
                         new(
                             AccountId,
                             Extraction,
-                            Page,
+                            GrantKind.Consumable,
                             1,
                             DateTime.UtcNow,
                             DateTime.UtcNow.AddDays(1)
@@ -142,7 +142,7 @@ public class RegistrationTests
             (
                 await provider
                     .GetRequiredService<IGrantRequestService>()
-                    .RequestGrantAsync(new(AccountId, Extraction, Page, 1))
+                    .RequestGrantAsync(new(AccountId, Extraction, 1))
             ).ResultCode
         );
         Assert.Equal(
@@ -154,10 +154,20 @@ public class RegistrationTests
             ).ResultCode
         );
         Assert.Equal(
-            QuotaAvailability.Unauthorized,
-            await provider
-                .GetRequiredService<IQuotaService>()
-                .GetAvailabilityAsync(AccountId, Extraction, Page)
+            QuotaReadResultCode.UnauthorizedError,
+            (
+                await provider
+                    .GetRequiredService<IQuotaService>()
+                    .GetBalanceAsync(AccountId, Extraction)
+            ).ResultCode
+        );
+        Assert.Equal(
+            RetrieveResultCode.UnauthorizedError,
+            (
+                await provider
+                    .GetRequiredService<IQuotaService>()
+                    .ListRegistrationsAsync(new([AccountId]))
+            ).ResultCode
         );
     }
 }

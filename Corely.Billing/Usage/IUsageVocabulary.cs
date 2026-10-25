@@ -8,6 +8,8 @@ public interface IUsageVocabulary
     bool Knows(UsageOperation operation);
     bool Knows(UsageUnit unit);
 
+    UsageOperationDefinition? Definition(UsageOperation operation);
+
     string DisplayName(UsageOperation operation);
     string DisplayName(UsageUnit unit);
 }

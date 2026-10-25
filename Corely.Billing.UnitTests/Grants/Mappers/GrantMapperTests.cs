@@ -15,19 +15,20 @@ public class GrantMapperTests
         var request = new CreateGrantRequest(
             Guid.CreateVersion7(),
             TestUsage.Extraction,
-            TestUsage.Page,
+            GrantKind.Consumable,
             100,
             From,
             To,
-            new() { ["plan"] = "standard" }
+            Tags: new() { ["plan"] = "standard" }
         );
 
-        var grant = request.ToGrant();
+        var grant = request.ToGrant(TestUsage.Page);
 
         Assert.NotEqual(Guid.Empty, grant.GrantId);
         Assert.Equal(request.AccountId, grant.AccountId);
         Assert.Equal(request.Operation, grant.Operation);
-        Assert.Equal(request.Unit, grant.Unit);
+        Assert.Equal(TestUsage.Page, grant.Unit);
+        Assert.Equal(GrantKind.Consumable, grant.Kind);
         Assert.Equal(request.Quantity, grant.Quantity);
         Assert.Equal(request.ValidFromUtc, grant.ValidFromUtc);
         Assert.Equal(request.ValidToUtc, grant.ValidToUtc);
@@ -70,7 +71,7 @@ public class GrantMapperTests
     }
 
     [Fact]
-    public void ApplyTo_KeepsTheEntitysOperation_ForAnUpdateRequest()
+    public void ApplyTo_KeepsTheEntitysOperationAndUnit_ForAnUpdateRequest()
     {
         var entity = new GrantEntity
         {
@@ -79,19 +80,12 @@ public class GrantMapperTests
             Operation = TestUsage.Extraction,
             Unit = TestUsage.Page,
         };
-        var request = new UpdateGrantRequest(
-            entity.AccountId,
-            entity.GrantId,
-            TestUsage.Document,
-            50,
-            From,
-            To
-        );
+        var request = new UpdateGrantRequest(entity.AccountId, entity.GrantId, 50, From, To);
 
         var grant = request.ApplyTo(entity);
 
         Assert.Equal(TestUsage.Extraction, grant.Operation);
-        Assert.Equal(TestUsage.Document, grant.Unit);
+        Assert.Equal(TestUsage.Page, grant.Unit);
         Assert.Equal(50, grant.Quantity);
     }
 }

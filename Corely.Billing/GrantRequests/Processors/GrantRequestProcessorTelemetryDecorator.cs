@@ -33,10 +33,11 @@ internal class GrantRequestProcessorTelemetryDecorator(
         if (result.ResultCode == RequestGrantResultCode.Success)
         {
             _telemetry.Increment(BillingMetricNames.GrantRequests.GRANT_REQUEST_CREATED);
-            _telemetry.Record(
-                BillingMetricNames.GrantRequests.GRANT_REQUEST_QUANTITY,
-                request.Quantity
-            );
+            if (request.Quantity is { } quantity)
+                _telemetry.Record(
+                    BillingMetricNames.GrantRequests.GRANT_REQUEST_QUANTITY,
+                    quantity
+                );
         }
         return result;
     }

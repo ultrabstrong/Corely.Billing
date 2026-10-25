@@ -4,6 +4,7 @@ using Corely.Billing.Models;
 using Corely.Billing.Services;
 using Corely.IAM.Security.Enums;
 using Corely.IAM.Security.Providers;
+using Corely.IAM.Users.Providers;
 using static Corely.Billing.IAM.UnitTests.TestUsage;
 
 namespace Corely.Billing.IAM.UnitTests.Authorization;
@@ -23,7 +24,12 @@ public class GrantAuthorizationDecoratorTests
             .ReturnsAsync(true);
     }
 
-    private GrantAuthorizationDecorator Decorator() => new(_inner.Object, _authorization.Object);
+    private GrantAuthorizationDecorator Decorator() =>
+        new(
+            _inner.Object,
+            _authorization.Object,
+            new AccountReadScope(_authorization.Object, Mock.Of<IUserContextProvider>())
+        );
 
     private void Deny(AuthAction action) =>
         _authorization
@@ -34,10 +40,17 @@ public class GrantAuthorizationDecoratorTests
         _authorization.Setup(p => p.HasAccountContext(AccountId)).Returns(false);
 
     private static CreateGrantRequest CreateRequest =>
-        new(AccountId, Extraction, Page, 10, DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
+        new(
+            AccountId,
+            Extraction,
+            GrantKind.Consumable,
+            10,
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddDays(1)
+        );
 
     private static UpdateGrantRequest UpdateRequest =>
-        new(AccountId, GrantId, Page, 10, DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
+        new(AccountId, GrantId, 10, DateTime.UtcNow, DateTime.UtcNow.AddDays(1));
 
     [Fact]
     public async Task CreateGrantAsync_CallsInner_ForCreateOnGrantInTheAccount()
@@ -255,7 +268,7 @@ public class GrantAuthorizationDecoratorTests
 
         await Decorator()
             .ListGrantsAsync(
-                new ListGrantsRequest(AccountId),
+                new ListGrantsRequest([AccountId]),
                 new HashSet<Guid> { Guid.NewGuid() }
             );
 
@@ -275,7 +288,7 @@ public class GrantAuthorizationDecoratorTests
     {
         Deny(AuthAction.Read);
 
-        var result = await Decorator().ListGrantsAsync(new ListGrantsRequest(AccountId));
+        var result = await Decorator().ListGrantsAsync(new ListGrantsRequest([AccountId]));
 
         Assert.Equal(RetrieveResultCode.UnauthorizedError, result.ResultCode);
         Assert.Equal("Unauthorized to list grants", result.Message);
@@ -292,7 +305,7 @@ public class GrantAuthorizationDecoratorTests
 
         Assert.Equal(
             RetrieveResultCode.UnauthorizedError,
-            (await Decorator().ListGrantsAsync(new ListGrantsRequest(AccountId))).ResultCode
+            (await Decorator().ListGrantsAsync(new ListGrantsRequest([AccountId]))).ResultCode
         );
     }
 }

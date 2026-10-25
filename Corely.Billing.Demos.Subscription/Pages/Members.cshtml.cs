@@ -1,3 +1,4 @@
+using Corely.Billing.Registrations.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -5,17 +6,24 @@ namespace Corely.Billing.Demos.Subscription.Pages;
 
 public class MembersModel(Membership membership) : PageModel
 {
-    public string VisitsText { get; private set; } = string.Empty;
+    public string SeatsText { get; private set; } = string.Empty;
 
     public async Task<IActionResult> OnGetAsync()
     {
-        if (!await membership.IsEntitledAsync())
+        if ((await membership.CapacityAsync()).Grants.Count == 0)
             return RedirectToPage("/Index");
 
-        await membership.RecordVisitAsync();
-        var term = await membership.CurrentTermAsync();
-        var visits = term is null ? 0 : await membership.VisitsThisTermAsync(term);
-        VisitsText = visits == 1 ? "once" : $"{visits:N0} times";
+        var joined = await membership.JoinAsync(Membership.YOU);
+        if (
+            joined.ResultCode
+            is not (RegisterResultCode.Registered or RegisterResultCode.AlreadyRegisteredError)
+        )
+        {
+            return RedirectToPage("/Index");
+        }
+
+        var capacity = await membership.CapacityAsync();
+        SeatsText = $"{capacity.InUse:N0} of {capacity.Granted:N0} seats in use";
         return Page();
     }
 }

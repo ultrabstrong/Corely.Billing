@@ -39,9 +39,13 @@ public class ServiceRegistrationExtensionsTests
         );
 
     [Fact]
-    public void AddBillingServices_Throws_ForNoRegisteredUnits() =>
+    public void AddBillingServices_Throws_ForAnOperationNamingAnUnregisteredUnit() =>
         Assert.Throws<InvalidOperationException>(() =>
-            Build(BillingOptions.Create(new ConfigurationManager()).RegisterOperation("a", "A"))
+            Build(
+                BillingOptions
+                    .Create(new ConfigurationManager())
+                    .RegisterOperation("a", "A", GrantKind.Consumable, "page")
+            )
         );
 
     [Fact]

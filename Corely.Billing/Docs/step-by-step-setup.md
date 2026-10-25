@@ -42,13 +42,13 @@ The factory serves Billing's DbContext only. If the host has DbContexts of its o
 
 ## 4) Configure BillingOptions
 
-Register every operation and unit the host bills for. Nothing can be granted or consumed without them.
+Register every unit, then every operation the host bills for with its grant kind and unit. Nothing can be granted or consumed without them.
 
 ```csharp
 var options = BillingOptions
     .Create(builder.Configuration, _ => new MsSqlEFConfiguration(connectionString))
-    .RegisterOperation("text_generation", "Text Generation")
-    .RegisterUnit("token", "token");
+    .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token");
 ```
 
 ## 5) Register Services
@@ -61,13 +61,13 @@ builder.Services.AddBillingServices(options);
 
 ```csharp
 var result = await grantService.CreateGrantAsync(new CreateGrantRequest(
-    accountId, generation, token, Quantity: 1_000_000,
+    accountId, generation, GrantKind.Consumable, Quantity: 1_000_000,
     ValidFromUtc: now, ValidToUtc: now.AddMonths(1)));
 ```
 
 ## 7) Reserve, Work, Settle
 
-Every quota call runs inside an operation scope. The scope names the unit of work and must be the same on every retry of it.
+Every reserve and settle runs inside an operation scope. The scope names the unit of work and must be the same on every retry of it.
 
 ```csharp
 using var scope = accessor.BeginScope(new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));

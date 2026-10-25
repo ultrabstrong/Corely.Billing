@@ -1,0 +1,54 @@
+@inherits BillingComponentBase
+<section class="cbw-registrations mt-4" aria-label="Registrations">
+    <h2 class="h5">Registrations</h2>
+
+    @if (_error is not null)
+    {
+        <div class="alert alert-danger py-2" role="alert">@_error</div>
+    }
+
+    @if (_loading)
+    {
+        <div class="text-body-secondary" role="status">Loading registrations…</div>
+    }
+    else if (_registrations.Count == 0)
+    {
+        <p class="text-body-secondary">Nothing holds a seat on this grant.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-3">
+            @foreach (var registration in _registrations)
+            {
+                <li class="list-group-item d-flex flex-wrap gap-2 align-items-center" data-registration-id="@registration.RegistrationId">
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="fw-semibold text-break">@(registration.Reference ?? "No reference")</div>
+                        @if (registration.Description is { } description)
+                        {
+                            <div class="small text-body-secondary text-break">@description</div>
+                        }
+                        <div class="small text-body-secondary">Since @registration.RegisteredUtc.ToString("MMM d, yyyy")</div>
+                    </div>
+                    <span class="badge rounded-pill @registration.Status.BadgeClass()">@registration.Status.Label()</span>
+                    @ActionGate.Gate(GrantAction.ManageRegistrations, Grant.GrantId,
+                        @<button type="button" class="btn btn-sm btn-outline-danger" disabled="@_working" @onclick="() => ReleaseAsync(registration)">Release</button>)
+                </li>
+            }
+        </ul>
+
+        @if (_targets.Count > 0)
+        {
+            @ActionGate.Gate(GrantAction.ManageRegistrations, Grant.GrantId,
+                @<div class="d-flex flex-wrap gap-2 align-items-center">
+                    <label for="cbw-move-target" class="form-label mb-0">Move all to</label>
+                    <select id="cbw-move-target" class="form-select form-select-sm w-auto" @bind="_targetId">
+                        @foreach (var target in _targets)
+                        {
+                            <option value="@target.GrantId">@target.HeadlineAndWindow(Vocabulary)</option>
+                        }
+                    </select>
+                    <button type="button" class="btn btn-sm btn-outline-primary" disabled="@_working" @onclick="MoveAllAsync">Move</button>
+                </div>)
+        }
+    }
+</section>

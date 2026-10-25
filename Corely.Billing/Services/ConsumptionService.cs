@@ -16,21 +16,6 @@ internal class ConsumptionService(IConsumptionReportProcessor consumptionReportP
         CancellationToken ct = default
     ) => Found(await _consumptionReportProcessor.GetConsumptionTotalAsync(request, ct));
 
-    public async Task<
-        RetrieveSingleResult<List<GrantTotalConsumptions>>
-    > GetGrantConsumptionTotalsAsync(
-        Guid accountId,
-        IReadOnlyList<Guid> grantIds,
-        CancellationToken ct = default
-    ) =>
-        Found(
-            await _consumptionReportProcessor.GetGrantConsumptionTotalsAsync(
-                accountId,
-                grantIds,
-                ct
-            )
-        );
-
     public async Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default

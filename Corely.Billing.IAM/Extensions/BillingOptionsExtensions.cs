@@ -21,6 +21,7 @@ public static class BillingOptionsExtensions
                     );
                 }
 
+                services.AddScoped<AccountReadScope>();
                 services.Decorate<IGrantService, GrantAuthorizationDecorator>();
                 services.Decorate<IGrantRequestService, GrantRequestAuthorizationDecorator>();
                 services.Decorate<IConsumptionService, ConsumptionAuthorizationDecorator>();

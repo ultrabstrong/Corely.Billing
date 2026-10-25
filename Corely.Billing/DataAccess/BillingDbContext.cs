@@ -1,6 +1,7 @@
 using Corely.Billing.Consumption.Entities;
 using Corely.Billing.GrantRequests.Entities;
 using Corely.Billing.Grants.Entities;
+using Corely.Billing.Registrations.Entities;
 using Corely.DataAccess.EntityFramework;
 using Corely.DataAccess.EntityFramework.Configurations;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ internal class BillingDbContext : DbContextBase
     public DbSet<GrantEntity> Grants => Set<GrantEntity>();
     public DbSet<GrantRequestEntity> GrantRequests => Set<GrantRequestEntity>();
     public DbSet<ConsumptionEventEntity> ConsumptionEvents => Set<ConsumptionEventEntity>();
+    public DbSet<RegistrationEntity> Registrations => Set<RegistrationEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -32,7 +32,7 @@ Usage over a range, drawn one of six ways, one unit at a time. Under the time-ba
 | Stacked | Per period, one segment per operation, provider or grant | What made up each period? |
 | Side by side | Per period, one bar per operation, provider or grant | How do they compare, period to period? |
 | Remaining | Each limited grant's balance at the end of each period, and the total across live grants | What was left, and when did it run low? |
-| Burn-up | Use of the limited grants so far in the range, against the allowance live at each point | Is usage on pace to outlast the allowance? |
+| Burn-up | Use of the limited grants so far in the range, against the quantity live at each point | Is usage on pace to outlast the balance? |
 | Share | The range's total per operation, provider or grant, as ranked bars | Where did it go overall? |
 
 ## Behavior

@@ -1,4 +1,5 @@
 using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Web.Extensions;
@@ -7,17 +8,16 @@ internal static class UsageVocabularyExtensions
 {
     extension(IUsageVocabulary vocabulary)
     {
-        public IReadOnlyList<(UsageOperation Operation, UsageUnit Unit)> Unrequested(
+        public IReadOnlyList<UsageOperationDefinition> Unrequested(
             IEnumerable<GrantRequest> pending
         )
         {
-            var taken = pending.Select(r => (r.Operation, r.Unit)).ToHashSet();
-            return
-            [
-                .. vocabulary
-                    .Operations.SelectMany(o => vocabulary.Units.Select(u => (o.Operation, u.Unit)))
-                    .Where(pair => !taken.Contains(pair)),
-            ];
+            var taken = pending.Select(r => r.Operation).ToHashSet();
+            return [.. vocabulary.Operations.Where(o => !taken.Contains(o.Operation))];
         }
+
+        public IReadOnlyList<IGrouping<GrantKind, UsageOperationDefinition>> ByKind(
+            IEnumerable<UsageOperationDefinition>? operations = null
+        ) => [.. (operations ?? vocabulary.Operations).GroupBy(o => o.Kind).OrderBy(g => g.Key)];
     }
 }

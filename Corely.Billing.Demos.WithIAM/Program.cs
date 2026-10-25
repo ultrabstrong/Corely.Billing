@@ -1,6 +1,7 @@
 using Corely.Billing;
 using Corely.Billing.Demos.WithIAM;
 using Corely.Billing.Demos.WithIAM.Components;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Extensions;
 using Corely.Billing.Web;
 using Corely.Billing.Web.IAM.Extensions;
@@ -30,8 +31,13 @@ builder.Services.AddIAMServices(
 builder.Services.AddBillingServices(
     BillingOptions
         .Create(builder.Configuration, _ => new SqlServerConfiguration(connectionString))
-        .RegisterOperation(DemoUsage.TextGeneration.Value, "Text generation")
         .RegisterUnit(DemoUsage.Token.Value, "token")
+        .RegisterOperation(
+            DemoUsage.TextGeneration.Value,
+            "Text generation",
+            GrantKind.Consumable,
+            DemoUsage.Token.Value
+        )
         .UseCorelyIamPermissions()
 );
 builder.Services.AddBillingWebIam();

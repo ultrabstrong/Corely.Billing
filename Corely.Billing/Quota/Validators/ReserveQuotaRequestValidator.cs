@@ -1,4 +1,5 @@
 using Corely.Billing.Consumption.Constants;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Usage;
 using FluentValidation;
@@ -15,8 +16,12 @@ internal class ReserveQuotaRequestValidator : AbstractValidator<ReserveQuotaRequ
         RuleFor(x => x.Operation)
             .Must(vocabulary.Knows)
             .WithMessage(x => $"Operation '{x.Operation}' is not a registered usage operation.");
-        RuleFor(x => x.Unit)
-            .Must(vocabulary.Knows)
-            .WithMessage(x => $"Unit '{x.Unit}' is not a registered usage unit.");
+        RuleFor(x => x)
+            .Must(x =>
+                vocabulary.Definition(x.Operation)?.Declares(GrantKind.Consumable, x.Unit) != false
+            )
+            .WithMessage(x =>
+                $"Operation '{x.Operation}' is not declared as consumable in '{x.Unit}'."
+            );
     }
 }

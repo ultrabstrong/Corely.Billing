@@ -24,6 +24,7 @@ Nothing else: no accessor, no decorators, no `PermissionView` wrappers of the ho
 | `Create`, `Update`, `Delete` | The same action on `grant` |
 | `Request` | Create on `grant_request` |
 | `Decide` | Update on `grant_request` for that request, inside Create on `grant`: the pair approving is authorized against |
+| `ManageRegistrations` | Execute on `quota`: releasing and moving the seats on a capacity grant |
 
 It calls `AddBillingWeb` itself.
 

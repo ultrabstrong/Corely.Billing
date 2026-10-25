@@ -113,6 +113,11 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                     b.Property<Guid?>("GrantId")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -122,7 +127,7 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<long>("Quantity")
+                    b.Property<long?>("Quantity")
                         .HasColumnType("bigint");
 
                     b.Property<Guid?>("RequestedByUserId")
@@ -140,7 +145,6 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
@@ -167,6 +171,11 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                     b.Property<bool>("Disabled")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
                     b.Property<string>("Operation")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -179,7 +188,6 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
@@ -191,9 +199,53 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
 
                     b.HasKey("GrantId");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("AccountId", "Operation");
 
                     b.ToTable("Grants", (string)null);
+                });
+
+            modelBuilder.Entity("Corely.Billing.Registrations.Entities.RegistrationEntity", b =>
+                {
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP")
+                        .HasDefaultValueSql("(UTC_TIMESTAMP)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid>("GrantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime>("RegisteredUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("ReleasedUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("RegistrationId");
+
+                    b.HasIndex("GrantId", "ReleasedUtc");
+
+                    b.HasIndex("AccountId", "Operation", "Reference");
+
+                    b.ToTable("Registrations", (string)null);
                 });
 #pragma warning restore 612, 618
         }

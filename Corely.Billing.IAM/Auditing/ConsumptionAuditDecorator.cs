@@ -24,17 +24,6 @@ internal sealed class ConsumptionAuditDecorator(
             r => AuditOutcome.Of(r.ResultCode)
         );
 
-    public Task<RetrieveSingleResult<List<GrantTotalConsumptions>>> GetGrantConsumptionTotalsAsync(
-        Guid accountId,
-        IReadOnlyList<Guid> grantIds,
-        CancellationToken ct = default
-    ) =>
-        auditProvider.RecordAsync(
-            Read(accountId),
-            () => inner.GetGrantConsumptionTotalsAsync(accountId, grantIds, ct),
-            r => AuditOutcome.Of(r.ResultCode)
-        );
-
     public Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
         GetConsumptionTimeSeriesRequest request,
         CancellationToken ct = default
@@ -50,7 +39,7 @@ internal sealed class ConsumptionAuditDecorator(
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            Read(request.AccountId),
+            Read(request.AccountIds is [var only] ? only : null),
             () => inner.ListConsumptionEventsAsync(request, ct),
             r => AuditOutcome.Of(r.ResultCode)
         );
@@ -85,7 +74,7 @@ internal sealed class ConsumptionAuditDecorator(
             r => AuditOutcome.Of(r.ResultCode)
         );
 
-    private static AuditCall Read(Guid accountId) =>
+    private static AuditCall Read(Guid? accountId) =>
         new(SERVICE, AuthAction.Read, BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE)
         {
             AccountId = accountId,

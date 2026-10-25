@@ -110,21 +110,25 @@ internal sealed record UsageExport(
                 : $"""
                 ## {GRANTS_FILE}
 
-                Every grant of the account: what it may use, and when.
+                Every grant of the account: what it holds, and when.
 
                 | Column | Meaning |
                 |---|---|
                 | `grant_id` | The grant |
-                | `operation`, `operation_name`, `unit`, `unit_name` | What the grant covers |
-                | `quantity` | The allowance; empty when `unlimited` is `true` |
-                | `valid_from_utc`, `valid_to_utc` | The window the grant can be drawn on |
-                | `status` | `upcoming`, `active` or `expired` when the export was taken |
-                | `used` | Everything counted against the grant, in any date range, when the export was taken |
-                | `remaining` | `quantity` minus `used`, never below zero; empty when unlimited |
-                | `overdrawn_by` | How far `used` went past `quantity`. Work already done is always recorded, so a grant can end up overdrawn |
+                | `operation`, `operation_name` | What the grant covers |
+                | `kind` | `consumable` (a balance that work uses up), `capacity` (seats that are held and released), `allowance` (an amount added) or `feature` (on while the grant is active) |
+                | `type` | The kind, and whether it is limited: `balance`, `unlimited`, `seats`, `unlimitedseats`, `allowance`, `unlimitedallowance` or `feature` |
+                | `unit`, `unit_name` | What the grant is counted in; empty for a feature |
+                | `quantity` | The balance, seats or amount; empty when `unlimited` is `true`, and for a feature |
+                | `unlimited` | `true` when the grant has no limit |
+                | `valid_from_utc`, `valid_to_utc` | The window the grant is active in |
+                | `status` | `upcoming`, `active` or `expired` when the export was taken, or `disabled` |
+                | `used` | For a consumable, everything counted against the grant when the export was taken. Work already done is always recorded, so this can pass `quantity` |
+                | `remaining` | For a limited consumable, `quantity` minus `used`, never below zero |
+                | `in_use` | For a capacity, the seats held when the export was taken |
                 | `tags` | Free-form labels, as a JSON object |
 
-                Work draws on unlimited grants first, then on limited grants soonest-expiring first.
+                Work draws on unlimited consumables first, then on limited ones soonest-expiring first.
                 """
         );
 

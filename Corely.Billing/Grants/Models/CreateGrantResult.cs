@@ -4,6 +4,7 @@ public enum CreateGrantResultCode
 {
     Success,
     ValidationError,
+    DeclarationMismatchError,
     UnauthorizedError,
 }
 

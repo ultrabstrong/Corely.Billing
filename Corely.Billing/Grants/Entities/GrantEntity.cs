@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess.Interfaces.Entities;
 
@@ -9,9 +10,10 @@ internal class GrantEntity : IHasCreatedUtc
     public DateTime CreatedUtc { get; set; }
 
     public Guid AccountId { get; set; }
-    public long? Quantity { get; set; }
-    public UsageUnit Unit { get; set; }
     public UsageOperation Operation { get; set; }
+    public GrantKind Kind { get; set; }
+    public UsageUnit? Unit { get; set; }
+    public long? Quantity { get; set; }
     public DateTime ValidFromUtc { get; set; }
     public DateTime ValidToUtc { get; set; }
     public bool Disabled { get; set; }

@@ -5,10 +5,8 @@ internal sealed class UsageVocabulary(
     IReadOnlyList<UsageUnitDefinition> units
 ) : IUsageVocabulary
 {
-    private readonly Dictionary<UsageOperation, string> _operations = operations.ToDictionary(
-        definition => definition.Operation,
-        definition => definition.DisplayName
-    );
+    private readonly Dictionary<UsageOperation, UsageOperationDefinition> _operations =
+        operations.ToDictionary(definition => definition.Operation);
     private readonly Dictionary<UsageUnit, string> _units = units.ToDictionary(
         definition => definition.Unit,
         definition => definition.DisplayName
@@ -21,8 +19,13 @@ internal sealed class UsageVocabulary(
 
     public bool Knows(UsageUnit unit) => _units.ContainsKey(unit);
 
+    public UsageOperationDefinition? Definition(UsageOperation operation) =>
+        _operations.GetValueOrDefault(operation);
+
     public string DisplayName(UsageOperation operation) =>
-        _operations.TryGetValue(operation, out var displayName) ? displayName : operation.Value;
+        _operations.TryGetValue(operation, out var definition)
+            ? definition.DisplayName
+            : operation.Value;
 
     public string DisplayName(UsageUnit unit) =>
         _units.TryGetValue(unit, out var displayName) ? displayName : unit.Value;

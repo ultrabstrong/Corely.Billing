@@ -28,7 +28,7 @@ A decided request never changes again.
 
 ```csharp
 var result = await grantRequestService.RequestGrantAsync(new RequestGrantRequest(
-    accountId, MyUsage.TextGeneration, MyUsage.Token, Quantity: 500_000,
+    accountId, MyUsage.TextGeneration, Quantity: 500_000,
     Note: "Quarter end reports", RequestedByUserId: userId));
 ```
 
@@ -41,7 +41,7 @@ var result = await grantRequestService.ApproveGrantRequestAsync(new ApproveGrant
 var grantId = result.GrantId;
 ```
 
-The grant takes the request's operation, unit, quantity and tags. The approver chooses only the window; change anything else afterwards through `IGrantService`.
+A request takes its kind and unit from the operation's declaration. The grant takes the request's operation, kind, unit, quantity and tags. The approver chooses only the window; change anything else afterwards through `IGrantService`.
 
 ### Decline
 
@@ -54,8 +54,7 @@ await grantRequestService.DeclineGrantRequestAsync(new DeclineGrantRequestReques
 
 ```csharp
 var result = await grantRequestService.ListGrantRequestsAsync(new ListGrantRequestsRequest(
-    accountId,
-    Filter: Filter.For<GrantRequest>().Where(r => r.Status, EnumFilter<GrantRequestStatus>.Equals(GrantRequestStatus.Pending))));
+    [accountId], Status: GrantRequestStatus.Pending));
 ```
 
 Without an order, pending requests list first, then newest `RequestedUtc` first.
@@ -65,17 +64,17 @@ Without an order, pending requests list first, then newest `RequestedUtc` first.
 | Rule | Code |
 |------|------|
 | `AccountId` not empty | `ValidationError` |
-| `Quantity` one or more; a request is never for unlimited | `ValidationError` |
+| `Quantity` one or more, since a request is never for unlimited; null for a feature | `ValidationError` |
 | `Note` and a decline's `Reason` up to 500 characters | `ValidationError` |
-| Operation and unit registered | `ValidationError` |
-| Another request for the same account, operation and unit still pending | `AlreadyPendingError` |
+| Operation registered | `ValidationError` |
+| Another request for the same account and operation still pending | `AlreadyPendingError` |
 | An approval's window fails grant validation | `ValidationError`, and nothing is written |
 
 ## Notes
 
 - Approve claims the request (`Pending` to `Approved`) and creates its grant inside one unit of work. Two approvals at once leave one grant: the second finds the request decided and returns `AlreadyDecidedError`
 - Approve begins its own unit of work, so do not call it inside one the host already began
-- One pending request per account, operation and unit is checked by the library, not by a unique index; two requests made at the same instant can both land
+- One pending request per account and operation is checked by the library, not by a unique index; two requests made at the same instant can both land
 - Every method is scoped by `accountId`; another account's request reads as `NotFoundError`
 - Deleting the grant an approval created leaves the request's history, `GrantId` included
 - Nothing here notifies anyone. A host that emails an admin when a request arrives, or the requester when it is decided, decorates `IGrantRequestService` through `BillingOptions.DecorateServices` and acts on a `Success` result

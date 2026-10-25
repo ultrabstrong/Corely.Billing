@@ -76,7 +76,10 @@ public class GrantListTests : BillingWebTestContext
 
         GrantRequests.Verify(g =>
             g.ListGrantRequestsAsync(
-                It.Is<ListGrantRequestsRequest>(r => r.AccountId == AccountId && r.Filter != null),
+                It.Is<ListGrantRequestsRequest>(r =>
+                    r.AccountIds.SequenceEqual(new[] { AccountId })
+                    && r.Status == GrantRequestStatus.Pending
+                ),
                 null,
                 It.IsAny<CancellationToken>()
             )
@@ -96,9 +99,16 @@ public class GrantListTests : BillingWebTestContext
     }
 
     [Fact]
-    public void Render_HidesTheRequestButton_ForEveryOperationAndUnitPending()
+    public void Render_HidesTheRequestButton_ForEveryOperationPending()
     {
-        HaveRequests(Request(5));
+        HaveRequests([
+            .. new[] { Extraction, Seats, Retention, Sftp }.Select(operation =>
+            {
+                var request = Request(5);
+                request.Operation = operation;
+                return request;
+            }),
+        ]);
 
         var toolbar = Render().FindAll(".cbw-toolbar a");
 
@@ -271,23 +281,19 @@ public class GrantListTests : BillingWebTestContext
     [Fact]
     public void Render_ShowsUnlimitedAndNoMeter_ForAGrantWithNoQuantity()
     {
-        var grant = Grant(null);
-        HaveGrants(grant);
-        HaveUsed(new GrantTotalConsumptions(grant.GrantId, 42));
+        HaveGrants(Grant(null, used: 42));
 
         var row = Render().Find(".cbw-grant-row");
 
         Assert.Contains("Unlimited pages", row.TextContent);
-        Assert.Contains("42 pages used, no limit", row.TextContent);
+        Assert.Contains("Unlimited, 42 pages used", row.TextContent);
         Assert.Empty(row.QuerySelectorAll("[role=meter]"));
     }
 
     [Fact]
     public void Render_ReadsAsOverdrawn_ForAGrantUsedPastItsQuantity()
     {
-        var grant = Grant(10);
-        HaveGrants(grant);
-        HaveUsed(new GrantTotalConsumptions(grant.GrantId, 15));
+        HaveGrants(Grant(10, used: 15));
 
         var row = Render().Find(".cbw-grant-row");
 
@@ -295,17 +301,26 @@ public class GrantListTests : BillingWebTestContext
         Assert.NotNull(row.QuerySelector(".cbw-meter-overdrawn"));
     }
 
-    [Fact]
-    public void Render_ShowsNoBalance_ForARefusedConsumptionRead()
+    [Theory]
+    [InlineData("allowance", "+60 days, until 31 March 2026")]
+    [InlineData("feature", "Enabled, until 31 March 2026")]
+    [InlineData("seats", "2 of 7 users in use")]
+    public void Render_ShowsItsOwnStateAndNoMeter_ForEachGrantType(string type, string expected)
     {
-        HaveGrants(Grant(5_000));
-        DenyUsed();
+        HaveGrants(
+            type switch
+            {
+                "allowance" => Retained(60),
+                "feature" => Feature(),
+                _ => Capacity(7, inUse: 2),
+            }
+        );
 
         var row = Render().Find(".cbw-grant-row");
 
-        Assert.DoesNotContain("left of", row.TextContent);
+        Assert.Contains(expected, row.QuerySelector(".cbw-grant-state")!.TextContent);
         Assert.Empty(row.QuerySelectorAll("[role=meter]"));
-        Assert.Contains("Balance unavailable", row.TextContent);
+        Assert.DoesNotContain("left of", row.TextContent);
     }
 
     [Fact]

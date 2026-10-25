@@ -50,21 +50,6 @@ public class PermissionGateTests : BunitContext
     public PermissionGateTests()
     {
         var consumption = new Mock<IConsumptionService>();
-        consumption
-            .Setup(c =>
-                c.GetGrantConsumptionTotalsAsync(
-                    It.IsAny<Guid>(),
-                    It.IsAny<IReadOnlyList<Guid>>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                new RetrieveSingleResult<List<GrantTotalConsumptions>>(
-                    RetrieveResultCode.Success,
-                    "",
-                    []
-                )
-            );
         _grants
             .Setup(g =>
                 g.ListGrantsAsync(
@@ -121,7 +106,9 @@ public class PermissionGateTests : BunitContext
         userContextAccessor.Setup(a => a.GetUserContextAsync()).ReturnsAsync(userContext);
 
         var vocabulary = new Mock<IUsageVocabulary>();
-        vocabulary.Setup(v => v.Operations).Returns([new(Extraction, "Extraction")]);
+        vocabulary
+            .Setup(v => v.Operations)
+            .Returns([new(Extraction, "Extraction", GrantKind.Consumable, Page)]);
         vocabulary.Setup(v => v.Units).Returns([new(Page, "page")]);
         vocabulary.Setup(v => v.DisplayName(It.IsAny<UsageOperation>())).Returns("Extraction");
         vocabulary.Setup(v => v.DisplayName(It.IsAny<UsageUnit>())).Returns("page");

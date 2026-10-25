@@ -1,7 +1,8 @@
 # Grant kinds: consumable, capacity, allowance and feature
 
-**Status: designed 2026-10-24 with the owner, ready to build.** A major version of `Corely.Billing`
-and the packages that depend on it. Found by dogfooding: DocsToData's document retention needed a
+**Status: built.** Releases as Corely.Billing 3.0.0, Corely.Billing.IAM 3.0.0, Corely.Billing.Web
+4.0.0, Corely.Billing.Web.IAM 4.0.0 and the migration CLI 3.0.0, on the owner's say-so. Designed
+2026-10-24 with the owner. A major version of `Corely.Billing` and the packages that depend on it. Found by dogfooding: DocsToData's document retention needed a
 grant that adds days rather than one that is burned down, and the library could only store, read and
 show the burned down kind.
 
@@ -284,3 +285,34 @@ Document retention (`Plans/InProgress/document-retention.md` there, built and co
   the cross-account read, instead of the default alone.
 - The grants page shows retention as an allowance, and the forms stop offering mismatched pairs.
 - Admission checks move from `GetAvailabilityAsync` to `GetBalanceAsync`.
+
+## As built
+
+Built as designed, with these differences:
+
+- **One result code for the four reads.** `GetBalanceResult`, `GetAllowanceResult`, `HasFeatureResult`
+  and `GetCapacityResult` share `QuotaReadResultCode` (`Success`, `WrongKindError`,
+  `UnauthorizedError`) rather than a code each, since the four can only fail the same ways. Each
+  result also carries a `Message`, as every other result here does.
+- **Register codes end in `Error`:** `AlreadyRegisteredError`, `NoCapacityError`,
+  `NoActiveGrantError`, plus `WrongKindError`, `ValidationError` and `UnauthorizedError`, matching
+  every other code in the library. Success is `Registered`.
+- **`Unit` is optional on `CreateGrantRequest`.** Left null, the grant takes the operation's declared
+  unit; given, it must match. `UpdateGrantRequest` loses its unit, since a grant keeps what it grants.
+- **Never expires is a date:** `GrantConstants.NEVER_EXPIRES_UTC`, 9999-12-31 UTC, with
+  `Grant.NeverExpires()` to read it, so every window query keeps working unchanged.
+- **The disable hook was not built.** DocsToData already shows what disabling costs from its own page
+  shell, above the editor, and nothing else asked for it.
+- **The database being unreachable throws.** `GetAvailabilityAsync` returned `Unknown`; the new reads
+  treat it as the fault it is, as the rest of the library does.
+- **Cross-account reads** are a resource type, `billing_all_accounts`, read only by a user in the
+  platform account who also holds Read on the list's own type, or by the system context. Only the
+  lists take several account ids: grants, grant requests, consumption events and registrations.
+- **Moving registrations is all or nothing.** A target without room for every one moves none and
+  returns `NoCapacityError`.
+- **The export README is tested against `grants.csv`'s header,** so a column added or dropped
+  without its description fails a unit test. It had drifted while the columns changed.
+
+Regression tests proven red against the bug each guards: two concurrent registrations for the last
+seat with the grant row lock removed (both providers), the kind backfill with its `UPDATE` removed
+(both providers), and the export README with a stale column.

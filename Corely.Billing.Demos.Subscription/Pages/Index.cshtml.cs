@@ -6,9 +6,9 @@ namespace Corely.Billing.Demos.Subscription.Pages;
 
 public class IndexModel(Membership membership) : PageModel
 {
-    public Grant? Term { get; private set; }
+    public Grant? Subscription { get; private set; }
 
-    public async Task OnGetAsync() => Term = await membership.CurrentTermAsync();
+    public async Task OnGetAsync() => Subscription = await membership.SubscriptionAsync();
 
     public async Task<IActionResult> OnPostSubscribeAsync()
     {

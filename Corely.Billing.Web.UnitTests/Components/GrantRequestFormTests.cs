@@ -32,7 +32,7 @@ public class GrantRequestFormTests : BillingWebTestContext
         form.Find("form").Submit();
 
         Assert.Equal(
-            new RequestGrantRequest(AccountId, Extraction, Page, 2_500, "Month end batch"),
+            new RequestGrantRequest(AccountId, Extraction, 2_500, "Month end batch"),
             _sent
         );
         Assert.NotNull(_raised);
@@ -74,5 +74,27 @@ public class GrantRequestFormTests : BillingWebTestContext
 
         Assert.Empty(form.FindAll("form"));
         Assert.Contains("You are not allowed to request grants.", form.Markup);
+    }
+
+    [Fact]
+    public void Send_RequestsAFeatureWithNoQuantity_ForAFeatureOperation()
+    {
+        var form = Render();
+        form.Find("#cbw-request-operation").Change(Sftp.Value);
+
+        Assert.Empty(form.FindAll("#cbw-request-quantity"));
+        form.Find("form").Submit();
+
+        Assert.Equal(new RequestGrantRequest(AccountId, Sftp, null), _sent);
+    }
+
+    [Fact]
+    public void Render_OffersOnlyDeclaredOperationsAndNoUnit_ForTheForm()
+    {
+        var form = Render();
+
+        Assert.Empty(form.FindAll("#cbw-request-unit"));
+        Assert.Equal(4, form.FindAll("#cbw-request-operation option").Count);
+        Assert.Equal("pages", form.Find("[data-unit]").TextContent);
     }
 }

@@ -134,7 +134,7 @@ internal class GrantProcessorTelemetryDecorator(
     public async Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
+        GrantKind kind,
         DateTime atUtc,
         IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default
@@ -143,7 +143,7 @@ internal class GrantProcessorTelemetryDecorator(
         var grants = await _logger.ExecuteWithLoggingAsync(
             nameof(GrantProcessor),
             accountId,
-            () => _inner.ListActiveGrantsAsync(accountId, operation, unit, atUtc, heldGrantIds, ct)
+            () => _inner.ListActiveGrantsAsync(accountId, operation, kind, atUtc, heldGrantIds, ct)
         );
         _telemetry.Record(BillingMetricNames.Grants.GRANT_ACTIVE_COUNT, grants.Count);
         return grants;

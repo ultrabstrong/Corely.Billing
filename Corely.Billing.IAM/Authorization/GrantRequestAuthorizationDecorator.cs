@@ -11,7 +11,8 @@ namespace Corely.Billing.IAM.Authorization;
 internal sealed class GrantRequestAuthorizationDecorator(
     IGrantRequestService inner,
     IAuthorizationProvider authorizationProvider,
-    IUserContextProvider userContextProvider
+    IUserContextProvider userContextProvider,
+    AccountReadScope accountReadScope
 ) : IGrantRequestService
 {
     private Guid? ActingUserId(Guid? claimed) =>
@@ -64,9 +65,8 @@ internal sealed class GrantRequestAuthorizationDecorator(
     )
     {
         if (
-            !authorizationProvider.HasAccountContext(request.AccountId)
-            || !await authorizationProvider.IsAuthorizedAsync(
-                AuthAction.Read,
+            !await accountReadScope.CanReadAsync(
+                request.AccountIds,
                 BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE
             )
         )

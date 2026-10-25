@@ -615,7 +615,7 @@ public sealed class ConsumptionReportTests : IDisposable
 
         var result = await ReportAsync(r =>
             r.ListConsumptionEventsAsync(
-                new ListConsumptionEventsRequest(AccountId3, Skip: 2, Take: 3)
+                new ListConsumptionEventsRequest([AccountId3], Skip: 2, Take: 3)
             )
         );
 
@@ -682,7 +682,7 @@ public sealed class ConsumptionReportTests : IDisposable
         await SeedAsync(data);
 
         var result = await ReportAsync(r =>
-            r.ListConsumptionEventsAsync(new ListConsumptionEventsRequest(AccountId1))
+            r.ListConsumptionEventsAsync(new ListConsumptionEventsRequest([AccountId1]))
         );
 
         Assert.Equal(3, result.Items.Count);
@@ -751,7 +751,10 @@ public sealed class ConsumptionReportTests : IDisposable
 
         var result = await ReportAsync(r =>
             r.ListConsumptionEventsAsync(
-                new ListConsumptionEventsRequest(AccountId2, SortDirection: SortDirection.Ascending)
+                new ListConsumptionEventsRequest(
+                    [AccountId2],
+                    SortDirection: SortDirection.Ascending
+                )
             )
         );
 
@@ -818,7 +821,7 @@ public sealed class ConsumptionReportTests : IDisposable
         var result = await ReportAsync(r =>
             r.ListConsumptionEventsAsync(
                 new ListConsumptionEventsRequest(
-                    AccountId3,
+                    [AccountId3],
                     FromUtc: new DateTime(2025, 8, 5, 0, 0, 0, DateTimeKind.Utc),
                     ToUtc: new DateTime(2025, 8, 15, 0, 0, 0, DateTimeKind.Utc)
                 )
@@ -834,7 +837,7 @@ public sealed class ConsumptionReportTests : IDisposable
     public async Task ListConsumptionEventsAsync_ReturnsEmpty_ForNoMatchingAccount()
     {
         var result = await ReportAsync(r =>
-            r.ListConsumptionEventsAsync(new ListConsumptionEventsRequest(NonExistentAccountId))
+            r.ListConsumptionEventsAsync(new ListConsumptionEventsRequest([NonExistentAccountId]))
         );
 
         Assert.Empty(result.Items);

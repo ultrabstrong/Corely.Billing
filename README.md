@@ -2,7 +2,7 @@
 
 Grants, consumption and quota for .NET applications. Records what an account was given, what it used, and whether any is left, kept reconciled across retries so a replayed unit of work is never charged twice.
 
-Not only for metering: a subscription, prepaid credits, a trial, or seats use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
+Not only for metering: seats, a subscription, prepaid credits, a trial, an extra amount or a feature use the same library with less of it. See [Usage Shapes](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/usage-shapes.md).
 
 **Try it running:** three demo apps show the web components, a subscription, and Billing inside a [Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) app. See [Demos](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing/Docs/demos.md).
 
@@ -30,12 +30,13 @@ flowchart LR
 
 ## Highlights
 
-- **Grants**: an account's allowance of a unit for an operation, valid for a window, limited or unlimited
+- **Grant kinds**: a consumable balance, a capacity of seats, an allowance the app reads, or a feature, each valid for a window, limited or unlimited
+- **Seats**: registrations hold a capacity grant's seats until released, atomically against the last one
 - **Reservations**: quota is held before work starts and settled to what the work cost
 - **Grant-edge splitting**: work larger than one grant's remainder draws from the next, soonest-expiring first
 - **Idempotent retries**: a retried unit of work recognises its own earlier rows instead of charging twice
 - **Overdraft-once**: work already paid for is always recorded, and the overrun stays visible
-- **Registered vocabulary**: operations and units are host-defined tokens, validated on every write
+- **Registered vocabulary**: operations declare their kind and unit, and every write is checked against them
 - **Host-owned authorization**: decorate the public services; no identity library is referenced
 - **Two database providers**: SQL Server and MySQL via EF Core
 
@@ -59,8 +60,8 @@ scripting, environment-variable configuration, and running against MySQL.
 
 ```csharp
 var options = BillingOptions.Create(configuration, efConfigFactory)
-    .RegisterOperation("text_generation", "Text Generation")
-    .RegisterUnit("token", "token");
+    .RegisterUnit("token", "token")
+    .RegisterOperation("text_generation", "Text Generation", GrantKind.Consumable, "token");
 services.AddBillingServices(options);
 
 using var scope = accessor.BeginScope(new OperationContext(correlationId, $"chat:{chatId}/turn:{turn}"));

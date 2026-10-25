@@ -195,7 +195,7 @@ public partial class UsageChart
                 unit,
                 Vocabulary.DisplayName(unit),
                 key => KeyLabel(key, byGrant),
-                grant => grant.AllowanceAndExpiry(Vocabulary)
+                grant => grant.HeadlineAndExpiry(Vocabulary)
             )
         );
     }
@@ -203,7 +203,7 @@ public partial class UsageChart
     private async Task<List<Grant>> GrantsAsync()
     {
         var result = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest(AccountId, Take: int.MaxValue)
+            new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
         );
         return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
@@ -283,8 +283,11 @@ public partial class UsageChart
             .Concat(
                 grants
                     .Where(g => g.ValidFromUtc <= Filter.ToUtc && g.ValidToUtc >= Filter.FromUtc)
-                    .Where(g => Filter.Units is not { Count: > 0 } || Filter.Units.Contains(g.Unit))
-                    .Select(g => g.Unit)
+                    .Where(g =>
+                        Filter.Units is not { Count: > 0 }
+                        || (g.Unit is { } unit && Filter.Units.Contains(unit))
+                    )
+                    .Select(g => g.Unit!.Value)
             )
             .ToHashSet();
         var order = Vocabulary.Units.Select(u => u.Unit).ToList();
@@ -302,7 +305,7 @@ public partial class UsageChart
         {
             UsageBreakdown.Operation => Vocabulary.DisplayName(UsageOperation.From(key)),
             UsageBreakdown.Grant => grants.TryGetValue(key, out var grant)
-                ? grant.AllowanceAndExpiry(Vocabulary)
+                ? grant.HeadlineAndExpiry(Vocabulary)
                 : $"Grant {key[^8..]}",
             _ => key,
         };

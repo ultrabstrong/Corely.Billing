@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace Corely.Billing.UnitTests;
@@ -20,8 +21,8 @@ public class BillingOptionsTests
     public void RegisterOperation_KeepsRegistrationOrder_ForSeveralOperations()
     {
         var options = Options()
-            .RegisterOperation("second", "Second")
-            .RegisterOperation("first", "First");
+            .RegisterOperation("second", "Second", GrantKind.Feature)
+            .RegisterOperation("first", "First", GrantKind.Feature);
 
         Assert.Equal(["second", "first"], options.Operations.Keys.Select(o => o.Value));
     }
@@ -29,9 +30,11 @@ public class BillingOptionsTests
     [Fact]
     public void RegisterOperation_KeepsTheLastDisplayName_ForADuplicateOperation()
     {
-        var options = Options().RegisterOperation("a", "A").RegisterOperation("a", "A again");
+        var options = Options()
+            .RegisterOperation("a", "A", GrantKind.Feature)
+            .RegisterOperation("a", "A again", GrantKind.Feature);
 
-        Assert.Equal("A again", Assert.Single(options.Operations).Value);
+        Assert.Equal("A again", Assert.Single(options.Operations).Value.DisplayName);
     }
 
     [Fact]
@@ -47,7 +50,9 @@ public class BillingOptionsTests
     [InlineData("has space")]
     [InlineData("")]
     public void RegisterOperation_Throws_ForAnInvalidToken(string value) =>
-        Assert.ThrowsAny<ArgumentException>(() => Options().RegisterOperation(value, "Name"));
+        Assert.ThrowsAny<ArgumentException>(() =>
+            Options().RegisterOperation(value, "Name", GrantKind.Feature)
+        );
 
     [Theory]
     [InlineData("")]
@@ -62,4 +67,49 @@ public class BillingOptionsTests
     [Fact]
     public void DecorateServices_Throws_ForANullAction() =>
         Assert.Throws<ArgumentNullException>(() => Options().DecorateServices(null!));
+
+    [Fact]
+    public void DeclarationProblem_IsNull_ForOneOperationOfEachKindDeclaredProperly() =>
+        Assert.Null(
+            Options()
+                .RegisterUnit("page", "page")
+                .RegisterUnit("day", "day")
+                .RegisterUnit("user", "user")
+                .RegisterOperation("extract", "Extract", GrantKind.Consumable, "page")
+                .RegisterOperation("seats", "Seats", GrantKind.Capacity, "user")
+                .RegisterOperation("retain", "Retain", GrantKind.Allowance, "day")
+                .RegisterOperation("sftp", "SFTP", GrantKind.Feature)
+                .DeclarationProblem()
+        );
+
+    [Fact]
+    public void DeclarationProblem_ReportsIt_ForNoOperations() =>
+        Assert.NotNull(Options().DeclarationProblem());
+
+    [Theory]
+    [InlineData(GrantKind.Consumable)]
+    [InlineData(GrantKind.Capacity)]
+    [InlineData(GrantKind.Allowance)]
+    public void DeclarationProblem_ReportsIt_ForACountedKindWithNoUnit(GrantKind kind) =>
+        Assert.Contains(
+            "names no unit",
+            Options().RegisterOperation("x", "X", kind).DeclarationProblem()
+        );
+
+    [Fact]
+    public void DeclarationProblem_ReportsIt_ForAFeatureWithAUnit() =>
+        Assert.Contains(
+            "is a feature and names a unit",
+            Options()
+                .RegisterUnit("day", "day")
+                .RegisterOperation("sftp", "SFTP", GrantKind.Feature, "day")
+                .DeclarationProblem()
+        );
+
+    [Fact]
+    public void DeclarationProblem_ReportsIt_ForAnUnregisteredUnit() =>
+        Assert.Contains(
+            "not registered",
+            Options().RegisterOperation("x", "X", GrantKind.Consumable, "page").DeclarationProblem()
+        );
 }

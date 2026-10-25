@@ -4,6 +4,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Quota.Mappers;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Usage;
 using Corely.Billing.Validators;
 using Corely.Common.Extensions;
@@ -16,6 +17,8 @@ internal class QuotaProcessor(
     IConsumptionProcessor consumptionProcessor,
     IConsumptionReportProcessor consumptionReportProcessor,
     IGrantSelectionPolicy grantSelectionPolicy,
+    IRegistrationProcessor registrationProcessor,
+    IUsageVocabulary vocabulary,
     IValidationProvider validationProvider,
     TimeProvider timeProvider,
     ILogger<QuotaProcessor> logger
@@ -32,42 +35,121 @@ internal class QuotaProcessor(
     private readonly IGrantSelectionPolicy _grantSelectionPolicy = grantSelectionPolicy.ThrowIfNull(
         nameof(grantSelectionPolicy)
     );
+    private readonly IRegistrationProcessor _registrationProcessor =
+        registrationProcessor.ThrowIfNull(nameof(registrationProcessor));
+    private readonly IUsageVocabulary _vocabulary = vocabulary.ThrowIfNull(nameof(vocabulary));
     private readonly IValidationProvider _validationProvider = validationProvider.ThrowIfNull(
         nameof(validationProvider)
     );
     private readonly TimeProvider _timeProvider = timeProvider.ThrowIfNull(nameof(timeProvider));
     private readonly ILogger<QuotaProcessor> _logger = logger.ThrowIfNull(nameof(logger));
 
-    public async Task<QuotaAvailability> GetAvailabilityAsync(
+    public async Task<GetBalanceResult> GetBalanceAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
         CancellationToken ct = default
     )
     {
-        try
-        {
-            var context = await LoadAsync(accountId, operation, unit, ct);
-            if (context.Grants.Count == 0)
-                return QuotaAvailability.Exhausted;
+        if (WrongKind(operation, GrantKind.Consumable) is { } refused)
+            return new GetBalanceResult(QuotaReadResultCode.WrongKindError, refused, null, []);
 
-            var split = _grantSelectionPolicy.Split(context.Grants, context.Totals, quantity: 1);
+        var context = await LoadAsync(accountId, operation, ct);
+        var used = context.Totals.ToDictionary(t => t.GrantId, t => t.TotalConsumedQuantity);
+        foreach (var grant in context.Grants)
+            grant.WithUse(used.GetValueOrDefault(grant.GrantId));
 
-            return split.Shortfall > 0 ? QuotaAvailability.Exhausted : QuotaAvailability.Available;
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            _logger.LogWarning(
-                ex,
-                "Could not determine {Operation}/{Unit} quota availability for AccountId {AccountId}. "
-                    + "Letting the work start.",
-                operation,
-                unit,
-                accountId
-            );
-            return QuotaAvailability.Unknown;
-        }
+        return new GetBalanceResult(
+            QuotaReadResultCode.Success,
+            string.Empty,
+            context.Grants.Any(g => g.Quantity is null)
+                ? null
+                : context.Grants.Sum(g => g.Remaining ?? 0),
+            context.Grants
+        );
     }
+
+    public async Task<GetAllowanceResult> GetAllowanceAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    )
+    {
+        if (WrongKind(operation, GrantKind.Allowance) is { } refused)
+            return new GetAllowanceResult(QuotaReadResultCode.WrongKindError, refused, null, []);
+
+        var grants = await ActiveAsync(accountId, operation, GrantKind.Allowance, ct);
+        return new GetAllowanceResult(
+            QuotaReadResultCode.Success,
+            string.Empty,
+            grants.Any(g => g.Quantity is null) ? null : grants.Sum(g => g.Quantity!.Value),
+            grants
+        );
+    }
+
+    public async Task<HasFeatureResult> HasFeatureAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    )
+    {
+        if (WrongKind(operation, GrantKind.Feature) is { } refused)
+            return new HasFeatureResult(QuotaReadResultCode.WrongKindError, refused, false, []);
+
+        var grants = await ActiveAsync(accountId, operation, GrantKind.Feature, ct);
+        return new HasFeatureResult(
+            QuotaReadResultCode.Success,
+            string.Empty,
+            grants.Count > 0,
+            grants
+        );
+    }
+
+    public async Task<GetCapacityResult> GetCapacityAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    )
+    {
+        if (WrongKind(operation, GrantKind.Capacity) is { } refused)
+            return new GetCapacityResult(QuotaReadResultCode.WrongKindError, refused, null, 0, []);
+
+        var grants = await ActiveAsync(accountId, operation, GrantKind.Capacity, ct);
+        var inUse = await _registrationProcessor.CountInUseAsync(
+            [.. grants.Select(g => g.GrantId)],
+            ct
+        );
+        foreach (var grant in grants)
+            grant.InUse = inUse.GetValueOrDefault(grant.GrantId);
+
+        return new GetCapacityResult(
+            QuotaReadResultCode.Success,
+            string.Empty,
+            grants.Any(g => g.Quantity is null) ? null : grants.Sum(g => g.Quantity!.Value),
+            grants.Sum(g => g.InUse ?? 0),
+            grants
+        );
+    }
+
+    private string? WrongKind(UsageOperation operation, GrantKind kind) =>
+        _vocabulary.Definition(operation) is not { } definition
+            ? $"Operation '{operation}' is not a registered usage operation."
+        : definition.Kind != kind
+            ? $"Operation '{operation}' is declared as {definition.Kind}, not {kind}."
+        : null;
+
+    private Task<List<Grant>> ActiveAsync(
+        Guid accountId,
+        UsageOperation operation,
+        GrantKind kind,
+        CancellationToken ct
+    ) =>
+        _grantProcessor.ListActiveGrantsAsync(
+            accountId,
+            operation,
+            kind,
+            _timeProvider.GetUtcNow().UtcDateTime,
+            ct: ct
+        );
 
     public async Task<ReserveQuotaResult> ReserveAsync(
         ReserveQuotaRequest request,
@@ -83,7 +165,7 @@ internal class QuotaProcessor(
                 validation.Message
             );
 
-        var context = await LoadAsync(request.AccountId, request.Operation, request.Unit, ct);
+        var context = await LoadAsync(request.AccountId, request.Operation, ct);
         if (context.Grants.Count == 0)
         {
             return new ReserveQuotaResult(
@@ -179,7 +261,6 @@ internal class QuotaProcessor(
             await LoadAsync(
                 request.AccountId,
                 request.Operation,
-                request.Unit,
                 ct,
                 [.. outstanding.Select(h => h.GrantId)]
             )
@@ -259,7 +340,6 @@ internal class QuotaProcessor(
     private async Task<QuotaContext> LoadAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
         CancellationToken ct,
         IReadOnlyCollection<Guid>? heldGrantIds = null
     )
@@ -267,7 +347,7 @@ internal class QuotaProcessor(
         var grants = await _grantProcessor.ListActiveGrantsAsync(
             accountId,
             operation,
-            unit,
+            GrantKind.Consumable,
             _timeProvider.GetUtcNow().UtcDateTime,
             heldGrantIds,
             ct

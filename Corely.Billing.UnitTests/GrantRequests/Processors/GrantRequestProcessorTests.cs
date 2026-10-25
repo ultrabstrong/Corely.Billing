@@ -2,6 +2,7 @@ using Corely.Billing.GrantRequests.Entities;
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.GrantRequests.Processors;
 using Corely.Billing.Grants.Entities;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Models;
 using Corely.Billing.Validators;
@@ -29,6 +30,7 @@ public class GrantRequestProcessorTests
         _processor = new GrantRequestProcessor(
             _requestRepo,
             _serviceFactory.GetRequiredService<IGrantProcessor>(),
+            TestUsage.Vocabulary,
             _serviceFactory.GetRequiredService<IUnitOfWorkProvider>(),
             _serviceFactory.GetRequiredService<IValidationProvider>(),
             _serviceFactory.TimeProvider,
@@ -37,7 +39,7 @@ public class GrantRequestProcessorTests
     }
 
     private static RequestGrantRequest Ask(long quantity = 5_000, string? note = null) =>
-        new(AccountId, TestUsage.Extraction, TestUsage.Page, quantity, note);
+        new(AccountId, TestUsage.Extraction, quantity, note);
 
     private async Task<Guid> PendingAsync(long quantity = 5_000)
     {
@@ -75,7 +77,7 @@ public class GrantRequestProcessorTests
     }
 
     [Fact]
-    public async Task RequestGrantAsync_RefusesASecond_ForTheSameOperationAndUnitPending()
+    public async Task RequestGrantAsync_RefusesASecond_ForTheSameOperationPending()
     {
         await PendingAsync();
 
@@ -86,13 +88,54 @@ public class GrantRequestProcessorTests
     }
 
     [Fact]
-    public async Task RequestGrantAsync_AcceptsASecond_ForAnotherUnit()
+    public async Task RequestGrantAsync_AcceptsASecond_ForAnotherOperation()
     {
         await PendingAsync();
 
-        var result = await _processor.RequestGrantAsync(Ask() with { Unit = TestUsage.Document });
+        var result = await _processor.RequestGrantAsync(Ask() with { Operation = TestUsage.Other });
 
         Assert.Equal(RequestGrantResultCode.Success, result.ResultCode);
+    }
+
+    [Fact]
+    public async Task RequestGrantAsync_StoresTheDeclaredKindWithNoQuantity_ForAFeature()
+    {
+        var result = await _processor.RequestGrantAsync(
+            new RequestGrantRequest(AccountId, TestUsage.Sftp, null)
+        );
+
+        Assert.Equal(RequestGrantResultCode.Success, result.ResultCode);
+        var entity = await _requestRepo.GetAsync(e => e.GrantRequestId == result.CreatedId);
+        Assert.Equal(GrantKind.Feature, entity!.Kind);
+        Assert.Null(entity.Unit);
+        Assert.Null(entity.Quantity);
+    }
+
+    [Fact]
+    public async Task RequestGrantAsync_WritesNothing_ForAFeatureWithAQuantity()
+    {
+        var result = await _processor.RequestGrantAsync(
+            new RequestGrantRequest(AccountId, TestUsage.Sftp, 3)
+        );
+
+        Assert.Equal(RequestGrantResultCode.ValidationError, result.ResultCode);
+        Assert.Equal(0, await _requestRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task ApproveGrantRequestAsync_CreatesAGrantOfTheDeclaredKind_ForAnAllowanceRequest()
+    {
+        var asked = await _processor.RequestGrantAsync(
+            new RequestGrantRequest(AccountId, TestUsage.Retention, 60)
+        );
+
+        var result = await _processor.ApproveGrantRequestAsync(Approval(asked.CreatedId));
+
+        Assert.Equal(DecideGrantRequestResultCode.Success, result.ResultCode);
+        var grant = await _grantRepo.GetAsync(e => e.GrantId == result.GrantId);
+        Assert.Equal(GrantKind.Allowance, grant!.Kind);
+        Assert.Equal(TestUsage.Day, grant.Unit);
+        Assert.Equal(60, grant.Quantity);
     }
 
     [Fact]
@@ -224,11 +267,11 @@ public class GrantRequestProcessorTests
         var pending = await PendingAsync();
         _serviceFactory.TimeProvider.Advance(TimeSpan.FromDays(1));
         var declined = (
-            await _processor.RequestGrantAsync(Ask() with { Unit = TestUsage.Document })
+            await _processor.RequestGrantAsync(Ask() with { Operation = TestUsage.Other })
         ).CreatedId;
         await _processor.DeclineGrantRequestAsync(new(AccountId, declined));
 
-        var result = await _processor.ListGrantRequestsAsync(new(AccountId));
+        var result = await _processor.ListGrantRequestsAsync(new([AccountId]));
 
         Assert.Equal(RetrieveResultCode.Success, result.ResultCode);
         Assert.Equal([pending, declined], result.Data!.Items.Select(r => r.GrantRequestId));

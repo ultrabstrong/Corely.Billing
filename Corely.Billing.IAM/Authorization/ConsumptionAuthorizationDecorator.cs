@@ -8,7 +8,8 @@ namespace Corely.Billing.IAM.Authorization;
 
 internal sealed class ConsumptionAuthorizationDecorator(
     IConsumptionService inner,
-    IAuthorizationProvider authorizationProvider
+    IAuthorizationProvider authorizationProvider,
+    AccountReadScope accountReadScope
 ) : IConsumptionService
 {
     public Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
@@ -19,17 +20,6 @@ internal sealed class ConsumptionAuthorizationDecorator(
             request.AccountId,
             "Unauthorized to read consumption total",
             () => inner.GetConsumptionTotalAsync(request, ct)
-        );
-
-    public Task<RetrieveSingleResult<List<GrantTotalConsumptions>>> GetGrantConsumptionTotalsAsync(
-        Guid accountId,
-        IReadOnlyList<Guid> grantIds,
-        CancellationToken ct = default
-    ) =>
-        ReadAsync(
-            accountId,
-            "Unauthorized to read grant consumption totals",
-            () => inner.GetGrantConsumptionTotalsAsync(accountId, grantIds, ct)
         );
 
     public Task<RetrieveSingleResult<List<ConsumptionSeries>>> GetConsumptionTimeSeriesAsync(
@@ -46,7 +36,10 @@ internal sealed class ConsumptionAuthorizationDecorator(
         ListConsumptionEventsRequest request,
         CancellationToken ct = default
     ) =>
-        await IsAuthorizedAsync(request.AccountId)
+        await accountReadScope.CanReadAsync(
+            request.AccountIds,
+            BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
+        )
             ? await inner.ListConsumptionEventsAsync(request, ct)
             : new RetrieveListResult<ConsumptionEvent>(
                 RetrieveResultCode.UnauthorizedError,

@@ -87,7 +87,7 @@ public class ConsumptionTableTests : BillingWebTestContext
         Render();
 
         var request = Assert.Single(_requests);
-        Assert.Equal(AccountId, request.AccountId);
+        Assert.Equal([AccountId], request.AccountIds);
         Assert.Equal(Filter.FromUtc, request.FromUtc);
         Assert.Equal(Filter.ToUtc, request.ToUtc);
         Assert.Equal(Filter.Units, request.Units);

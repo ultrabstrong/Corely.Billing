@@ -21,17 +21,48 @@ internal class QuotaProcessorTelemetryDecorator(
     );
     private readonly IBillingTelemetry _telemetry = telemetry.ThrowIfNull(nameof(telemetry));
 
-    public Task<QuotaAvailability> GetAvailabilityAsync(
+    public Task<GetBalanceResult> GetBalanceAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
         CancellationToken ct = default
     ) =>
         _logger.ExecuteWithLoggingAsync(
             nameof(QuotaProcessor),
             accountId,
-            () => _inner.GetAvailabilityAsync(accountId, operation, unit, ct),
-            logResult: true
+            () => _inner.GetBalanceAsync(accountId, operation, ct)
+        );
+
+    public Task<GetAllowanceResult> GetAllowanceAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaProcessor),
+            accountId,
+            () => _inner.GetAllowanceAsync(accountId, operation, ct)
+        );
+
+    public Task<HasFeatureResult> HasFeatureAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaProcessor),
+            accountId,
+            () => _inner.HasFeatureAsync(accountId, operation, ct)
+        );
+
+    public Task<GetCapacityResult> GetCapacityAsync(
+        Guid accountId,
+        UsageOperation operation,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(QuotaProcessor),
+            accountId,
+            () => _inner.GetCapacityAsync(accountId, operation, ct)
         );
 
     public async Task<ReserveQuotaResult> ReserveAsync(

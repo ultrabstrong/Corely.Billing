@@ -20,6 +20,10 @@
                 <div class="alert alert-secondary" role="status">You can view this grant but not change it.</div>
                 @Form(false)
             </text>)
+        @if (_grant is { Kind: GrantKind.Capacity } capacity)
+        {
+            <RegistrationList AccountId="AccountId" Grant="capacity" />
+        }
     }
 </div>
 
@@ -32,38 +36,42 @@
             }
             <fieldset disabled="@(!editable || _saving)">
                 <div class="mb-3">
-                    <label for="cbw-operation" class="form-label">Operation</label>
+                    <label for="cbw-operation" class="form-label">What to grant</label>
                     <select id="cbw-operation" class="form-select" @bind="OperationValue" disabled="@(!IsNew)">
-                        @foreach (var definition in Vocabulary.Operations)
+                        @if (!IsNew && Definition is null)
                         {
-                            <option value="@definition.Operation.Value">@definition.DisplayName</option>
+                            <option value="@_operation.Value">@Vocabulary.DisplayName(_operation)</option>
+                        }
+                        @foreach (var kind in Vocabulary.ByKind())
+                        {
+                            <optgroup label="@kind.Key.GroupLabel()">
+                                @foreach (var definition in kind)
+                                {
+                                    <option value="@definition.Operation.Value">@definition.DisplayName</option>
+                                }
+                            </optgroup>
                         }
                     </select>
                     @if (!IsNew)
                     {
-                        <div class="form-text">A grant keeps its operation. Create a new grant for a different one.</div>
+                        <div class="form-text">A grant keeps what it grants. Create a new grant for something else.</div>
                     }
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-6 mb-3">
-                        <label for="cbw-quantity" class="form-label">Quantity</label>
-                        <input id="cbw-quantity" type="number" min="0" class="form-control" @bind="_quantity" disabled="@_unlimited" />
+                @if (Kind != GrantKind.Feature)
+                {
+                    <div class="mb-3">
+                        <label for="cbw-quantity" class="form-label">@QuantityLabel</label>
+                        <div class="input-group">
+                            <input id="cbw-quantity" type="number" min="0" class="form-control" @bind="_quantity" disabled="@_unlimited" />
+                            <span class="input-group-text" data-unit>@UnitPlural</span>
+                        </div>
                         <div class="form-check mt-2">
                             <input id="cbw-unlimited" type="checkbox" class="form-check-input" @bind="_unlimited" />
                             <label for="cbw-unlimited" class="form-check-label">Unlimited</label>
                         </div>
                     </div>
-                    <div class="col-sm-6 mb-3">
-                        <label for="cbw-unit" class="form-label">Unit</label>
-                        <select id="cbw-unit" class="form-select" @bind="UnitValue">
-                            @foreach (var definition in Vocabulary.Units)
-                            {
-                                <option value="@definition.Unit.Value">@definition.DisplayName</option>
-                            }
-                        </select>
-                    </div>
-                </div>
+                }
 
                 <div class="row">
                     <div class="col-sm-6 mb-3">
@@ -72,7 +80,17 @@
                     </div>
                     <div class="col-sm-6 mb-3">
                         <label for="cbw-to" class="form-label">Valid to (UTC)</label>
-                        <input id="cbw-to" type="datetime-local" class="form-control" @bind="_validToUtc" />
+                        @if (!_neverExpires)
+                        {
+                            <input id="cbw-to" type="datetime-local" class="form-control" @bind="_validToUtc" />
+                        }
+                        @if (CanNeverExpire)
+                        {
+                            <div class="form-check mt-2">
+                                <input id="cbw-never-expires" type="checkbox" class="form-check-input" @bind="_neverExpires" />
+                                <label for="cbw-never-expires" class="form-check-label">Never expires</label>
+                            </div>
+                        }
                     </div>
                 </div>
             </fieldset>

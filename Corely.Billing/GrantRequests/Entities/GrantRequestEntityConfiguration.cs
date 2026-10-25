@@ -1,4 +1,5 @@
 using Corely.Billing.GrantRequests.Constants;
+using Corely.Billing.Grants.Constants;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -17,15 +18,22 @@ internal sealed class GrantRequestEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.AccountId).IsRequired();
         builder
             .Property(e => e.Unit)
-            .HasConversion(unit => unit.Value, value => UsageUnit.From(value))
-            .HasMaxLength(UsageUnit.MAX_LENGTH)
+            .HasConversion<string?>(
+                unit => unit == null ? null : unit.Value.Value,
+                value => value == null ? null : UsageUnit.From(value)
+            )
+            .HasMaxLength(UsageUnit.MAX_LENGTH);
+        builder
+            .Property(e => e.Kind)
+            .HasConversion<string>()
+            .HasMaxLength(GrantConstants.KIND_MAX_LENGTH)
             .IsRequired();
         builder
             .Property(e => e.Operation)
             .HasConversion(operation => operation.Value, value => UsageOperation.From(value))
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
-        builder.Property(e => e.Quantity).IsRequired();
+        builder.Property(e => e.Quantity);
         builder.Property(e => e.Note).HasMaxLength(GrantRequestConstants.NOTE_MAX_LENGTH);
         builder.Property(e => e.RequestedUtc).IsRequired();
         builder

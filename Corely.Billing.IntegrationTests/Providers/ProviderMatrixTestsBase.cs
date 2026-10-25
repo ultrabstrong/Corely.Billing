@@ -4,11 +4,14 @@ using Corely.Billing.DataAccess;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IntegrationTests.Infrastructure;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Models;
 using Corely.Billing.Services;
 using Corely.Common.Filtering;
 using Corely.Common.Filtering.Filters;
 using Corely.Common.Filtering.Ordering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.IntegrationTests.Providers;
@@ -66,6 +69,74 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     }
 
     [RequiresDockerFact]
+    public async Task KindMigrationMakesExistingGrantsConsumable_ForAGrantFromBeforeKinds()
+    {
+        var grantId = Guid.CreateVersion7();
+        await Host.QueryAsync(async db =>
+        {
+            await db.GetService<IMigrator>().MigrateAsync("AddGrantRequestsAndDisabledGrants");
+            return true;
+        });
+        await Host.QueryAsync(db =>
+            db.Database.ExecuteSqlAsync(
+                $"INSERT INTO Grants (GrantId, AccountId, Operation, Unit, Quantity, Disabled, ValidFromUtc, ValidToUtc) VALUES ({grantId}, {AccountId}, {TestUsage.Extraction.Value}, {TestUsage.Page.Value}, {100L}, {false}, {new DateTime(2026, 1, 1)}, {new DateTime(2027, 1, 1)})"
+            )
+        );
+
+        await Host.MigrateAsync();
+        var grant = await Host.WithScopeAsync(services =>
+            services.GetRequiredService<IGrantService>().GetGrantAsync(AccountId, grantId)
+        );
+
+        Assert.Equal(GrantKind.Consumable, grant.Item!.Kind);
+        Assert.Equal(TestUsage.Page, grant.Item.Unit);
+    }
+
+    [RequiresDockerFact]
+    public async Task LastSeatGoesToOneRegistration_ForTwoRegisteringAtOnce()
+    {
+        await Host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .CreateGrantAsync(
+                    new CreateGrantRequest(
+                        AccountId,
+                        TestUsage.Seats,
+                        GrantKind.Capacity,
+                        1,
+                        Host.TimeProvider.GetUtcNow().UtcDateTime.AddDays(-1),
+                        Host.TimeProvider.GetUtcNow().UtcDateTime.AddDays(30)
+                    )
+                )
+        );
+
+        var results = await Task.WhenAll(
+            Enumerable
+                .Range(0, 2)
+                .Select(i =>
+                    Host.WithScopeAsync(services =>
+                        services
+                            .GetRequiredService<IQuotaService>()
+                            .RegisterAsync(
+                                new RegisterRequest(AccountId, TestUsage.Seats, $"user{i}")
+                            )
+                    )
+                )
+        );
+        var capacity = await Host.WithScopeAsync(services =>
+            services
+                .GetRequiredService<IQuotaService>()
+                .GetCapacityAsync(AccountId, TestUsage.Seats)
+        );
+
+        Assert.Equal(
+            [RegisterResultCode.Registered, RegisterResultCode.NoCapacityError],
+            results.Select(r => r.ResultCode).Order()
+        );
+        Assert.Equal(1, capacity.InUse);
+    }
+
+    [RequiresDockerFact]
     public async Task BalanceSplitsAcrossGrants_ForWorkThatCrossesAGrantEdge()
     {
         var expiringSoon = await _ledger.SeedGrantAsync(quantity: 100, expiresInDays: 2);
@@ -84,15 +155,16 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
         var unlimited = await _ledger.SeedGrantAsync(quantity: null, expiresInDays: 365);
 
         await _ledger.ProcessAsync("job:a/step:1", 500);
-        var availability = await Host.WithScopeAsync(services =>
+        var balance = await Host.WithScopeAsync(services =>
             services
                 .GetRequiredService<IQuotaService>()
-                .GetAvailabilityAsync(AccountId, TestUsage.Extraction, TestUsage.Page)
+                .GetBalanceAsync(AccountId, TestUsage.Extraction)
         );
 
         Assert.Equal(0, await _ledger.BalanceAsync(expiringSoon));
         Assert.Equal(500, await _ledger.BalanceAsync(unlimited));
-        Assert.Equal(QuotaAvailability.Available, availability);
+        Assert.Null(balance.Remaining);
+        Assert.True(balance.HasAny);
     }
 
     [RequiresDockerFact]
@@ -231,7 +303,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                 .GetRequiredService<IConsumptionService>()
                 .ListConsumptionEventsAsync(
                     new ListConsumptionEventsRequest(
-                        AccountId,
+                        [AccountId],
                         Units: [TestUsage.Page],
                         Operations: [TestUsage.Extraction],
                         Providers: ["prov"],
@@ -260,7 +332,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                 .GetRequiredService<IGrantService>()
                 .ListGrantsAsync(
                     new ListGrantsRequest(
-                        AccountId,
+                        [AccountId],
                         Filter: Filter
                             .For<Grant>()
                             .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20)),

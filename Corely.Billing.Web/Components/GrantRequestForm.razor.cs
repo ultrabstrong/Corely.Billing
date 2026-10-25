@@ -1,4 +1,5 @@
 using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Microsoft.AspNetCore.Components;
@@ -29,7 +30,6 @@ public partial class GrantRequestForm
     public EventCallback OnCancel { get; set; }
 
     private UsageOperation _operation;
-    private UsageUnit _unit;
     private long? _quantity;
     private string? _note;
     private bool _sending;
@@ -41,21 +41,20 @@ public partial class GrantRequestForm
         set => _operation = UsageOperation.From(value);
     }
 
-    private string UnitValue
-    {
-        get => _unit.Value;
-        set => _unit = UsageUnit.From(value);
-    }
+    private UsageOperationDefinition? Definition => Vocabulary.Definition(_operation);
+
+    private string UnitPlural =>
+        Definition?.Unit is { } unit ? $"{Vocabulary.DisplayName(unit)}s" : "seats";
 
     protected override void OnInitialized()
     {
         _operation = Vocabulary.Operations[0].Operation;
-        _unit = Vocabulary.Units[0].Unit;
     }
 
     private async Task SendAsync()
     {
-        if (_quantity is not { } quantity || quantity < 1)
+        var isFeature = Definition?.Kind == GrantKind.Feature;
+        if (!isFeature && _quantity is not >= 1)
         {
             _error = "Ask for at least one.";
             return;
@@ -66,8 +65,7 @@ public partial class GrantRequestForm
             new RequestGrantRequest(
                 AccountId,
                 _operation,
-                _unit,
-                quantity,
+                isFeature ? null : _quantity,
                 _note,
                 await AccountAccessor.GetUserIdAsync()
             )

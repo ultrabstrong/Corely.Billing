@@ -108,14 +108,14 @@ public partial class UsageDashboard
     private async Task LoadReferenceDataAsync()
     {
         var grants = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest(AccountId, Take: int.MaxValue)
+            new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
         );
         _showGrants = grants.ResultCode != RetrieveResultCode.UnauthorizedError;
         if (!_showGrants)
             _grantIds = new HashSet<Guid>();
 
         var grantList = grants.Data?.Items ?? [];
-        _grantOptions = [.. grantList.Select(g => (g.GrantId, g.AllowanceAndWindow(Vocabulary)))];
+        _grantOptions = [.. grantList.Select(g => (g.GrantId, g.HeadlineAndWindow(Vocabulary)))];
 
         var providers = await ConsumptionService.ListProvidersAsync(AccountId);
         _providerOptions = [.. (providers.Item ?? []).Select(p => (p, p))];

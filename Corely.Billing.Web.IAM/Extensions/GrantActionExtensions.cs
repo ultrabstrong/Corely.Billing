@@ -31,6 +31,10 @@ internal static class GrantActionExtensions
                     (AuthAction.Update, BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE),
                     (AuthAction.Create, BillingResourceTypes.GRANT_RESOURCE_TYPE),
                 ],
+                GrantAction.ManageRegistrations =>
+                [
+                    (AuthAction.Execute, BillingResourceTypes.QUOTA_RESOURCE_TYPE),
+                ],
             };
     }
 }

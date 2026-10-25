@@ -116,6 +116,11 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                     b.Property<Guid?>("GrantId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -125,7 +130,7 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long>("Quantity")
+                    b.Property<long?>("Quantity")
                         .HasColumnType("bigint");
 
                     b.Property<Guid?>("RequestedByUserId")
@@ -143,7 +148,6 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -170,6 +174,11 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                     b.Property<bool>("Disabled")
                         .HasColumnType("bit");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Operation")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -182,7 +191,6 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Unit")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -194,9 +202,53 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
 
                     b.HasKey("GrantId");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("AccountId", "Operation");
 
                     b.ToTable("Grants", (string)null);
+                });
+
+            modelBuilder.Entity("Corely.Billing.Registrations.Entities.RegistrationEntity", b =>
+                {
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("DATETIME2")
+                        .HasDefaultValueSql("(SYSUTCDATETIME())");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("GrantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("RegisteredUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReleasedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RegistrationId");
+
+                    b.HasIndex("GrantId", "ReleasedUtc");
+
+                    b.HasIndex("AccountId", "Operation", "Reference");
+
+                    b.ToTable("Registrations", (string)null);
                 });
 #pragma warning restore 612, 618
         }

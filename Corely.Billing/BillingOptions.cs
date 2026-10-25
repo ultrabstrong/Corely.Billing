@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Telemetry;
 using Corely.Billing.Usage;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -16,7 +17,7 @@ public class BillingOptions
 
     internal Action<IServiceCollection>? ServiceDecorators { get; private set; }
 
-    internal Dictionary<UsageOperation, string> Operations { get; } = [];
+    internal Dictionary<UsageOperation, UsageOperationDefinition> Operations { get; } = [];
 
     internal Dictionary<UsageUnit, string> Units { get; } = [];
 
@@ -42,10 +43,21 @@ public class BillingOptions
         };
     }
 
-    public BillingOptions RegisterOperation(string value, string displayName)
+    public BillingOptions RegisterOperation(
+        string value,
+        string displayName,
+        GrantKind kind,
+        string? unit = null
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        Operations[UsageOperation.From(value)] = displayName;
+        var operation = UsageOperation.From(value);
+        Operations[operation] = new UsageOperationDefinition(
+            operation,
+            displayName,
+            kind,
+            unit is null ? null : UsageUnit.From(unit)
+        );
         return this;
     }
 
@@ -55,6 +67,23 @@ public class BillingOptions
         Units[UsageUnit.From(value)] = displayName;
         return this;
     }
+
+    internal string? DeclarationProblem() =>
+        Operations.Count == 0
+            ? "Register at least one operation on BillingOptions. Nothing can be granted or "
+                + "consumed without one."
+        : Operations.Values.FirstOrDefault(o => o.Unit is { } unit && !Units.ContainsKey(unit))
+            is { } unregistered
+            ? $"Operation '{unregistered.Operation}' names unit '{unregistered.Unit}', which is "
+                + "not registered. Register it with RegisterUnit."
+        : Operations.Values.FirstOrDefault(o => (o.Kind == GrantKind.Feature) != (o.Unit is null))
+            is { } misdeclared
+            ? misdeclared.Kind == GrantKind.Feature
+                    ? $"Operation '{misdeclared.Operation}' is a feature and names a unit. A feature "
+                        + "is on or off and has none."
+                : $"Operation '{misdeclared.Operation}' is {misdeclared.Kind} and names no unit. "
+                    + "Every kind but a feature is counted in a unit."
+        : null;
 
     public BillingOptions UseTelemetry(Func<IServiceProvider, IBillingTelemetry> telemetryFactory)
     {

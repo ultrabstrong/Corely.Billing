@@ -1,7 +1,11 @@
+using Corely.Billing.Consumption.Models;
+using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Grants.Entities;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Models;
+using Corely.Billing.Registrations.Processors;
+using Corely.Billing.Usage;
 using Corely.Billing.Validators;
 using Corely.DataAccess.Interfaces.Repos;
 using Microsoft.Extensions.Logging;
@@ -15,23 +19,49 @@ public class GrantProcessorTests
 
     private readonly ServiceFactory _serviceFactory = new();
     private readonly IRepo<GrantEntity> _grantRepo;
+    private readonly Mock<IConsumptionReportProcessor> _consumptionReport = new();
+    private readonly Mock<IRegistrationProcessor> _registrations = new();
     private readonly GrantProcessor _grantProcessor;
 
     public GrantProcessorTests()
     {
         _grantRepo = _serviceFactory.GetRequiredService<IRepo<GrantEntity>>();
+        _consumptionReport
+            .Setup(p =>
+                p.GetGrantConsumptionTotalsAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<IReadOnlyList<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync([]);
+        _registrations
+            .Setup(p =>
+                p.CountInUseAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync([]);
         _grantProcessor = new GrantProcessor(
             _grantRepo,
+            _consumptionReport.Object,
+            _registrations.Object,
+            TestUsage.Vocabulary,
             _serviceFactory.GetRequiredService<IValidationProvider>(),
             _serviceFactory.GetRequiredService<ILogger<GrantProcessor>>()
         );
     }
 
-    private static CreateGrantRequest CreateRequest(long quantity = 100) =>
+    private static CreateGrantRequest CreateRequest(
+        long? quantity = 100,
+        UsageOperation? operation = null,
+        GrantKind kind = GrantKind.Consumable
+    ) =>
         new(
             AccountId,
-            TestUsage.Extraction,
-            TestUsage.Page,
+            operation ?? TestUsage.Extraction,
+            kind,
             quantity,
             Now.AddDays(-1),
             Now.AddDays(30)
@@ -40,7 +70,8 @@ public class GrantProcessorTests
     private async Task<Guid> CreateGrantAsync(
         Guid? accountId = null,
         DateTime? validFromUtc = null,
-        DateTime? validToUtc = null
+        DateTime? validToUtc = null,
+        GrantKind kind = GrantKind.Consumable
     )
     {
         var entity = new GrantEntity
@@ -48,6 +79,7 @@ public class GrantProcessorTests
             GrantId = Guid.CreateVersion7(),
             AccountId = accountId ?? AccountId,
             Operation = TestUsage.Extraction,
+            Kind = kind,
             Unit = TestUsage.Page,
             Quantity = 100,
             ValidFromUtc = validFromUtc ?? Now.AddDays(-1),
@@ -58,7 +90,7 @@ public class GrantProcessorTests
     }
 
     [Fact]
-    public async Task CreateGrantAsync_PersistsTheGrant_ForAValidRequest()
+    public async Task CreateGrantAsync_PersistsTheGrantWithTheDeclaredUnit_ForAValidRequest()
     {
         var result = await _grantProcessor.CreateGrantAsync(CreateRequest());
 
@@ -66,6 +98,8 @@ public class GrantProcessorTests
         var entity = await _grantRepo.GetAsync(e => e.GrantId == result.CreatedId);
         Assert.NotNull(entity);
         Assert.Equal(100, entity.Quantity);
+        Assert.Equal(GrantKind.Consumable, entity.Kind);
+        Assert.Equal(TestUsage.Page, entity.Unit);
     }
 
     [Fact]
@@ -78,19 +112,85 @@ public class GrantProcessorTests
         Assert.Equal(0, await _grantRepo.CountAsync());
     }
 
-    [Fact]
-    public async Task CreateGrantAsync_WritesNothing_ForAnUnregisteredUnit()
+    [Theory]
+    [InlineData(GrantKind.Allowance)]
+    [InlineData(GrantKind.Capacity)]
+    [InlineData(GrantKind.Feature)]
+    public async Task CreateGrantAsync_RefusesAndWritesNothing_ForAKindTheOperationDoesNotDeclare(
+        GrantKind kind
+    )
     {
-        var request = CreateRequest() with { Unit = TestUsage.UnregisteredUnit };
+        var result = await _grantProcessor.CreateGrantAsync(CreateRequest(kind: kind));
 
-        var result = await _grantProcessor.CreateGrantAsync(request);
+        Assert.Equal(CreateGrantResultCode.DeclarationMismatchError, result.ResultCode);
+        Assert.Equal(0, await _grantRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_RefusesAndWritesNothing_ForAUnitTheOperationDoesNotDeclare()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest() with
+            {
+                Unit = TestUsage.Day,
+            }
+        );
+
+        Assert.Equal(CreateGrantResultCode.DeclarationMismatchError, result.ResultCode);
+        Assert.Equal(0, await _grantRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_RefusesAndWritesNothing_ForAFeatureGrantWithAQuantity()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest(quantity: 1, operation: TestUsage.Sftp, kind: GrantKind.Feature)
+        );
 
         Assert.Equal(CreateGrantResultCode.ValidationError, result.ResultCode);
         Assert.Equal(0, await _grantRepo.CountAsync());
     }
 
     [Fact]
-    public async Task UpdateGrantAsync_ChangesTheGrant_ForAValidRequest()
+    public async Task CreateGrantAsync_RefusesAndWritesNothing_ForAFeatureGrantWithAUnit()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest(quantity: null, operation: TestUsage.Sftp, kind: GrantKind.Feature) with
+            {
+                Unit = TestUsage.Day,
+            }
+        );
+
+        Assert.Equal(CreateGrantResultCode.DeclarationMismatchError, result.ResultCode);
+        Assert.Equal(0, await _grantRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_PersistsAFeatureWithNoUnit_ForAFeatureOperation()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest(quantity: null, operation: TestUsage.Sftp, kind: GrantKind.Feature)
+        );
+
+        Assert.Equal(CreateGrantResultCode.Success, result.ResultCode);
+        var entity = await _grantRepo.GetAsync(e => e.GrantId == result.CreatedId);
+        Assert.Null(entity!.Unit);
+        Assert.Null(entity.Quantity);
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_WritesNothing_ForAnUnregisteredOperation()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest(operation: TestUsage.Unregistered)
+        );
+
+        Assert.Equal(CreateGrantResultCode.ValidationError, result.ResultCode);
+        Assert.Equal(0, await _grantRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task UpdateGrantAsync_ChangesTheGrantButNotWhatItGrants_ForAValidRequest()
     {
         var grantId = await CreateGrantAsync();
 
@@ -98,7 +198,6 @@ public class GrantProcessorTests
             new UpdateGrantRequest(
                 AccountId,
                 grantId,
-                TestUsage.Document,
                 250,
                 Now,
                 Now.AddDays(60),
@@ -109,8 +208,9 @@ public class GrantProcessorTests
         Assert.Equal(ModifyResultCode.Success, result.ResultCode);
         var entity = await _grantRepo.GetAsync(e => e.GrantId == grantId);
         Assert.Equal(250, entity!.Quantity);
-        Assert.Equal(TestUsage.Document, entity.Unit);
+        Assert.Equal(TestUsage.Page, entity.Unit);
         Assert.Equal(TestUsage.Extraction, entity.Operation);
+        Assert.Equal(GrantKind.Consumable, entity.Kind);
         Assert.Contains("growth", entity.TagsJson);
     }
 
@@ -120,7 +220,7 @@ public class GrantProcessorTests
         var grantId = await CreateGrantAsync(accountId: Guid.CreateVersion7());
 
         var result = await _grantProcessor.UpdateGrantAsync(
-            new UpdateGrantRequest(AccountId, grantId, TestUsage.Page, 1, Now, Now.AddDays(1))
+            new UpdateGrantRequest(AccountId, grantId, 1, Now, Now.AddDays(1))
         );
 
         Assert.Equal(ModifyResultCode.NotFoundError, result.ResultCode);
@@ -132,7 +232,7 @@ public class GrantProcessorTests
         var grantId = await CreateGrantAsync();
 
         var result = await _grantProcessor.UpdateGrantAsync(
-            new UpdateGrantRequest(AccountId, grantId, TestUsage.Page, -5, Now, Now.AddDays(1))
+            new UpdateGrantRequest(AccountId, grantId, -5, Now, Now.AddDays(1))
         );
 
         Assert.Equal(ModifyResultCode.ValidationError, result.ResultCode);
@@ -160,14 +260,44 @@ public class GrantProcessorTests
     }
 
     [Fact]
-    public async Task GetGrantAsync_ReturnsTheGrant_ForAnExistingGrant()
+    public async Task GetGrantAsync_ReturnsTheGrantWithWhatIsLeft_ForAConsumableGrant()
     {
         var grantId = await CreateGrantAsync();
+        _consumptionReport
+            .Setup(p =>
+                p.GetGrantConsumptionTotalsAsync(
+                    AccountId,
+                    It.IsAny<IReadOnlyList<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync([new GrantTotalConsumptions(grantId, 30)]);
 
         var result = await _grantProcessor.GetGrantAsync(AccountId, grantId);
 
         Assert.Equal(RetrieveResultCode.Success, result.ResultCode);
-        Assert.Equal(grantId, result.Item!.GrantId);
+        Assert.Equal(30, result.Item!.Used);
+        Assert.Equal(70, result.Item.Remaining);
+        Assert.Null(result.Item.InUse);
+    }
+
+    [Fact]
+    public async Task GetGrantAsync_ReturnsTheSeatsHeld_ForACapacityGrant()
+    {
+        var grantId = await CreateGrantAsync(kind: GrantKind.Capacity);
+        _registrations
+            .Setup(p =>
+                p.CountInUseAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(new Dictionary<Guid, long> { [grantId] = 4 });
+
+        var grant = (await _grantProcessor.GetGrantAsync(AccountId, grantId)).Item!;
+
+        Assert.Equal(4, grant.InUse);
+        Assert.Null(grant.Used);
     }
 
     [Fact]
@@ -192,7 +322,7 @@ public class GrantProcessorTests
         var grants = await _grantProcessor.ListActiveGrantsAsync(
             AccountId,
             TestUsage.Extraction,
-            TestUsage.Page,
+            GrantKind.Consumable,
             Now
         );
 
@@ -233,7 +363,7 @@ public class GrantProcessorTests
         await _grantProcessor.SetGrantDisabledAsync(new(AccountId, grantId, true));
 
         await _grantProcessor.UpdateGrantAsync(
-            new UpdateGrantRequest(AccountId, grantId, TestUsage.Page, 250, Now, Now.AddDays(60))
+            new UpdateGrantRequest(AccountId, grantId, 250, Now, Now.AddDays(60))
         );
 
         Assert.True((await _grantProcessor.GetGrantAsync(AccountId, grantId)).Item!.Disabled);
@@ -249,7 +379,7 @@ public class GrantProcessorTests
         var grants = await _grantProcessor.ListActiveGrantsAsync(
             AccountId,
             TestUsage.Extraction,
-            TestUsage.Page,
+            GrantKind.Consumable,
             Now
         );
 
@@ -265,7 +395,7 @@ public class GrantProcessorTests
         var grants = await _grantProcessor.ListActiveGrantsAsync(
             AccountId,
             TestUsage.Extraction,
-            TestUsage.Page,
+            GrantKind.Consumable,
             Now,
             [paused]
         );
@@ -274,14 +404,14 @@ public class GrantProcessorTests
     }
 
     [Fact]
-    public async Task ListActiveGrantsAsync_ReturnsNothing_ForADifferentUnit()
+    public async Task ListActiveGrantsAsync_ReturnsNothing_ForADifferentKind()
     {
         await CreateGrantAsync();
 
         var grants = await _grantProcessor.ListActiveGrantsAsync(
             AccountId,
             TestUsage.Extraction,
-            TestUsage.Document,
+            GrantKind.Allowance,
             Now
         );
 

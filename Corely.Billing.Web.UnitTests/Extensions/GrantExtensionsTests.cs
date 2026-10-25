@@ -43,7 +43,7 @@ public class GrantExtensionsTests : BillingWebTestContext
         var grant = Grant(100, -5, 30);
         grant.Disabled = true;
 
-        Assert.Equal("disabled", grant.ToCsvRow(Vocabulary, used: 0, Now).Split(',')[9]);
+        Assert.Equal("disabled", grant.ToCsvRow(Vocabulary, Now).Split(',')[11]);
     }
 
     [Theory]
@@ -59,62 +59,119 @@ public class GrantExtensionsTests : BillingWebTestContext
     ) => Assert.Equal(expected, Grant(100, fromDays, toDays).WhenText(Now));
 
     [Fact]
-    public void Allowance_UsesTheUnitsDisplayName_ForALimitedGrant() =>
-        Assert.Equal("1,500 pages", Grant(1_500).Allowance(Vocabulary));
+    public void Headline_UsesTheUnitsDisplayName_ForALimitedGrant() =>
+        Assert.Equal("1,500 pages", Grant(1_500).Headline(Vocabulary));
 
     [Fact]
-    public void Allowance_ReadsUnlimited_ForANullQuantity() =>
-        Assert.Equal("Unlimited pages", Grant(null).Allowance(Vocabulary));
+    public void Headline_ReadsUnlimited_ForANullQuantity() =>
+        Assert.Equal("Unlimited pages", Grant(null).Headline(Vocabulary));
 
     [Fact]
-    public void AllowanceAndExpiry_EndsWithTheLastDay_ForAGrant() =>
+    public void Headline_IsTheOperationsName_ForAFeature() =>
+        Assert.Equal("SFTP access", Feature().Headline(Vocabulary));
+
+    [Fact]
+    public void HeadlineAndExpiry_EndsWithTheLastDay_ForAGrant() =>
         Assert.Equal(
             "100 pages to Mar 31, 2026",
-            Grant(100, toDays: 30).AllowanceAndExpiry(Vocabulary)
+            Grant(100, toDays: 30).HeadlineAndExpiry(Vocabulary)
         );
 
     [Fact]
-    public void AllowanceAndWindow_ShowsBothEnds_ForAGrant() =>
+    public void HeadlineAndWindow_ShowsBothEnds_ForAGrant() =>
         Assert.Equal(
-            "100 pages, Feb 19, 2026 – Mar 31, 2026",
-            Grant(100, fromDays: -10, toDays: 30).AllowanceAndWindow(Vocabulary)
+            "100 pages, Feb 19, 2026 to Mar 31, 2026",
+            Grant(100, fromDays: -10, toDays: 30).HeadlineAndWindow(Vocabulary)
         );
+
+    [Fact]
+    public void StateText_SaysWhatWasUsed_ForAnUnlimitedBalance() =>
+        Assert.Equal(
+            "Unlimited, 1,240 pages used",
+            Grant(null, used: 1_240).StateText(Vocabulary, Now)
+        );
+
+    [Fact]
+    public void StateText_CountsTheSeatsHeld_ForSeats() =>
+        Assert.Equal("2 of 7 users in use", Capacity(7, inUse: 2).StateText(Vocabulary, Now));
+
+    [Fact]
+    public void StateText_CountsTheSeatsHeld_ForUnlimitedSeats() =>
+        Assert.Equal("Unlimited, 12 in use", Capacity(null, inUse: 12).StateText(Vocabulary, Now));
+
+    [Fact]
+    public void StateText_ReadsAsAnAmountAdded_ForAnAllowance() =>
+        Assert.Equal(
+            "+60 days, until 31 March 2026",
+            Retained(60, toDays: 30).StateText(Vocabulary, Now)
+        );
+
+    [Fact]
+    public void StateText_ReadsAsUnlimitedDays_ForAnUnlimitedAllowance() =>
+        Assert.Equal(
+            "Unlimited days, until 31 March 2026",
+            Retained(null, toDays: 30).StateText(Vocabulary, Now)
+        );
+
+    [Fact]
+    public void StateText_SaysEnabledUntilItsEnd_ForAnActiveFeature() =>
+        Assert.Equal("Enabled, until 31 March 2026", Feature().StateText(Vocabulary, Now));
+
+    [Fact]
+    public void StateText_SaysDisabled_ForADisabledFeature() =>
+        Assert.Equal("Disabled", Feature(disabled: true).StateText(Vocabulary, Now));
+
+    [Fact]
+    public void StateText_SaysNoEndDate_ForAnAllowanceThatNeverExpires()
+    {
+        var grant = Retained(60);
+        grant.ValidToUtc = Corely.Billing.Grants.Constants.GrantConstants.NEVER_EXPIRES_UTC;
+
+        Assert.Equal("+60 days, with no end date", grant.StateText(Vocabulary, Now));
+        Assert.Equal("Never expires", grant.WhenText(Now));
+    }
 
     private IUsageVocabulary Vocabulary => Services.GetRequiredService<IUsageVocabulary>();
 
     [Fact]
-    public void ToCsvRow_ReportsBalanceAndOverdraft_ForAnOverdrawnGrant()
+    public void ToCsvRow_ReportsKindTypeAndBalance_ForAnOverdrawnGrant()
     {
-        var grant = Grant(100, -5, 30);
-        var vocabulary = Services.GetRequiredService<IUsageVocabulary>();
-
-        var cells = grant.ToCsvRow(vocabulary, used: 130, Now).Split(',');
+        var cells = Grant(100, -5, 30, used: 130).ToCsvRow(Vocabulary, Now).Split(',');
 
         Assert.Equal(GrantExtensions.CSV_HEADER.Split(',').Length, cells.Length);
         Assert.Equal(
-            ["100", "false", "active", "130", "0", "30", ""],
-            [cells[5], cells[6], cells[9], cells[10], cells[11], cells[12], cells[13]]
+            ["consumable", "balance", "100", "false", "active", "130", "0", ""],
+            [cells[3], cells[4], cells[7], cells[8], cells[11], cells[12], cells[13], cells[14]]
         );
     }
 
     [Fact]
     public void ToCsvRow_LeavesQuantityAndRemainingEmpty_ForAnUnlimitedGrant()
     {
-        var vocabulary = Services.GetRequiredService<IUsageVocabulary>();
+        var cells = Grant(null, used: 7).ToCsvRow(Vocabulary, Now).Split(',');
 
-        var cells = Grant(null).ToCsvRow(vocabulary, used: 7, Now).Split(',');
-
-        Assert.Equal(["", "true", "7", ""], [cells[5], cells[6], cells[10], cells[11]]);
+        Assert.Equal(["", "true", "7", ""], [cells[7], cells[8], cells[12], cells[13]]);
     }
 
     [Fact]
-    public void ToCsvRow_LeavesTheBalanceEmpty_ForUnknownUse()
+    public void ToCsvRow_ReportsTheSeatsHeld_ForACapacityGrant()
     {
-        var cells = Grant(100).ToCsvRow(Vocabulary, used: null, Now).Split(',');
+        var cells = Capacity(7, inUse: 3).ToCsvRow(Vocabulary, Now).Split(',');
 
         Assert.Equal(
-            ["100", "false", "", "", ""],
-            [cells[5], cells[6], cells[10], cells[11], cells[12]]
+            ["capacity", "seats", "7", "", "3"],
+            [cells[3], cells[4], cells[7], cells[12], cells[14]]
+        );
+    }
+
+    [Fact]
+    public void ToCsvRow_LeavesUnitAndUnlimitedBlankAndFalse_ForAFeature()
+    {
+        var cells = Feature().ToCsvRow(Vocabulary, Now).Split(',');
+
+        Assert.Equal(
+            ["feature", "feature", "", "", "", "false"],
+            [cells[3], cells[4], cells[5], cells[6], cells[7], cells[8]]
         );
     }
 }

@@ -39,7 +39,7 @@ internal interface IGrantProcessor
     Task<List<Grant>> ListActiveGrantsAsync(
         Guid accountId,
         UsageOperation operation,
-        UsageUnit unit,
+        GrantKind kind,
         DateTime atUtc,
         IReadOnlyCollection<Guid>? heldGrantIds = null,
         CancellationToken ct = default

@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Constants;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
@@ -39,24 +40,37 @@ public partial class GrantEditor
     private Grant? _grant;
 
     private UsageOperation _operation;
-    private UsageUnit _unit;
     private long _quantity;
     private bool _unlimited;
+    private bool _neverExpires;
     private DateTime _validFromUtc;
     private DateTime _validToUtc;
 
     private bool IsNew => GrantId is null;
 
+    private UsageOperationDefinition? Definition => Vocabulary.Definition(_operation);
+
+    private GrantKind Kind => _grant?.Kind ?? Definition?.Kind ?? GrantKind.Consumable;
+
+    private bool CanNeverExpire => Kind is GrantKind.Consumable or GrantKind.Capacity;
+
+    private string QuantityLabel =>
+        Kind switch
+        {
+            GrantKind.Capacity => "Seats",
+            GrantKind.Allowance => "Amount added",
+            _ => "Quantity",
+        };
+
+    private string UnitPlural =>
+        (_grant?.Unit ?? Definition?.Unit) is { } unit
+            ? $"{Vocabulary.DisplayName(unit)}s"
+            : "seats";
+
     private string OperationValue
     {
         get => _operation.Value;
         set => _operation = UsageOperation.From(value);
-    }
-
-    private string UnitValue
-    {
-        get => _unit.Value;
-        set => _unit = UsageUnit.From(value);
     }
 
     protected override Task OnParametersSetSignedInAsync() => LoadAsync();
@@ -71,9 +85,9 @@ public partial class GrantEditor
         {
             var today = TimeProvider.GetUtcNow().UtcDateTime.Date;
             _operation = Vocabulary.Operations[0].Operation;
-            _unit = Vocabulary.Units[0].Unit;
             _quantity = 0;
             _unlimited = false;
+            _neverExpires = false;
             _validFromUtc = today;
             _validToUtc = today.AddYears(1);
             _loading = false;
@@ -95,11 +109,11 @@ public partial class GrantEditor
 
         _grant = result.Item;
         _operation = _grant.Operation;
-        _unit = _grant.Unit;
         _unlimited = _grant.Quantity is null;
         _quantity = _grant.Quantity ?? 0;
         _validFromUtc = _grant.ValidFromUtc;
-        _validToUtc = _grant.ValidToUtc;
+        _neverExpires = _grant.NeverExpires();
+        _validToUtc = _neverExpires ? _validFromUtc.AddYears(1) : _grant.ValidToUtc;
         _loading = false;
     }
 
@@ -110,9 +124,12 @@ public partial class GrantEditor
             return;
 
         _saving = true;
-        var quantity = _unlimited ? (long?)null : _quantity;
+        long? quantity = Kind == GrantKind.Feature || _unlimited ? null : _quantity;
         var fromUtc = DateTime.SpecifyKind(_validFromUtc, DateTimeKind.Utc);
-        var toUtc = DateTime.SpecifyKind(_validToUtc, DateTimeKind.Utc);
+        var toUtc =
+            CanNeverExpire && _neverExpires
+                ? GrantConstants.NEVER_EXPIRES_UTC
+                : DateTime.SpecifyKind(_validToUtc, DateTimeKind.Utc);
 
         var (grantId, error) = IsNew
             ? await CreateAsync(quantity, fromUtc, toUtc)
@@ -145,8 +162,9 @@ public partial class GrantEditor
     }
 
     private string? Validate() =>
-        !_unlimited && _quantity < 0 ? "Quantity must be zero or more."
-        : _validToUtc <= _validFromUtc ? "Valid to must be after valid from."
+        Kind != GrantKind.Feature && !_unlimited && _quantity < 0 ? "Quantity must be zero or more."
+        : !(CanNeverExpire && _neverExpires) && _validToUtc <= _validFromUtc
+            ? "Valid to must be after valid from."
         : null;
 
     private async Task<(Guid, string?)> CreateAsync(
@@ -156,7 +174,7 @@ public partial class GrantEditor
     )
     {
         var result = await GrantService.CreateGrantAsync(
-            new CreateGrantRequest(AccountId, _operation, _unit, quantity, fromUtc, toUtc)
+            new CreateGrantRequest(AccountId, _operation, Kind, quantity, fromUtc, toUtc)
         );
         return result.ResultCode switch
         {
@@ -179,7 +197,6 @@ public partial class GrantEditor
             new UpdateGrantRequest(
                 AccountId,
                 _grant!.GrantId,
-                _unit,
                 quantity,
                 fromUtc,
                 toUtc,

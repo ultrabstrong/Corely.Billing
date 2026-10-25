@@ -18,7 +18,9 @@ public class GrantEntityConfigurationTests
 
         var accountIndex = Assert.Single(
             entity!.GetIndexes(),
-            i => i.Properties.Select(p => p.Name).SequenceEqual([nameof(GrantEntity.AccountId)])
+            i =>
+                i.Properties.Select(p => p.Name)
+                    .SequenceEqual([nameof(GrantEntity.AccountId), nameof(GrantEntity.Operation)])
         );
         Assert.False(accountIndex.IsUnique);
     }
