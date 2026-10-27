@@ -8,13 +8,20 @@ public static class BillingResourceTypes
     public const string QUOTA_RESOURCE_TYPE = "quota";
     public const string ALL_ACCOUNTS_RESOURCE_TYPE = "billing_all_accounts";
 
-    public const string GRANT_DESCRIPTION = "Billing grants: what an account may use";
+    public const string GROUP = "Billing";
+
+    public const string GRANT_TITLE = "Grants";
+    public const string GRANT_DESCRIPTION = "What an account may use";
+    public const string GRANT_REQUEST_TITLE = "Grant requests";
     public const string GRANT_REQUEST_DESCRIPTION =
-        "Billing grant requests: asking for a grant, and approving or declining one";
-    public const string CONSUMPTION_DESCRIPTION = "Billing consumption: what an account used";
+        "Asking for a grant, and approving or declining one";
+    public const string CONSUMPTION_TITLE = "Consumption";
+    public const string CONSUMPTION_DESCRIPTION = "What an account used";
+    public const string QUOTA_TITLE = "Quota";
     public const string QUOTA_DESCRIPTION =
-        "Billing quota: reading balances, allowances, features and capacity, reserving and "
-        + "settling usage, and registering against capacity";
+        "Reading balances, allowances, features and capacity, reserving and settling usage, "
+        + "and registering against capacity";
+    public const string ALL_ACCOUNTS_TITLE = "All accounts";
     public const string ALL_ACCOUNTS_DESCRIPTION =
         "Billing reads across every account, for a role in the platform account";
 }

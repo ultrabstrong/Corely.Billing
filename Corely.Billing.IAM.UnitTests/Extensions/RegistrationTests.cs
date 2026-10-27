@@ -60,6 +60,43 @@ public class RegistrationTests
     }
 
     [Theory]
+    [InlineData(BillingResourceTypes.GRANT_RESOURCE_TYPE, BillingResourceTypes.GRANT_TITLE)]
+    [InlineData(
+        BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+        BillingResourceTypes.GRANT_REQUEST_TITLE
+    )]
+    [InlineData(
+        BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE,
+        BillingResourceTypes.CONSUMPTION_TITLE
+    )]
+    [InlineData(BillingResourceTypes.QUOTA_RESOURCE_TYPE, BillingResourceTypes.QUOTA_TITLE)]
+    [InlineData(
+        BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE,
+        BillingResourceTypes.ALL_ACCOUNTS_TITLE
+    )]
+    public void RegisterBillingResourceTypes_TitlesAndGroupsEachType_ForTheBillingGroup(
+        string resourceType,
+        string expectedTitle
+    )
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddIAMServices(
+            IAMOptions
+                .Create(Configuration, Mock.Of<ISecurityConfigurationProvider>())
+                .RegisterBillingResourceTypes()
+        );
+
+        var info = services
+            .BuildServiceProvider()
+            .GetRequiredService<IResourceTypeRegistry>()
+            .Get(resourceType);
+
+        Assert.Equal(expectedTitle, info?.Title);
+        Assert.Equal(BillingResourceTypes.GROUP, info?.Group);
+    }
+
+    [Theory]
     [InlineData(BillingResourceTypes.GRANT_RESOURCE_TYPE, new[] { AuthAction.Read })]
     [InlineData(
         BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
