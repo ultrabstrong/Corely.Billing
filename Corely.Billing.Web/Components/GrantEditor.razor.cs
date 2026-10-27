@@ -1,4 +1,4 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Services;
@@ -128,7 +128,7 @@ public partial class GrantEditor
         var fromUtc = DateTime.SpecifyKind(_validFromUtc, DateTimeKind.Utc);
         var toUtc =
             CanNeverExpire && _neverExpires
-                ? GrantConstants.NEVER_EXPIRES_UTC
+                ? Grant.NEVER_EXPIRES_UTC
                 : DateTime.SpecifyKind(_validToUtc, DateTimeKind.Utc);
 
         var (grantId, error) = IsNew

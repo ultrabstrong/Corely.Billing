@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
 using Corely.Billing.Web.Extensions;
@@ -125,7 +126,7 @@ public class GrantExtensionsTests : BillingWebTestContext
     public void StateText_SaysNoEndDate_ForAnAllowanceThatNeverExpires()
     {
         var grant = Retained(60);
-        grant.ValidToUtc = Corely.Billing.Grants.Constants.GrantConstants.NEVER_EXPIRES_UTC;
+        grant.ValidToUtc = Corely.Billing.Grants.Models.Grant.NEVER_EXPIRES_UTC;
 
         Assert.Equal("+60 days, with no end date", grant.StateText(Vocabulary, Now));
         Assert.Equal("Never expires", grant.WhenText(Now));

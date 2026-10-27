@@ -13,6 +13,12 @@ public readonly record struct UsageOperation : IComparable<UsageOperation>
     public static UsageOperation From(string value) =>
         new(UsageToken.Validated(value, nameof(UsageOperation)));
 
+    public static bool TryFrom(string? value, out UsageOperation result)
+    {
+        result = UsageToken.IsValid(value) ? new(value) : default;
+        return UsageToken.IsValid(value);
+    }
+
     public int CompareTo(UsageOperation other) => string.CompareOrdinal(Value, other.Value);
 
     public override string ToString() => Value;

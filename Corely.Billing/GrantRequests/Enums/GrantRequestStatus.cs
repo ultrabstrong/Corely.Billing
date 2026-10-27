@@ -1,4 +1,4 @@
-namespace Corely.Billing.GrantRequests.Models;
+namespace Corely.Billing.GrantRequests.Enums;
 
 public enum GrantRequestStatus
 {

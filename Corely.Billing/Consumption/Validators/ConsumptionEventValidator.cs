@@ -1,4 +1,3 @@
-using Corely.Billing.Consumption.Constants;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Usage;
 using FluentValidation;
@@ -11,8 +10,8 @@ internal class ConsumptionEventValidator : AbstractValidator<ConsumptionEvent>
     {
         RuleFor(x => x.AccountId).NotEmpty();
         RuleFor(x => x.GrantId).NotEmpty();
-        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(ConsumptionConstants.QUANTITY_MIN_VALUE);
-        RuleFor(x => x.Provider).NotEmpty().MaximumLength(ConsumptionConstants.PROVIDER_MAX_LENGTH);
+        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(ConsumptionEvent.QUANTITY_MIN_VALUE);
+        RuleFor(x => x.Provider).NotEmpty().MaximumLength(ConsumptionEvent.PROVIDER_MAX_LENGTH);
         RuleFor(x => x.Operation)
             .Must(vocabulary.Knows)
             .WithMessage(x => $"Operation '{x.Operation}' is not a registered usage operation.");

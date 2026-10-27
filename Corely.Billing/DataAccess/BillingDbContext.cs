@@ -11,6 +11,8 @@ namespace Corely.Billing.DataAccess;
 
 internal class BillingDbContext : DbContextBase
 {
+    public const string DEFAULT_MIGRATIONS_HISTORY_TABLE = "__CorelyBillingMigrationsHistory";
+
     public BillingDbContext(
         [FromKeyedServices(EFConfigurationKeys.BILLING)] IEFConfiguration efConfiguration
     )

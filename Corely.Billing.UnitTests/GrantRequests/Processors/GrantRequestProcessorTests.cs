@@ -1,7 +1,9 @@
 using Corely.Billing.GrantRequests.Entities;
+using Corely.Billing.GrantRequests.Enums;
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.GrantRequests.Processors;
 using Corely.Billing.Grants.Entities;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Models;

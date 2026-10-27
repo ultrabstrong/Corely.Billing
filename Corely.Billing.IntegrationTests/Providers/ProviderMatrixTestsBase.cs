@@ -1,7 +1,9 @@
 using System.Text.RegularExpressions;
 using Corely.Billing.Consumption.Entities;
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.DataAccess;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IntegrationTests.Infrastructure;
 using Corely.Billing.Quota.Models;
@@ -62,7 +64,7 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
     {
         var count = await Host.QueryAsync(db =>
             db.Database.SqlQueryRaw<int>(
-                    $"SELECT COUNT(*) AS Value FROM {MigrationConstants.DEFAULT_HISTORY_TABLE}"
+                    $"SELECT COUNT(*) AS Value FROM {BillingDbContext.DEFAULT_MIGRATIONS_HISTORY_TABLE}"
                 )
                 .SingleAsync()
         );
@@ -389,7 +391,7 @@ public class MsSqlProviderMatrixTests()
         var applied = (int)
             (
                 await new SqlCommand(
-                    $"SELECT COUNT(*) FROM {MigrationConstants.DEFAULT_HISTORY_TABLE}",
+                    $"SELECT COUNT(*) FROM {BillingDbContext.DEFAULT_MIGRATIONS_HISTORY_TABLE}",
                     connection
                 ).ExecuteScalarAsync()
             )!;

@@ -31,7 +31,7 @@ Services (public) → Processors (internal) → Repositories/UoW → BillingDbCo
 
 ```
 Domain/
-├── Constants/        # Domain constants (SCREAMING_SNAKE_CASE)
+├── Enums/            # Enums that are not result codes
 ├── Entities/         # EF Core entities and their configurations
 ├── Models/           # Request, result and domain models
 ├── Processors/       # Business logic + telemetry decorators
@@ -39,7 +39,7 @@ Domain/
 └── Validators/       # FluentValidation rules
 ```
 
-Domains: `Grants`, `GrantRequests`, `Consumption`, `Quota`.
+Domains: `Grants`, `GrantRequests`, `Registrations`, `Consumption`, `Quota`.
 
 ## Schema
 

@@ -1,5 +1,6 @@
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.DataAccess;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Telemetry;

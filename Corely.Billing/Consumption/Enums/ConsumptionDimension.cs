@@ -1,4 +1,4 @@
-namespace Corely.Billing.Consumption.Models;
+namespace Corely.Billing.Consumption.Enums;
 
 public enum ConsumptionDimension
 {

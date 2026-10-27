@@ -1,10 +1,22 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Grants.Models;
 
 public class Grant
 {
+    internal const int QUANTITY_MIN_VALUE = 0;
+    internal const int KIND_MAX_LENGTH = 20;
+    public static readonly DateTime NEVER_EXPIRES_UTC = new(
+        9999,
+        12,
+        31,
+        0,
+        0,
+        0,
+        DateTimeKind.Utc
+    );
+
     public Guid GrantId { get; set; }
     public Guid AccountId { get; set; }
     public UsageOperation Operation { get; set; }
@@ -33,7 +45,7 @@ public class Grant
             _ => throw new InvalidOperationException($"Grant kind {Kind} has no grant type."),
         };
 
-    public bool NeverExpires() => ValidToUtc >= GrantConstants.NEVER_EXPIRES_UTC;
+    public bool NeverExpires() => ValidToUtc >= Grant.NEVER_EXPIRES_UTC;
 
     public void WithUse(long used)
     {

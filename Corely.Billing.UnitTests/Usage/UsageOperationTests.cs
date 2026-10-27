@@ -42,4 +42,26 @@ public class UsageOperationTests
     [Fact]
     public void ToString_IsTheValue_ForAnOperation() =>
         Assert.Equal("document_extraction", UsageOperation.From("document_extraction").ToString());
+
+    [Fact]
+    public void TryFrom_GivesTheValue_ForALowercaseToken()
+    {
+        Assert.True(UsageOperation.TryFrom("text_generation", out var operation));
+        Assert.Equal("text_generation", operation.Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("Not_Lowercase")]
+    [InlineData("has space")]
+    public void TryFrom_IsFalse_ForAValueThatIsNotALowercaseToken(string? value)
+    {
+        Assert.False(UsageOperation.TryFrom(value, out var operation));
+        Assert.Equal(default, operation);
+    }
+
+    [Fact]
+    public void TryFrom_IsFalse_ForAValuePastTheMaximumLength() =>
+        Assert.False(UsageOperation.TryFrom(new string('a', UsageOperation.MAX_LENGTH + 1), out _));
 }

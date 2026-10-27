@@ -1,5 +1,6 @@
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Quota.Models;

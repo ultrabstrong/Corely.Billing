@@ -1,4 +1,4 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -25,7 +25,7 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder
             .Property(e => e.Kind)
             .HasConversion<string>()
-            .HasMaxLength(GrantConstants.KIND_MAX_LENGTH)
+            .HasMaxLength(Grant.KIND_MAX_LENGTH)
             .IsRequired();
         builder
             .Property(e => e.Operation)

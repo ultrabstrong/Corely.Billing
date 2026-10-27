@@ -1,4 +1,4 @@
-using Corely.Billing.Consumption.Constants;
+using Corely.Billing.Consumption.Models;
 using Corely.Billing.Operations;
 using Corely.Billing.Usage;
 
@@ -15,11 +15,11 @@ internal static class IdempotencyKeyFactory
     {
         var key = Prefix(context, operation, unit) + grantId.ToString("N");
 
-        return key.Length <= ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH
+        return key.Length <= ConsumptionEvent.IDEMPOTENCY_KEY_MAX_LENGTH
             ? key
             : throw new ArgumentException(
                 $"Idempotency scope '{context.IdempotencyScope}' produces a key of {key.Length} "
-                    + $"characters, over the {ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH} allowed.",
+                    + $"characters, over the {ConsumptionEvent.IDEMPOTENCY_KEY_MAX_LENGTH} allowed.",
                 nameof(context)
             );
     }

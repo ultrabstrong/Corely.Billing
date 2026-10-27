@@ -1,4 +1,4 @@
-using Corely.Billing.Registrations.Constants;
+using Corely.Billing.Registrations.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -21,10 +21,8 @@ internal sealed class RegistrationEntityConfiguration(IDbTypes dbTypes)
             .HasConversion(operation => operation.Value, value => UsageOperation.From(value))
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
-        builder.Property(e => e.Reference).HasMaxLength(RegistrationConstants.REFERENCE_MAX_LENGTH);
-        builder
-            .Property(e => e.Description)
-            .HasMaxLength(RegistrationConstants.DESCRIPTION_MAX_LENGTH);
+        builder.Property(e => e.Reference).HasMaxLength(Registration.REFERENCE_MAX_LENGTH);
+        builder.Property(e => e.Description).HasMaxLength(Registration.DESCRIPTION_MAX_LENGTH);
         builder.Property(e => e.RegisteredUtc).IsRequired();
         builder.Property(e => e.ReleasedUtc);
 

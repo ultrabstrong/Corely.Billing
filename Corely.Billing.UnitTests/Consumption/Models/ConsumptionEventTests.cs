@@ -1,3 +1,4 @@
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Operations;

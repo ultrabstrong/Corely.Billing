@@ -84,11 +84,11 @@ if (registered.ResultCode == RegisterResultCode.NoCapacityError)
 `GetCapacityAsync` adds up the active grants: `Granted` (null for unlimited), `InUse` and `Free`.
 ## Subscription
 
-A subscription is a capacity grant that never expires, with each member registered against it. The grant's end date is `GrantConstants.NEVER_EXPIRES_UTC`, because a subscription ends when it lapses, not on a date. The app tracks whether it is paid: a lapse disables the grant, and a renewal enables it again, so its registrations come back with it.
+A subscription is a capacity grant that never expires, with each member registered against it. The grant's end date is `Grant.NEVER_EXPIRES_UTC`, because a subscription ends when it lapses, not on a date. The app tracks whether it is paid: a lapse disables the grant, and a renewal enables it again, so its registrations come back with it.
 
 ```csharp
 await grantService.CreateGrantAsync(new CreateGrantRequest(
-    accountId, members, GrantKind.Capacity, Quantity: 3, now, GrantConstants.NEVER_EXPIRES_UTC));
+    accountId, members, GrantKind.Capacity, Quantity: 3, now, Grant.NEVER_EXPIRES_UTC));
 
 await grantService.SetGrantDisabledAsync(new SetGrantDisabledRequest(accountId, grantId, Disabled: true));
 ```

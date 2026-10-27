@@ -1,4 +1,4 @@
-using Corely.Billing.Consumption.Constants;
+using Corely.Billing.Consumption.Models;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Quota.Validators;
 
@@ -40,7 +40,7 @@ public class ReserveQuotaRequestValidatorTests
                 .Validate(
                     ValidRequest() with
                     {
-                        Provider = new string('p', ConsumptionConstants.PROVIDER_MAX_LENGTH + 1),
+                        Provider = new string('p', ConsumptionEvent.PROVIDER_MAX_LENGTH + 1),
                     }
                 )
                 .IsValid

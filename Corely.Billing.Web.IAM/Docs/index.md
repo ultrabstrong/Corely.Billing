@@ -28,6 +28,11 @@ Nothing else: no accessor, no decorators, no `PermissionView` wrappers of the ho
 
 It calls `AddBillingWeb` itself.
 
+## API
+
+`MapBillingApiEndpoints()` serves quota, registrations, grants and consumption over HTTP to a caller
+holding an IAM token, an API key's or a user's. See [Billing API](api.md).
+
 ## What Each Role Sees
 
 | Permissions on `grant` | Grant list | Editor |

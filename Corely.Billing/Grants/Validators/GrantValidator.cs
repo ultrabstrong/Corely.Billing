@@ -1,4 +1,4 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 using FluentValidation;
@@ -12,7 +12,7 @@ internal class GrantValidator : AbstractValidator<Grant>
         RuleFor(x => x.GrantId).NotEmpty();
         RuleFor(x => x.AccountId).NotEmpty();
         RuleFor(x => x.Kind).IsInEnum();
-        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(GrantConstants.QUANTITY_MIN_VALUE);
+        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(Grant.QUANTITY_MIN_VALUE);
         RuleFor(x => x.ValidToUtc)
             .GreaterThan(x => x.ValidFromUtc)
             .WithMessage("Valid To must be after Valid From.");

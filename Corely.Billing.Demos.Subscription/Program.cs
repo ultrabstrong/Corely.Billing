@@ -1,5 +1,6 @@
 using Corely.Billing;
 using Corely.Billing.Demos.Subscription;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 
 var builder = WebApplication.CreateBuilder(args);

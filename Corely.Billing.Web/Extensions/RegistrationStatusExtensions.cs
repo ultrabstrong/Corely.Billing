@@ -1,3 +1,4 @@
+using Corely.Billing.Registrations.Enums;
 using Corely.Billing.Registrations.Models;
 
 namespace Corely.Billing.Web.Extensions;

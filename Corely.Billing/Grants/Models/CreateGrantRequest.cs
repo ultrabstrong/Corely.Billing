@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Grants.Models;

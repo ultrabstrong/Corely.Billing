@@ -48,7 +48,7 @@ await grantService.CreateGrantAsync(new CreateGrantRequest(
 
 ### Never Expires
 
-A grant that ends on a lapse rather than a date, such as a subscription, takes `GrantConstants.NEVER_EXPIRES_UTC` as its `ValidToUtc`. `Grant.NeverExpires()` reads it back.
+A grant that ends on a lapse rather than a date, such as a subscription, takes `Grant.NEVER_EXPIRES_UTC` as its `ValidToUtc`. `Grant.NeverExpires()` reads it back.
 
 ### List with Filtering and Pagination
 

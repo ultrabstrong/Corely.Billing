@@ -1,4 +1,3 @@
-using Corely.Billing.GrantRequests.Constants;
 using Corely.Billing.GrantRequests.Models;
 using FluentValidation;
 
@@ -8,6 +7,6 @@ internal class DeclineGrantRequestRequestValidator : AbstractValidator<DeclineGr
 {
     public DeclineGrantRequestRequestValidator()
     {
-        RuleFor(x => x.Reason).MaximumLength(GrantRequestConstants.DECISION_REASON_MAX_LENGTH);
+        RuleFor(x => x.Reason).MaximumLength(GrantRequest.DECISION_REASON_MAX_LENGTH);
     }
 }

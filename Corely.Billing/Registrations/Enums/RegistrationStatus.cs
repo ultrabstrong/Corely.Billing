@@ -1,4 +1,4 @@
-namespace Corely.Billing.Registrations.Models;
+namespace Corely.Billing.Registrations.Enums;
 
 public enum RegistrationStatus
 {

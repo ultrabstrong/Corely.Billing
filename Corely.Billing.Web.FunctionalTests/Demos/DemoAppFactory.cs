@@ -15,9 +15,17 @@ namespace Corely.Billing.Web.FunctionalTests.Demos;
 public sealed class DemoAppFactory<TEntryPoint> : WebApplicationFactory<TEntryPoint>
     where TEntryPoint : class
 {
-    private readonly SqliteConnection _connection = new("Data Source=:memory:");
+    private const string IAM_DB_CONTEXT = "Corely.IAM.DataAccess.IamDbContext, Corely.IAM";
+    private const string IAM_EF_CONFIGURATION_KEY = "Corely.IAM.EFConfiguration";
 
-    public DemoAppFactory() => _connection.Open();
+    private readonly SqliteConnection _connection = new("Data Source=:memory:");
+    private readonly SqliteConnection _iamConnection = new("Data Source=:memory:");
+
+    public DemoAppFactory()
+    {
+        _connection.Open();
+        _iamConnection.Open();
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -29,6 +37,11 @@ public sealed class DemoAppFactory<TEntryPoint> : WebApplicationFactory<TEntryPo
                 EFConfigurationKeys.BILLING,
                 (_, _) => new SqliteEFConfiguration(_connection)
             );
+            services.RemoveAllKeyed<IEFConfiguration>(IAM_EF_CONFIGURATION_KEY);
+            services.AddKeyedScoped<IEFConfiguration>(
+                IAM_EF_CONFIGURATION_KEY,
+                (_, _) => new SqliteEFConfiguration(_iamConnection)
+            );
             services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
         });
     }
@@ -37,6 +50,14 @@ public sealed class DemoAppFactory<TEntryPoint> : WebApplicationFactory<TEntryPo
     {
         using var scope = Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<BillingDbContext>().Database.EnsureCreated();
+    }
+
+    public void CreateIamSchema()
+    {
+        using var scope = Services.CreateScope();
+        (
+            (DbContext)scope.ServiceProvider.GetRequiredService(Type.GetType(IAM_DB_CONTEXT, true)!)
+        ).Database.EnsureCreated();
     }
 
     public HttpClient CreateTestClient() =>
@@ -52,7 +73,10 @@ public sealed class DemoAppFactory<TEntryPoint> : WebApplicationFactory<TEntryPo
     protected override void Dispose(bool disposing)
     {
         if (disposing)
+        {
             _connection.Dispose();
+            _iamConnection.Dispose();
+        }
         base.Dispose(disposing);
     }
 

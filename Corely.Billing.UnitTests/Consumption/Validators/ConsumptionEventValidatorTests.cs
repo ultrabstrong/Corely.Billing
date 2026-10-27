@@ -1,4 +1,3 @@
-using Corely.Billing.Consumption.Constants;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Validators;
 
@@ -15,7 +14,7 @@ public class ConsumptionEventValidatorTests
             GrantId = Guid.CreateVersion7(),
             Operation = TestUsage.Extraction,
             Unit = TestUsage.Page,
-            Quantity = ConsumptionConstants.QUANTITY_MIN_VALUE,
+            Quantity = ConsumptionEvent.QUANTITY_MIN_VALUE,
             Provider = "prov",
             UtcTimestamp = new DateTime(2026, 3, 1, 12, 0, 0, DateTimeKind.Utc),
         };
@@ -55,7 +54,7 @@ public class ConsumptionEventValidatorTests
     public void Validate_Fails_ForAQuantityBelowTheMinimum()
     {
         var consumptionEvent = ValidEvent();
-        consumptionEvent.Quantity = ConsumptionConstants.QUANTITY_MIN_VALUE - 1;
+        consumptionEvent.Quantity = ConsumptionEvent.QUANTITY_MIN_VALUE - 1;
 
         Assert.False(_validator.Validate(consumptionEvent).IsValid);
     }
@@ -76,7 +75,7 @@ public class ConsumptionEventValidatorTests
     public void Validate_Fails_ForAProviderTooLong()
     {
         var consumptionEvent = ValidEvent();
-        consumptionEvent.Provider = new string('p', ConsumptionConstants.PROVIDER_MAX_LENGTH + 1);
+        consumptionEvent.Provider = new string('p', ConsumptionEvent.PROVIDER_MAX_LENGTH + 1);
 
         Assert.False(_validator.Validate(consumptionEvent).IsValid);
     }

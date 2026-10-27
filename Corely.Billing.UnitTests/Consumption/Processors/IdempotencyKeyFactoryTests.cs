@@ -1,4 +1,4 @@
-using Corely.Billing.Consumption.Constants;
+using Corely.Billing.Consumption.Models;
 using Corely.Billing.Consumption.Processors;
 using Corely.Billing.Operations;
 
@@ -61,7 +61,7 @@ public class IdempotencyKeyFactoryTests
     [Fact]
     public void Create_Throws_ForAScopeTooLongToStore()
     {
-        var context = Context(new string('x', ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH));
+        var context = Context(new string('x', ConsumptionEvent.IDEMPOTENCY_KEY_MAX_LENGTH));
 
         Assert.Throws<ArgumentException>(() => Create(context, GrantA));
     }

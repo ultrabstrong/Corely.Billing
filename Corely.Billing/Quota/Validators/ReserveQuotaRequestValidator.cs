@@ -1,4 +1,5 @@
-using Corely.Billing.Consumption.Constants;
+using Corely.Billing.Consumption.Models;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Usage;
@@ -11,8 +12,8 @@ internal class ReserveQuotaRequestValidator : AbstractValidator<ReserveQuotaRequ
     public ReserveQuotaRequestValidator(IUsageVocabulary vocabulary)
     {
         RuleFor(x => x.AccountId).NotEmpty();
-        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(ConsumptionConstants.QUANTITY_MIN_VALUE);
-        RuleFor(x => x.Provider).NotEmpty().MaximumLength(ConsumptionConstants.PROVIDER_MAX_LENGTH);
+        RuleFor(x => x.Quantity).GreaterThanOrEqualTo(ConsumptionEvent.QUANTITY_MIN_VALUE);
+        RuleFor(x => x.Provider).NotEmpty().MaximumLength(ConsumptionEvent.PROVIDER_MAX_LENGTH);
         RuleFor(x => x.Operation)
             .Must(vocabulary.Knows)
             .WithMessage(x => $"Operation '{x.Operation}' is not a registered usage operation.");

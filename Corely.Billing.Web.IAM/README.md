@@ -8,4 +8,7 @@ builder.Services.AddBillingServices(billingOptions.UseCorelyIamPermissions());
 builder.Services.AddBillingWebIam();
 ```
 
+`app.MapBillingApiEndpoints()` serves quota, registrations, grants and consumption to a backend
+holding an IAM API key.
+
 See the [documentation](https://github.com/ultrabstrong/Corely.Billing/blob/master/Corely.Billing.Web.IAM/Docs/index.md).

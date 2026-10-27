@@ -1,6 +1,7 @@
 using Corely.Billing;
 using Corely.Billing.Demos.WithIAM;
 using Corely.Billing.Demos.WithIAM.Components;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM.Extensions;
 using Corely.Billing.Web;
@@ -11,7 +12,7 @@ using Corely.IAM.Web.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddIAMWeb();
+builder.Services.AddIAMWeb(options => options.AcceptBearerTokens = true);
 builder.Services.AddIAMWebBlazor();
 
 var connectionString =
@@ -88,6 +89,8 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 
 app.MapRazorPages();
+app.MapIAMTokenEndpoints();
+app.MapBillingApiEndpoints();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

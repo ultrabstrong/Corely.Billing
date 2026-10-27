@@ -15,7 +15,7 @@ internal sealed class TestMsSqlConfiguration(string connectionString)
             b =>
             {
                 b.MigrationsAssembly(MIGRATIONS_ASSEMBLY);
-                b.MigrationsHistoryTable(MigrationConstants.DEFAULT_HISTORY_TABLE);
+                b.MigrationsHistoryTable(BillingDbContext.DEFAULT_MIGRATIONS_HISTORY_TABLE);
             }
         );
 }
@@ -31,7 +31,7 @@ internal sealed class TestMySqlConfiguration(string connectionString)
             b =>
             {
                 b.MigrationsAssembly(MIGRATIONS_ASSEMBLY);
-                b.MigrationsHistoryTable(MigrationConstants.DEFAULT_HISTORY_TABLE);
+                b.MigrationsHistoryTable(BillingDbContext.DEFAULT_MIGRATIONS_HISTORY_TABLE);
             }
         );
 }

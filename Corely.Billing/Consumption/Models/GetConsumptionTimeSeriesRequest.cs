@@ -1,3 +1,4 @@
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Consumption.Models;

@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IntegrationTests.Infrastructure;
 using Corely.Billing.Services;

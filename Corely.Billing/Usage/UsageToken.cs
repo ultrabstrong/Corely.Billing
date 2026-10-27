@@ -1,8 +1,15 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Corely.Billing.Usage;
 
 internal static class UsageToken
 {
     internal const int MAX_LENGTH = 100;
+
+    internal static bool IsValid([NotNullWhen(true)] string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && value.Length <= MAX_LENGTH
+        && value.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c == '_');
 
     internal static string Validated(string value, string tokenType)
     {

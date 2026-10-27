@@ -1,5 +1,6 @@
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Registrations.Enums;
 using Corely.Billing.Registrations.Models;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;

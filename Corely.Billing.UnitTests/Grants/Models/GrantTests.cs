@@ -1,4 +1,4 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 
 namespace Corely.Billing.UnitTests.Grants.Models;
@@ -39,7 +39,7 @@ public class GrantTests
 
     [Fact]
     public void NeverExpires_IsTrue_ForTheNeverExpiresDate() =>
-        Assert.True(new Grant { ValidToUtc = GrantConstants.NEVER_EXPIRES_UTC }.NeverExpires());
+        Assert.True(new Grant { ValidToUtc = Grant.NEVER_EXPIRES_UTC }.NeverExpires());
 
     [Fact]
     public void NeverExpires_IsFalse_ForAnyEarlierDate() =>

@@ -36,5 +36,5 @@ An existing capacity grant shows its registrations under the form, through [Regi
 - Whether the form is editable is `IGrantActionGate`'s call: Create for a new grant, Update for an existing one. Without it a new grant shows a message, and an existing one shows the same form read-only.
 - An editable existing grant also offers Disable grant, or Enable grant when it is disabled, under the same Update gate. It takes effect at once, without Save, and a disabled grant shows a note that nothing new can draw on it.
 - An existing grant's operation and kind cannot change; create a new grant instead.
-- "Unlimited" saves a null quantity; "Never expires" saves `GrantConstants.NEVER_EXPIRES_UTC`.
+- "Unlimited" saves a null quantity; "Never expires" saves `Grant.NEVER_EXPIRES_UTC`.
 - Times are entered and shown in UTC.

@@ -1,4 +1,3 @@
-using Corely.Billing.Consumption.Constants;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
@@ -32,16 +31,16 @@ internal sealed class ConsumptionEventEntityConfiguration(IDbTypes dbTypes)
         builder
             .Property(e => e.Outcome)
             .HasConversion<string>()
-            .HasMaxLength(ConsumptionConstants.OUTCOME_MAX_LENGTH);
+            .HasMaxLength(ConsumptionEvent.OUTCOME_MAX_LENGTH);
 
         builder
             .Property(e => e.Provider)
-            .HasMaxLength(ConsumptionConstants.PROVIDER_MAX_LENGTH)
+            .HasMaxLength(ConsumptionEvent.PROVIDER_MAX_LENGTH)
             .IsRequired();
 
         builder
             .Property(e => e.IdempotencyKey)
-            .HasMaxLength(ConsumptionConstants.IDEMPOTENCY_KEY_MAX_LENGTH)
+            .HasMaxLength(ConsumptionEvent.IDEMPOTENCY_KEY_MAX_LENGTH)
             .IsRequired();
 
         builder.HasIndex(e => new { e.AccountId, e.IdempotencyKey }).IsUnique();

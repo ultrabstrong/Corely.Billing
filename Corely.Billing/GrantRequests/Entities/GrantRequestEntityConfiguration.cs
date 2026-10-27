@@ -1,5 +1,5 @@
-using Corely.Billing.GrantRequests.Constants;
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -26,7 +26,7 @@ internal sealed class GrantRequestEntityConfiguration(IDbTypes dbTypes)
         builder
             .Property(e => e.Kind)
             .HasConversion<string>()
-            .HasMaxLength(GrantConstants.KIND_MAX_LENGTH)
+            .HasMaxLength(Grant.KIND_MAX_LENGTH)
             .IsRequired();
         builder
             .Property(e => e.Operation)
@@ -34,16 +34,16 @@ internal sealed class GrantRequestEntityConfiguration(IDbTypes dbTypes)
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
         builder.Property(e => e.Quantity);
-        builder.Property(e => e.Note).HasMaxLength(GrantRequestConstants.NOTE_MAX_LENGTH);
+        builder.Property(e => e.Note).HasMaxLength(GrantRequest.NOTE_MAX_LENGTH);
         builder.Property(e => e.RequestedUtc).IsRequired();
         builder
             .Property(e => e.Status)
             .HasConversion<string>()
-            .HasMaxLength(GrantRequestConstants.STATUS_MAX_LENGTH)
+            .HasMaxLength(GrantRequest.STATUS_MAX_LENGTH)
             .IsRequired();
         builder
             .Property(e => e.DecisionReason)
-            .HasMaxLength(GrantRequestConstants.DECISION_REASON_MAX_LENGTH);
+            .HasMaxLength(GrantRequest.DECISION_REASON_MAX_LENGTH);
 
         builder.HasIndex(e => new { e.AccountId, e.Status });
     }

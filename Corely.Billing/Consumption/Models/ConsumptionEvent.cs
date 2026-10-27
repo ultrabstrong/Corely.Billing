@@ -1,9 +1,15 @@
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Consumption.Models;
 
 public class ConsumptionEvent
 {
+    internal const int QUANTITY_MIN_VALUE = 0;
+    internal const int PROVIDER_MAX_LENGTH = 100;
+    internal const int IDEMPOTENCY_KEY_MAX_LENGTH = 400;
+    internal const int OUTCOME_MAX_LENGTH = 20;
+
     public Guid ConsumptionId { get; set; }
     public Guid AccountId { get; set; }
     public Guid GrantId { get; set; }

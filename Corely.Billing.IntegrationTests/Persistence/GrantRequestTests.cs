@@ -1,4 +1,5 @@
 using Corely.Billing.GrantRequests.Entities;
+using Corely.Billing.GrantRequests.Enums;
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.IntegrationTests.Infrastructure;
 using Corely.Billing.Models;

@@ -1,4 +1,4 @@
-namespace Corely.Billing.Grants.Models;
+namespace Corely.Billing.Grants.Enums;
 
 public enum GrantKind
 {

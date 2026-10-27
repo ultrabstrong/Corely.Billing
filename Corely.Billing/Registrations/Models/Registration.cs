@@ -1,3 +1,4 @@
+using Corely.Billing.Registrations.Enums;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Registrations.Models;
@@ -12,4 +13,8 @@ public record Registration(
     DateTime RegisteredUtc,
     DateTime? ReleasedUtc,
     RegistrationStatus Status
-);
+)
+{
+    internal const int REFERENCE_MAX_LENGTH = 200;
+    internal const int DESCRIPTION_MAX_LENGTH = 500;
+}

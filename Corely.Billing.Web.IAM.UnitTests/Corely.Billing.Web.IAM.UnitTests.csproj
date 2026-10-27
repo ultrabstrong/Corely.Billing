@@ -29,4 +29,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Corely.Billing.Web.IAM\Corely.Billing.Web.IAM.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile
+      Include="..\Corely.Billing.UnitTests\PublicSurface\PublicTypes.cs"
+      Link="PublicSurface\PublicTypes.cs"
+    />
+  </ItemGroup>
 </Project>

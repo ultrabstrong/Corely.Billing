@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Corely.Billing.Consumption.Entities;
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Consumption.Mappers;
 using Corely.Billing.Consumption.Models;
 

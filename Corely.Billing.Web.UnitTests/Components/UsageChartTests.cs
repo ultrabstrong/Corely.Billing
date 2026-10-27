@@ -1,3 +1,4 @@
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Consumption.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;

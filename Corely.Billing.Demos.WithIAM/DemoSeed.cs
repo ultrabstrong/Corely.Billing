@@ -1,25 +1,27 @@
 using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IAM;
 using Corely.Billing.Services;
+using Corely.Billing.Web.IAM.Extensions;
 using Corely.IAM.Models;
 using Corely.IAM.Permissions.Models;
 using Corely.IAM.Services;
 
 namespace Corely.Billing.Demos.WithIAM;
 
-internal static class DemoSeed
+public static class DemoSeed
 {
     public const string PASSWORD = "Test1234";
     private const string DEVICE_ID = "demo-seed";
 
-    public static async Task RunAsync(IServiceProvider services)
+    public static async Task<string?> RunAsync(IServiceProvider services)
     {
         var owner = await RegisterUserAsync(services, "olivia", "olivia@example.com");
         if (owner is null)
         {
             Console.WriteLine("Already seeded - olivia exists. Drop the database to reseed.");
-            return;
+            return null;
         }
         var member = await RegisterUserAsync(services, "bobby", "bobby@example.com");
         var editor = await RegisterUserAsync(services, "carla", "carla@example.com");
@@ -27,6 +29,7 @@ internal static class DemoSeed
         var provisioner = await RegisterUserAsync(services, "priya", "priya@example.com");
 
         Guid accountId;
+        string? apiKey;
         using (var scope = services.CreateScope())
         {
             await SignInAsync(scope.ServiceProvider, "olivia", accountId: null);
@@ -39,7 +42,9 @@ internal static class DemoSeed
 
         using (var scope = services.CreateScope())
         {
-            await SignInAsync(scope.ServiceProvider, "olivia", accountId);
+            scope
+                .ServiceProvider.GetRequiredService<IAuthenticationService>()
+                .AuthenticateAsSystem(DEVICE_ID);
             var registration = scope.ServiceProvider.GetRequiredService<IRegistrationService>();
             await registration.RegisterUserWithAccountAsync(
                 new RegisterUserWithAccountRequest(member!.Value, accountId)
@@ -61,7 +66,16 @@ internal static class DemoSeed
                 .ServiceProvider.GetRequiredService<IAuthenticationService>()
                 .AuthenticateAsSystem(DEVICE_ID);
             await RegisterGrantEditorAsync(scope.ServiceProvider, accountId, editor.Value);
-            await RegisterClientAsync(scope.ServiceProvider, accountId, client.Value);
+            var clientRoleId = await RegisterClientAsync(
+                scope.ServiceProvider,
+                accountId,
+                client.Value
+            );
+            apiKey = await RegisterUsageMeterKeyAsync(
+                scope.ServiceProvider,
+                accountId,
+                clientRoleId
+            );
             await RegisterProvisionerAsync(scope.ServiceProvider, accountId, provisioner.Value);
 
             var grants = scope.ServiceProvider.GetRequiredService<IGrantService>();
@@ -118,6 +132,10 @@ internal static class DemoSeed
                 + "provisions grants and decides requests, and bobby with no roles"
         );
         Console.WriteLine($"Password for all five: {PASSWORD}");
+        Console.WriteLine(
+            $"API key usage-meter, with chloe's Client role, for {BillingApiEndpointExtensions.DEFAULT_PREFIX}: {apiKey}"
+        );
+        return apiKey;
     }
 
     private static async Task RegisterGrantEditorAsync(
@@ -158,7 +176,7 @@ internal static class DemoSeed
         );
     }
 
-    private static async Task RegisterClientAsync(
+    private static async Task<Guid> RegisterClientAsync(
         IServiceProvider scoped,
         Guid accountId,
         Guid userId
@@ -186,6 +204,27 @@ internal static class DemoSeed
         await registration.RegisterRolesWithUserAsync(
             new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)
         );
+        return role.CreatedRoleId;
+    }
+
+    private static async Task<string?> RegisterUsageMeterKeyAsync(
+        IServiceProvider scoped,
+        Guid accountId,
+        Guid roleId
+    )
+    {
+        var registration = scoped.GetRequiredService<IRegistrationService>();
+        var key = await registration.RegisterApiKeyAsync(
+            new RegisterApiKeyRequest(
+                "usage-meter",
+                accountId,
+                "Reserves and settles text generation from the backend"
+            )
+        );
+        await registration.RegisterRolesWithApiKeyAsync(
+            new RegisterRolesWithApiKeyRequest([roleId], key.CreatedApiKeyId, accountId)
+        );
+        return key.Key;
     }
 
     private static async Task RegisterProvisionerAsync(

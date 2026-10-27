@@ -1,3 +1,4 @@
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
 using Corely.Billing.Web.Components;
@@ -220,9 +221,6 @@ public class GrantEditorTests : BillingWebTestContext
         Assert.Empty(editor.FindAll("#cbw-to"));
         editor.Find("form").Submit();
 
-        Assert.Equal(
-            Corely.Billing.Grants.Constants.GrantConstants.NEVER_EXPIRES_UTC,
-            _created!.ValidToUtc
-        );
+        Assert.Equal(Corely.Billing.Grants.Models.Grant.NEVER_EXPIRES_UTC, _created!.ValidToUtc);
     }
 }

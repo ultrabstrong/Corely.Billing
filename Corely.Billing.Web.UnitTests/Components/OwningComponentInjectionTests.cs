@@ -1,4 +1,5 @@
 using System.Reflection;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Services;
 using Corely.Billing.Web.Components;
 using Corely.Billing.Web.Extensions;
@@ -28,12 +29,7 @@ public class OwningComponentInjectionTests
             BillingOptions
                 .Create(new ConfigurationManager())
                 .RegisterUnit("page", "page")
-                .RegisterOperation(
-                    "extraction",
-                    "Extraction",
-                    Corely.Billing.Grants.Models.GrantKind.Consumable,
-                    "page"
-                )
+                .RegisterOperation("extraction", "Extraction", GrantKind.Consumable, "page")
         );
         services.AddBillingWeb<NoAccountAccessor>();
         return services;

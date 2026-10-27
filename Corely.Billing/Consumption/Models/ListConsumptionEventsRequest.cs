@@ -1,3 +1,4 @@
+using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Usage;
 using Corely.Common.Filtering.Ordering;
 

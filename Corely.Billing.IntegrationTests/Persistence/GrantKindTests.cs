@@ -1,6 +1,8 @@
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.IntegrationTests.Infrastructure;
 using Corely.Billing.Quota.Models;
+using Corely.Billing.Registrations.Enums;
 using Corely.Billing.Registrations.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;

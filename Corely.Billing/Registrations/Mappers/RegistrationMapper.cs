@@ -1,5 +1,6 @@
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Registrations.Entities;
+using Corely.Billing.Registrations.Enums;
 using Corely.Billing.Registrations.Models;
 
 namespace Corely.Billing.Registrations.Mappers;

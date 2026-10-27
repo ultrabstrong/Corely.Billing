@@ -151,7 +151,7 @@ git push origin Corely.Billing-v2.0.1
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
 | `Corely.Billing.Web` | Blazor Server components. The host writes the pages and passes every link; the demos hold working shells. Versioned on its own. No reference to Corely.IAM |
 | `Corely.Billing.IAM` | Corely.IAM permissions for the three services: resource types, authorization and audit decorators shaped like IAM's own, `UseCorelyIamPermissions()`. Versioned on its own |
-| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. Versioned on its own |
+| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. The opt in bearer API, `MapBillingApiEndpoints()`, over quota, registrations, grants and consumption, with the account taken from the token. Versioned on its own |
 | `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |
 | `Corely.Billing.Demos.Bootstrap` | Bootstrap for the demos, served as a static web asset so it is vendored once |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo on SQLite |
@@ -173,11 +173,11 @@ Registration order in `ServiceRegistrationExtensions.cs` matters: decorators are
 
 ### Domain Structure
 
-Each domain (Grants, Consumption, Quota) follows IAM's folder layout:
+Each domain (Grants, GrantRequests, Registrations, Consumption, Quota) follows IAM's folder layout:
 
 ```
 Domain/
-├── Constants/        # Domain constants (SCREAMING_SNAKE_CASE)
+├── Enums/            # Enums that are not result codes
 ├── Entities/         # EF Core entities and configurations
 ├── Models/           # Request/response/domain models
 ├── Processors/       # Business logic + telemetry decorators
@@ -185,7 +185,33 @@ Domain/
 └── Validators/       # FluentValidation rules
 ```
 
+### Adding a resource type
+
+A new account scoped resource is built to the same shape as Grants and GrantRequests, end to end.
+Before writing a layer, open the same file in a sibling domain and match it. A feature that seems to
+need its own service, naming or layout is a question for the owner, asked before it is built.
+
+| Layer | Shape |
+|-------|-------|
+| Constants | On the model they describe: `X.NAME_MAX_LENGTH` on `X`, read by the entity configuration and the validators so a column and its rule cannot disagree. Public only when a host has a use for it (`Grant.NEVER_EXPIRES_UTC`), otherwise internal. No constants classes and no `Constants` folders |
+| Entity | Plain data with an `AccountId`, an `XEntityConfiguration`, and a `DbSet` on `BillingDbContext`. A migration through `.\AddMigration.ps1` for both providers |
+| Mapper | Entity to model and back in the domain's `Mappers/`; never built inline in a processor |
+| Validator | FluentValidation in `Validators/`, limits read from the constants |
+| Processor | Internal `IXProcessor` and `XProcessorTelemetryDecorator` recording `BillingMetricNames.X`. Every lookup and bulk update filters by the account the call names |
+| Service | Methods on the area's service (`IGrantService`, `IGrantRequestService`, `IQuotaService`, `IConsumptionService`), or a new `IXService` only for a new area. The account comes first, either as `Guid accountId` or as `AccountId` on the request, and `CancellationToken ct = default` last. A list takes `IReadOnlyList<Guid> AccountIds`. A `XServiceTelemetryDecorator` that logs |
+| Corely.Billing.IAM | The resource type and its description on `BillingResourceTypes`, an `XAuthorizationDecorator` (`HasAccountContext` plus `IsAuthorizedAsync` on the type and ids; lists through `AccountReadScope`), an `XAuditDecorator`, both registered in `UseCorelyIamPermissions` |
+| Tests | Unit: `XProcessorTelemetryDecoratorTests`, and `XProcessorTests` for logic that needs no database. Integration: what only EF and the ledger can prove. A case per new service method in `CrossAccountScopingTests` and `AccountContextCoverageTests`, which fail until it is added, and `AuditDecoratorCoverageTests` covers the audit decorator |
+
 ### Boundaries that are the point of the library
+
+- **An account only ever reaches its own rows.** Every processor lookup by id and every bulk update
+  filters by the account the call names (`e.AccountId == accountId && e.GrantId == grantId`). The
+  account id is always required: there is no default that means any account. Two coverage tests hold
+  the boundary for every public service method. `CrossAccountScopingTests` (integration) names
+  another account's rows with the caller's own account id and checks nothing of the other account
+  changed or came back. `AccountContextCoverageTests` (`Corely.Billing.IAM.UnitTests`) names the other
+  account's id with every permission granted and checks the call is refused. A new service method
+  fails both until it has a case.
 
 - **No vocabulary.** Operations and units are tokens a host registers on `BillingOptions`. Nothing in this repository may name a consumer's operation or unit outside a test.
 - **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too. Only the opt-in `Corely.Billing.IAM` and `Corely.Billing.Web.IAM` reference IAM, and they follow Corely.IAM's own patterns exactly: where IAM does something for roles, they do the same for grants.

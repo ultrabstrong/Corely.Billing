@@ -17,7 +17,7 @@ Open https://localhost:7111. Subscribe, open the members area, cancel, then subs
 
 ## What it uses
 
-- **Subscribe**: `CreateGrantAsync` with `GrantKind.Capacity`, a capacity of three, and `GrantConstants.NEVER_EXPIRES_UTC` as its end. A subscription ends when it lapses, not on a date.
+- **Subscribe**: `CreateGrantAsync` with `GrantKind.Capacity`, a capacity of three, and `Grant.NEVER_EXPIRES_UTC` as its end. A subscription ends when it lapses, not on a date.
 - **Cancel**: `SetGrantDisabledAsync` disables the grant. That is the lapse.
 - **Renew**: subscribing again enables the same grant, and its members come back with it.
 - **The gate**: the members page opens only while `GetCapacityAsync` reads an active grant.

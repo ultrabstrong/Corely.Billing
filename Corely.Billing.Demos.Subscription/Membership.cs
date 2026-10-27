@@ -1,4 +1,4 @@
-using Corely.Billing.Grants.Constants;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Quota.Models;
 using Corely.Billing.Registrations.Models;
@@ -43,7 +43,7 @@ public sealed class Membership(IGrantService grants, IQuotaService quota, TimePr
                 GrantKind.Capacity,
                 CAPACITY,
                 Now,
-                GrantConstants.NEVER_EXPIRES_UTC
+                Grant.NEVER_EXPIRES_UTC
             )
         );
     }

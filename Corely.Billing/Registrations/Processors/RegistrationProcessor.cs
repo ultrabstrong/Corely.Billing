@@ -1,4 +1,5 @@
 using Corely.Billing.Grants.Entities;
+using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Mappers;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
