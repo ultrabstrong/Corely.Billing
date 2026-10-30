@@ -57,6 +57,10 @@ public class RegistrationTests
             BillingResourceTypes.QUOTA_DESCRIPTION,
             registry.Get(BillingResourceTypes.QUOTA_RESOURCE_TYPE)?.Description
         );
+        Assert.Equal(
+            BillingResourceTypes.REGISTRATION_DESCRIPTION,
+            registry.Get(BillingResourceTypes.REGISTRATION_RESOURCE_TYPE)?.Description
+        );
     }
 
     [Theory]
@@ -70,6 +74,10 @@ public class RegistrationTests
         BillingResourceTypes.CONSUMPTION_TITLE
     )]
     [InlineData(BillingResourceTypes.QUOTA_RESOURCE_TYPE, BillingResourceTypes.QUOTA_TITLE)]
+    [InlineData(
+        BillingResourceTypes.REGISTRATION_RESOURCE_TYPE,
+        BillingResourceTypes.REGISTRATION_TITLE
+    )]
     [InlineData(
         BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE,
         BillingResourceTypes.ALL_ACCOUNTS_TITLE
@@ -103,8 +111,9 @@ public class RegistrationTests
         new[] { AuthAction.Read, AuthAction.Create }
     )]
     [InlineData(BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(BillingResourceTypes.QUOTA_RESOURCE_TYPE, new[] { AuthAction.Read })]
     [InlineData(
-        BillingResourceTypes.QUOTA_RESOURCE_TYPE,
+        BillingResourceTypes.REGISTRATION_RESOURCE_TYPE,
         new[] { AuthAction.Read, AuthAction.Execute }
     )]
     public void RegisterBillingResourceTypes_GivesOwnersOnlyTheseActions_ForEachType(

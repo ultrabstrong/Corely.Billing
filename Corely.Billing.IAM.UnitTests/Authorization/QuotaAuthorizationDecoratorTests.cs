@@ -14,6 +14,7 @@ namespace Corely.Billing.IAM.UnitTests.Authorization;
 public class QuotaAuthorizationDecoratorTests
 {
     private const string QUOTA = BillingResourceTypes.QUOTA_RESOURCE_TYPE;
+    private const string REGISTRATION = BillingResourceTypes.REGISTRATION_RESOURCE_TYPE;
 
     private readonly Mock<IQuotaService> _inner = new();
     private readonly Mock<IAuthorizationProvider> _authorization = new();
@@ -57,12 +58,16 @@ public class QuotaAuthorizationDecoratorTests
             new AccountReadScope(_authorization.Object, Mock.Of<IUserContextProvider>())
         );
 
-    private void AllowOnly(params AuthAction[] actions) =>
+    private void AllowOnly(params AuthAction[] actions) => AllowOnly(QUOTA, actions);
+
+    private void AllowOnly(string resourceType, params AuthAction[] actions) =>
         _authorization
             .Setup(p =>
                 p.IsAuthorizedAsync(It.IsAny<AuthAction>(), It.IsAny<string>(), It.IsAny<Guid[]>())
             )
-            .ReturnsAsync((AuthAction a, string r, Guid[] _) => r == QUOTA && actions.Contains(a));
+            .ReturnsAsync(
+                (AuthAction a, string r, Guid[] _) => r == resourceType && actions.Contains(a)
+            );
 
     private Task<GetBalanceResult> BalanceAsync() =>
         Decorator().GetBalanceAsync(AccountId, Extraction);
@@ -154,7 +159,7 @@ public class QuotaAuthorizationDecoratorTests
     [Fact]
     public async Task RegisterAsync_ReturnsUnauthorizedWithoutCallingInner_ForReadWithoutExecute()
     {
-        AllowOnly(AuthAction.Read);
+        AllowOnly(REGISTRATION, AuthAction.Read);
 
         var result = await Decorator().RegisterAsync(new RegisterRequest(AccountId, Extraction));
 
@@ -166,9 +171,39 @@ public class QuotaAuthorizationDecoratorTests
     }
 
     [Fact]
+    public async Task RegisterAsync_CallsInner_ForExecuteOnRegistrationAlone()
+    {
+        AllowOnly(REGISTRATION, AuthAction.Execute);
+
+        var result = await Decorator().RegisterAsync(new RegisterRequest(AccountId, Extraction));
+
+        Assert.Equal(RegisterResultCode.Registered, result.ResultCode);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_ReturnsUnauthorized_ForExecuteOnQuota()
+    {
+        AllowOnly(AuthAction.Execute);
+
+        var result = await Decorator().RegisterAsync(new RegisterRequest(AccountId, Extraction));
+
+        Assert.Equal(RegisterResultCode.UnauthorizedError, result.ResultCode);
+    }
+
+    [Fact]
+    public async Task ReserveSettleAndRelease_ReturnUnauthorized_ForExecuteOnRegistration()
+    {
+        AllowOnly(REGISTRATION, AuthAction.Execute);
+
+        Assert.Equal(ReserveQuotaResultCode.UnauthorizedError, (await ReserveAsync()).ResultCode);
+        Assert.Equal(SettleQuotaResultCode.UnauthorizedError, (await SettleAsync()).ResultCode);
+        Assert.Equal(SettleQuotaResultCode.UnauthorizedError, (await ReleaseAsync()).ResultCode);
+    }
+
+    [Fact]
     public async Task ReleaseRegistrationAsync_ReturnsUnauthorized_ForReadWithoutExecute()
     {
-        AllowOnly(AuthAction.Read);
+        AllowOnly(REGISTRATION, AuthAction.Read);
 
         var result = await Decorator().ReleaseRegistrationAsync(AccountId, Guid.CreateVersion7());
 

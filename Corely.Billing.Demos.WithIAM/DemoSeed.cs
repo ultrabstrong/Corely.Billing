@@ -69,7 +69,8 @@ public static class DemoSeed
             var clientRoleId = await RegisterClientAsync(
                 scope.ServiceProvider,
                 accountId,
-                client.Value
+                client.Value,
+                owner.Value
             );
             apiKey = await RegisterUsageMeterKeyAsync(
                 scope.ServiceProvider,
@@ -179,30 +180,42 @@ public static class DemoSeed
     private static async Task<Guid> RegisterClientAsync(
         IServiceProvider scoped,
         Guid accountId,
-        Guid userId
+        Guid clientId,
+        Guid ownerId
     )
     {
         var registration = scoped.GetRequiredService<IRegistrationService>();
+        var metering = await registration.RegisterPermissionAsync(
+            new RegisterPermissionRequest(
+                accountId,
+                BillingResourceTypes.QUOTA_RESOURCE_TYPE,
+                Guid.Empty,
+                Read: true,
+                Execute: true,
+                Description: "Read quota, and reserve and settle usage"
+            )
+        );
         var permissions = await scoped
             .GetRequiredService<IRetrievalService>()
             .ListPermissionsAsync(new ListPermissionsRequest(accountId, Take: 100));
-        var ownerUsage = permissions
-            .Data!.Items.Where(p =>
-                p.IsSystemDefined
-                && p.ResourceType
-                    is BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
-                        or BillingResourceTypes.QUOTA_RESOURCE_TYPE
-            )
-            .Select(p => p.Id)
-            .ToList();
+        var ownerConsumption = permissions.Data!.Items.Single(p =>
+            p.IsSystemDefined && p.ResourceType == BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE
+        );
         var role = await registration.RegisterRoleAsync(
             new RegisterRoleRequest("Client", accountId)
         );
         await registration.RegisterPermissionsWithRoleAsync(
-            new RegisterPermissionsWithRoleRequest(ownerUsage, role.CreatedRoleId, accountId)
+            new RegisterPermissionsWithRoleRequest(
+                [metering.CreatedPermissionId, ownerConsumption.Id],
+                role.CreatedRoleId,
+                accountId
+            )
         );
         await registration.RegisterRolesWithUserAsync(
-            new RegisterRolesWithUserRequest([role.CreatedRoleId], userId, accountId)
+            new RegisterRolesWithUserRequest([role.CreatedRoleId], clientId, accountId)
+        );
+        await registration.RegisterRolesWithUserAsync(
+            new RegisterRolesWithUserRequest([role.CreatedRoleId], ownerId, accountId)
         );
         return role.CreatedRoleId;
     }

@@ -36,6 +36,13 @@ public static class IAMOptionsExtensions
                     BillingResourceTypes.QUOTA_TITLE,
                     BillingResourceTypes.QUOTA_DESCRIPTION,
                     BillingResourceTypes.GROUP,
+                    AuthAction.Read
+                )
+                .RegisterResourceType(
+                    BillingResourceTypes.REGISTRATION_RESOURCE_TYPE,
+                    BillingResourceTypes.REGISTRATION_TITLE,
+                    BillingResourceTypes.REGISTRATION_DESCRIPTION,
+                    BillingResourceTypes.GROUP,
                     AuthAction.Read,
                     AuthAction.Execute
                 )

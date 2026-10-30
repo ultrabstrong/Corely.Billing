@@ -24,14 +24,15 @@ Nothing else: no accessor, no decorators, no `PermissionView` wrappers of the ho
 | `Create`, `Update`, `Delete` | The same action on `grant` |
 | `Request` | Create on `grant_request` |
 | `Decide` | Update on `grant_request` for that request, inside Create on `grant`: the pair approving is authorized against |
-| `ManageRegistrations` | Execute on `quota`: releasing and moving registrations |
+| `ManageRegistrations` | Execute on `registration`: releasing and moving registrations |
 
 It calls `AddBillingWeb` itself.
 
 ## API
 
-`MapBillingApiEndpoints()` serves quota, registrations, grants and consumption over HTTP to a caller
-holding an IAM token, an API key's or a user's. See [Billing API](api.md).
+`MapBillingApiEndpoints()` serves quota reads, registrations, grants and consumption over HTTP to a
+caller holding an IAM token, an API key's or a user's. `MapBillingMeteringEndpoints()` adds reserve,
+settle and release for a host that meters over HTTP. See [Billing API](api.md).
 
 ## What Each Role Sees
 

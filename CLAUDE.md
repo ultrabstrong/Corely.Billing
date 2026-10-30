@@ -171,7 +171,7 @@ and the consumer fails to load them.
 | `Corely.Billing` | Core library — grants, the consumption ledger, quota (net10.0) |
 | `Corely.Billing.Web` | Blazor Server components. The host writes the pages and passes every link; the demos hold working shells. Versioned on its own. No reference to Corely.IAM |
 | `Corely.Billing.IAM` | Corely.IAM permissions for the three services: resource types, authorization and audit decorators shaped like IAM's own, `UseCorelyIamPermissions()`. Versioned on its own |
-| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. The opt in bearer API, `MapBillingApiEndpoints()`, over quota, registrations, grants and consumption, with the account taken from the token. Versioned on its own |
+| `Corely.Billing.Web.IAM` | Corely.IAM.Web for the components: the signed-in account and a `PermissionView` gate per grant action, `AddBillingWebIam()`. The opt in bearer API, `MapBillingApiEndpoints()`, over quota reads, registrations, grants and consumption, with the account taken from the token, and `MapBillingMeteringEndpoints()` for reserve, settle and release. Versioned on its own |
 | `Corely.Billing.Demos.Portal` / `.Subscription` / `.WithIAM` | Demo hosts on LocalDB, schema from the migration CLI. Smoke-tested in `Corely.Billing.Web.FunctionalTests/Demos`, which references them through extern aliases because every host's top-level `Program` is public |
 | `Corely.Billing.Demos.Bootstrap` | Bootstrap for the demos, served as a static web asset so it is vendored once |
 | `Corely.Billing.ConsoleTest` | Zero-setup demo on SQLite |

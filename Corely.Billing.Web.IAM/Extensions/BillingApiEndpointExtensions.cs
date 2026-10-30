@@ -48,18 +48,6 @@ public static class BillingApiEndpointExtensions
                 .WithName("GetBillingCapacity")
                 .WithSummary("The operation's capacity and how much of it is in use");
             group
-                .MapPost($"{OPERATION}/reserve", ReserveAsync)
-                .WithName("ReserveBillingQuota")
-                .WithSummary("Reserve quota before doing the work");
-            group
-                .MapPost($"{OPERATION}/settle", SettleAsync)
-                .WithName("SettleBillingQuota")
-                .WithSummary("Settle a reservation with what the work actually used");
-            group
-                .MapPost($"{OPERATION}/release", ReleaseAsync)
-                .WithName("ReleaseBillingQuota")
-                .WithSummary("Release a reservation the work did not use");
-            group
                 .MapPost($"{OPERATION}/registrations", RegisterAsync)
                 .WithName("RegisterBillingCapacity")
                 .WithSummary("Take one unit of the operation's capacity");
@@ -87,6 +75,30 @@ public static class BillingApiEndpointExtensions
                 .MapGet("/consumption/events", ListConsumptionEventsAsync)
                 .WithName("ListBillingConsumptionEvents")
                 .WithSummary("The account's consumption events, newest first");
+
+            return group;
+        }
+
+        public RouteGroupBuilder MapBillingMeteringEndpoints(string prefix = DEFAULT_PREFIX)
+        {
+            var group = endpoints
+                .MapGroup(prefix)
+                .RequireAuthorization()
+                .AsIAMApi()
+                .WithTags("Billing");
+
+            group
+                .MapPost($"{OPERATION}/reserve", ReserveAsync)
+                .WithName("ReserveBillingQuota")
+                .WithSummary("Reserve quota before doing the work");
+            group
+                .MapPost($"{OPERATION}/settle", SettleAsync)
+                .WithName("SettleBillingQuota")
+                .WithSummary("Settle a reservation with what the work actually used");
+            group
+                .MapPost($"{OPERATION}/release", ReleaseAsync)
+                .WithName("ReleaseBillingQuota")
+                .WithSummary("Release a reservation the work did not use");
 
             return group;
         }

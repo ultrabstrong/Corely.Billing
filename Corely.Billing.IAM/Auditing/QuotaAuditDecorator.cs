@@ -93,7 +93,7 @@ internal sealed class QuotaAuditDecorator(IQuotaService inner, IAuditProvider au
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            OnQuota(AuthAction.Execute, request.AccountId),
+            OnRegistration(AuthAction.Execute, request.AccountId),
             () => inner.RegisterAsync(request, ct),
             r => AuditOutcome.Of(r.ResultCode, r.Registration?.RegistrationId ?? Guid.Empty)
         );
@@ -104,7 +104,7 @@ internal sealed class QuotaAuditDecorator(IQuotaService inner, IAuditProvider au
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            OnQuota(AuthAction.Execute, accountId) with
+            OnRegistration(AuthAction.Execute, accountId) with
             {
                 ResourceIds = [registrationId],
             },
@@ -117,7 +117,7 @@ internal sealed class QuotaAuditDecorator(IQuotaService inner, IAuditProvider au
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            OnQuota(AuthAction.Execute, request.AccountId) with
+            OnRegistration(AuthAction.Execute, request.AccountId) with
             {
                 ResourceIds = [request.FromGrantId, request.ToGrantId],
             },
@@ -130,7 +130,7 @@ internal sealed class QuotaAuditDecorator(IQuotaService inner, IAuditProvider au
         CancellationToken ct = default
     ) =>
         auditProvider.RecordAsync(
-            new AuditCall(SERVICE, AuthAction.Read, BillingResourceTypes.QUOTA_RESOURCE_TYPE)
+            new AuditCall(SERVICE, AuthAction.Read, BillingResourceTypes.REGISTRATION_RESOURCE_TYPE)
             {
                 AccountId = request.AccountIds.Count == 1 ? request.AccountIds[0] : null,
             },
@@ -140,4 +140,10 @@ internal sealed class QuotaAuditDecorator(IQuotaService inner, IAuditProvider au
 
     private static AuditCall OnQuota(AuthAction action, Guid accountId) =>
         new(SERVICE, action, BillingResourceTypes.QUOTA_RESOURCE_TYPE) { AccountId = accountId };
+
+    private static AuditCall OnRegistration(AuthAction action, Guid accountId) =>
+        new(SERVICE, action, BillingResourceTypes.REGISTRATION_RESOURCE_TYPE)
+        {
+            AccountId = accountId,
+        };
 }

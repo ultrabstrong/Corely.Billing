@@ -1,6 +1,6 @@
 # Corely.Billing.IAM Documentation
 
-[Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) permissions for Corely.Billing. Registers the `grant`, `grant_request`, `consumption`, `quota` and `billing_all_accounts` resource types with IAM, and decorates the four Billing services the way Corely.IAM decorates its own: the caller's account first, then CRUDX on the resource type.
+[Corely.IAM](https://github.com/ultrabstrong/Corely.IAM) permissions for Corely.Billing. Registers the `grant`, `grant_request`, `consumption`, `quota`, `registration` and `billing_all_accounts` resource types with IAM, and decorates the four Billing services the way Corely.IAM decorates its own: the caller's account first, then CRUDX on the resource type.
 
 - **One call each side**: `RegisterBillingResourceTypes()` on `IAMOptions`, `UseCorelyIamPermissions()` on `BillingOptions`
 - **IAM's own mechanisms**: `IAuthorizationProvider`, `RegisterResourceType` and `UnauthorizedError` results, nothing new
@@ -28,6 +28,7 @@ A host with Blazor adds [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Do
 | `BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE` | `grant_request` |
 | `BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE` | `consumption` |
 | `BillingResourceTypes.QUOTA_RESOURCE_TYPE` | `quota` |
+| `BillingResourceTypes.REGISTRATION_RESOURCE_TYPE` | `registration` |
 | `BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE` | `billing_all_accounts` |
 
 Registered, they appear in the IAM.Web permission form's resource type list.
@@ -42,7 +43,8 @@ owner holds them:
 | `grant` | Read | Owners see their quota but cannot give themselves more. Grants are provisioned by the host, under system context, or by approving a request |
 | `grant_request` | Read, Create | Owners ask for more and see what they asked. Deciding (Update) is held by no owner |
 | `consumption` | Read | Owners see their usage |
-| `quota` | Read, Execute | Owners can run work that consumes their own quota, and register and release against their capacity |
+| `quota` | Read | Owners see what they have. Reserving and settling writes consumption, so it is the platform's: a user who runs work runs the work, and the host meters it as a result |
+| `registration` | Read, Execute | Owners add and remove people from their capacity freely |
 | `billing_all_accounts` | None | Only a platform role reads across accounts |
 
 Because IAM refuses to hand out what the caller does not hold, an owner also cannot create a
@@ -72,8 +74,8 @@ Every method first checks `HasAccountContext` for the account it names. The syst
 | Every `IConsumptionService` read | Read on `consumption` |
 | `GetBalanceAsync`, `GetAllowanceAsync`, `HasFeatureAsync`, `GetCapacityAsync` | Read on `quota` |
 | `ReserveAsync`, `SettleAsync`, `ReleaseAsync` | Execute on `quota` |
-| `RegisterAsync`, `ReleaseRegistrationAsync`, `MoveRegistrationsAsync` | Execute on `quota` |
-| `ListRegistrationsAsync` | Read on `quota`; across accounts, below |
+| `RegisterAsync`, `ReleaseRegistrationAsync`, `MoveRegistrationsAsync` | Execute on `registration` |
+| `ListRegistrationsAsync` | Read on `registration`; across accounts, below |
 
 A request's `RequestedByUserId` and a decision's `DecidedByUserId` are replaced with the signed-in user's id, whatever the caller passed, so nobody can record a request or decision as someone else's. Only the system context keeps the id it was given, so a host's background work can act for a named user.
 
@@ -96,7 +98,7 @@ Anything else is `UnauthorizedError`, with nothing read. Only the lists cross ac
 [Corely.IAM's audit log](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM/Docs/auditing.md)
 with the same action and resource type its permission uses, in the account it names. What is actually
 written follows the platform's and the account's audit settings. Grant and request changes (Create,
-Update, Delete) are recorded by default; reads and quota calls (Read, Execute) only where an account turns them
+Update, Delete) are recorded by default; reads, quota and registration calls (Read, Execute) only where an account turns them
 on, which keeps busy consumption paths free of writes.
 
 | Service | Recorded as |
@@ -104,7 +106,7 @@ on, which keeps busy consumption paths free of writes.
 | `IGrantService` | The action above on `grant`, with the grant's id (a created grant's id comes from the result) |
 | `IGrantRequestService` | Create (ask), Read, or Update (approve, decline) on `grant_request`, with the request's id |
 | `IConsumptionService` | Read on `consumption` |
-| `IQuotaService` | Read (the reads, listing registrations) or Execute (reserve, settle, release, register, release and move registrations) on `quota` |
+| `IQuotaService` | Read (the reads) or Execute (reserve, settle, release) on `quota`; Read (listing) or Execute (register, release and move) on `registration` |
 
 Order: Billing's telemetry, then audit, then authorization, then the service, so a refused call is
 recorded with its refusal code.
@@ -113,4 +115,5 @@ recorded with its refusal code.
 
 - The decorators sit inside Billing's telemetry decorators, so a denied call is still logged.
 - One permission covers reserve, settle and release, so a caller can never hold quota it cannot settle or release. The same holds for registering and releasing.
-- A user who consumes quota interactively needs Execute on `quota`; one who only watches usage needs Read on `consumption`.
+- No account holds Execute on `quota` by default, and IAM refuses to hand out what the caller does not hold, so no owner can give it to a user or an API key. A host meters as the system. One that wants a user or a key to meter directly creates that permission itself, under system context.
+- A user who only watches usage needs Read on `consumption`.

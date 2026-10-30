@@ -89,7 +89,7 @@ internal sealed class QuotaAuthorizationDecorator(
         RegisterRequest request,
         CancellationToken ct = default
     ) =>
-        await IsAuthorizedAsync(request.AccountId, AuthAction.Execute)
+        await IsAuthorizedForRegistrationsAsync(request.AccountId)
             ? await inner.RegisterAsync(request, ct)
             : new RegisterResult(RegisterResultCode.UnauthorizedError, "Unauthorized to register");
 
@@ -98,7 +98,7 @@ internal sealed class QuotaAuthorizationDecorator(
         Guid registrationId,
         CancellationToken ct = default
     ) =>
-        await IsAuthorizedAsync(accountId, AuthAction.Execute)
+        await IsAuthorizedForRegistrationsAsync(accountId)
             ? await inner.ReleaseRegistrationAsync(accountId, registrationId, ct)
             : new ModifyResult(
                 ModifyResultCode.UnauthorizedError,
@@ -109,7 +109,7 @@ internal sealed class QuotaAuthorizationDecorator(
         MoveRegistrationsRequest request,
         CancellationToken ct = default
     ) =>
-        await IsAuthorizedAsync(request.AccountId, AuthAction.Execute)
+        await IsAuthorizedForRegistrationsAsync(request.AccountId)
             ? await inner.MoveRegistrationsAsync(request, ct)
             : new MoveRegistrationsResult(
                 MoveRegistrationsResultCode.UnauthorizedError,
@@ -123,7 +123,7 @@ internal sealed class QuotaAuthorizationDecorator(
     ) =>
         await accountReadScope.CanReadAsync(
             request.AccountIds,
-            BillingResourceTypes.QUOTA_RESOURCE_TYPE
+            BillingResourceTypes.REGISTRATION_RESOURCE_TYPE
         )
             ? await inner.ListRegistrationsAsync(request, ct)
             : new RetrieveListResult<Registration>(
@@ -137,5 +137,12 @@ internal sealed class QuotaAuthorizationDecorator(
         && await authorizationProvider.IsAuthorizedAsync(
             action,
             BillingResourceTypes.QUOTA_RESOURCE_TYPE
+        );
+
+    private async Task<bool> IsAuthorizedForRegistrationsAsync(Guid accountId) =>
+        authorizationProvider.HasAccountContext(accountId)
+        && await authorizationProvider.IsAuthorizedAsync(
+            AuthAction.Execute,
+            BillingResourceTypes.REGISTRATION_RESOURCE_TYPE
         );
 }

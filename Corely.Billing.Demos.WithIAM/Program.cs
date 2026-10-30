@@ -91,6 +91,7 @@ app.MapStaticAssets();
 app.MapRazorPages();
 app.MapIAMTokenEndpoints();
 app.MapBillingApiEndpoints();
+app.MapBillingMeteringEndpoints();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 app.Run();

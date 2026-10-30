@@ -113,7 +113,7 @@ public class AuditDecoratorTests
     }
 
     [Fact]
-    public async Task RegisterAsync_RecordsAnExecuteOnQuota_ForARegistration()
+    public async Task RegisterAsync_RecordsAnExecuteOnRegistration_ForARegistration()
     {
         var inner = new Mock<IQuotaService>();
         inner
@@ -126,7 +126,7 @@ public class AuditDecoratorTests
 
         var captured = Assert.Single(_auditProvider.Calls);
         Assert.Equal(AuthAction.Execute, captured.Call.Action);
-        Assert.Equal(BillingResourceTypes.QUOTA_RESOURCE_TYPE, captured.Call.ResourceType);
+        Assert.Equal(BillingResourceTypes.REGISTRATION_RESOURCE_TYPE, captured.Call.ResourceType);
         Assert.Equal(nameof(RegisterResultCode.Registered), captured.Outcome!.ResultCode);
     }
 }

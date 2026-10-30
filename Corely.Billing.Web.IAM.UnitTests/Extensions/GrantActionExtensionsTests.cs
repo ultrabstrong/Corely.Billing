@@ -30,6 +30,13 @@ public class GrantActionExtensionsTests
         );
 
     [Fact]
+    public void Permissions_AreExecuteOnRegistration_ForManageRegistrations() =>
+        Assert.Equal(
+            [(AuthAction.Execute, BillingResourceTypes.REGISTRATION_RESOURCE_TYPE)],
+            GrantAction.ManageRegistrations.Permissions()
+        );
+
+    [Fact]
     public void Permissions_MapsEveryMember_ForTheWholeEnum() =>
         Assert.All(Enum.GetValues<GrantAction>(), action => Assert.NotEmpty(action.Permissions()));
 }
