@@ -7,6 +7,7 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.IAM.Endpoints;
 using Corely.IAM.Users.Providers;
+using Corely.IAM.Web.Endpoints;
 using Corely.IAM.Web.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -116,7 +117,12 @@ public static class BillingApiEndpointExtensions
             async (accountId, op) =>
             {
                 var result = await quota.GetBalanceAsync(accountId, op, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -132,7 +138,12 @@ public static class BillingApiEndpointExtensions
             async (accountId, op) =>
             {
                 var result = await quota.GetAllowanceAsync(accountId, op, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -148,7 +159,12 @@ public static class BillingApiEndpointExtensions
             async (accountId, op) =>
             {
                 var result = await quota.HasFeatureAsync(accountId, op, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -164,7 +180,12 @@ public static class BillingApiEndpointExtensions
             async (accountId, op) =>
             {
                 var result = await quota.GetCapacityAsync(accountId, op, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -192,7 +213,12 @@ public static class BillingApiEndpointExtensions
 
                 using var scope = operations.BeginScope(body.OperationContext);
                 var result = await quota.ReserveAsync(request, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -217,7 +243,12 @@ public static class BillingApiEndpointExtensions
 
                 using var scope = operations.BeginScope(body.OperationContext);
                 var result = await quota.SettleAsync(request, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -242,7 +273,12 @@ public static class BillingApiEndpointExtensions
 
                 using var scope = operations.BeginScope(body.OperationContext);
                 var result = await quota.ReleaseAsync(request, ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -259,7 +295,12 @@ public static class BillingApiEndpointExtensions
             async (accountId, op) =>
             {
                 var result = await quota.RegisterAsync(body.ToRegisterRequest(accountId, op), ct);
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -289,7 +330,12 @@ public static class BillingApiEndpointExtensions
                     ),
                     ct
                 );
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -304,7 +350,7 @@ public static class BillingApiEndpointExtensions
             return Results.Unauthorized();
 
         var result = await quota.ReleaseRegistrationAsync(accountId, registrationId, ct);
-        return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+        return Respond(result, result.ResultCode, result.Message, result.ResultCode.StatusCode);
     }
 
     private static async Task<IResult> ListGrantsAsync(
@@ -325,7 +371,12 @@ public static class BillingApiEndpointExtensions
                     new ListGrantsRequest([accountId], kind, op, Skip: skip, Take: take),
                     ct: ct
                 );
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -340,7 +391,7 @@ public static class BillingApiEndpointExtensions
             return Results.Unauthorized();
 
         var result = await grants.GetGrantAsync(accountId, grantId, ct);
-        return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+        return Respond(result, result.ResultCode, result.Message, result.ResultCode.StatusCode);
     }
 
     private static async Task<IResult> GetConsumptionTotalAsync(
@@ -372,7 +423,12 @@ public static class BillingApiEndpointExtensions
                     ),
                     ct
                 );
-                return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+                return Respond(
+                    result,
+                    result.ResultCode,
+                    result.Message,
+                    result.ResultCode.StatusCode
+                );
             }
         );
 
@@ -393,7 +449,7 @@ public static class BillingApiEndpointExtensions
             new ListConsumptionEventsRequest([accountId], fromUtc, toUtc, Skip: skip, Take: take),
             ct
         );
-        return Results.Json(result, statusCode: result.ResultCode.StatusCode);
+        return Respond(result, result.ResultCode, result.Message, result.ResultCode.StatusCode);
     }
 
     private static async Task<IResult> WithOperationAsync(
@@ -431,5 +487,15 @@ public static class BillingApiEndpointExtensions
         );
 
     private static IResult Invalid(string field, string message) =>
-        Results.ValidationProblem(new Dictionary<string, string[]> { [field] = [message] });
+        Results.Json(
+            ApiResponse.Failure("ValidationError", $"{field}: {message}"),
+            statusCode: StatusCodes.Status400BadRequest
+        );
+
+    private static IResult Respond<TResult>(
+        TResult result,
+        Enum resultCode,
+        string? message,
+        int statusCode
+    ) => new BillingApiResult<TResult>(result, resultCode, message, statusCode);
 }

@@ -83,6 +83,7 @@ app.Use(
         await next();
     }
 );
+app.UseIAMApiResponses("/api");
 app.UseIAMWebAuthentication();
 app.UseHttpsRedirection();
 app.UseAntiforgery();

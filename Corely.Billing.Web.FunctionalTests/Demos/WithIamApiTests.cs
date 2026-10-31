@@ -39,6 +39,7 @@ public sealed class WithIamApiTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.Single().Scheme);
+        await AssertFailureAsync(response, "Unauthorized");
     }
 
     [Fact]
@@ -50,7 +51,12 @@ public sealed class WithIamApiTests : IAsyncLifetime
         var body = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.InRange(body.GetProperty("remaining").GetInt64(), 1, 2_250_000 - 1);
+        Assert.Equal("Success", body.GetProperty("resultCode").GetString());
+        Assert.InRange(
+            body.GetProperty("data").GetProperty("remaining").GetInt64(),
+            1,
+            2_250_000 - 1
+        );
     }
 
     [Fact]
@@ -102,6 +108,7 @@ public sealed class WithIamApiTests : IAsyncLifetime
         );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertFailureAsync(response, "ValidationError");
     }
 
     [Fact]
@@ -112,6 +119,7 @@ public sealed class WithIamApiTests : IAsyncLifetime
         using var response = await _client.GetAsync("/api/billing/grants", Ct);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        await AssertFailureAsync(response, "UnauthorizedError");
     }
 
     [Fact]
@@ -129,6 +137,15 @@ public sealed class WithIamApiTests : IAsyncLifetime
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    private static async Task AssertFailureAsync(HttpResponseMessage response, string resultCode)
+    {
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
+
+        Assert.Equal(resultCode, body.GetProperty("resultCode").GetString());
+        Assert.False(string.IsNullOrEmpty(body.GetProperty("message").GetString()));
+        Assert.Equal(JsonValueKind.Null, body.GetProperty("data").ValueKind);
+    }
+
     private async Task AuthorizeAsync()
     {
         using var exchange = await _client.PostAsJsonAsync(
@@ -140,7 +157,7 @@ public sealed class WithIamApiTests : IAsyncLifetime
         var pair = await exchange.Content.ReadFromJsonAsync<JsonElement>(Ct);
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            pair.GetProperty("authToken").GetString()
+            pair.GetProperty("data").GetProperty("authToken").GetString()
         );
     }
 }

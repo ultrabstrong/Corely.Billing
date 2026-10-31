@@ -12,6 +12,7 @@ builder.Services.AddIAMWeb(options => options.AcceptBearerTokens = true);
 builder.Services.AddBillingWebIam();
 
 var app = builder.Build();
+app.UseIAMApiResponses("/api");
 app.UseIAMWebAuthentication();
 
 app.MapIAMTokenEndpoints();
@@ -70,7 +71,10 @@ id. A missing one is a 400.
 
 ## Responses
 
-The body is the service's result as JSON. The status follows its result code:
+Every response has the shape Corely.IAM.Web defines:
+[Responses](https://github.com/ultrabstrong/Corely.IAM/blob/master/Corely.IAM.Web/Docs/bearer-api.md#responses).
+`resultCode` and `message` are the service's, and `data` holds the rest of its result, or is null on a
+failure. A list's page is `data` itself. The status follows the result code:
 
 | Result code | Status |
 |-------------|--------|

@@ -13,6 +13,7 @@ using Corely.Billing.Quota.Models;
 using Corely.Billing.Registrations.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.IAM.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -303,13 +304,9 @@ public sealed class CrossAccountScopingTests : IAsyncLifetime
         };
 
     public static TheoryData<string> CaseNames() =>
-        [
-            .. ServiceMethods()
-                .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
-                .Order(StringComparer.Ordinal),
-        ];
+        [.. CrossAccountCoverage.MethodsOf(Services()).Order(StringComparer.Ordinal)];
 
-    private static IEnumerable<MethodInfo> ServiceMethods() =>
+    private static IEnumerable<Type> Services() =>
         typeof(IGrantService)
             .Assembly.GetExportedTypes()
             .Where(t =>
@@ -317,21 +314,18 @@ public sealed class CrossAccountScopingTests : IAsyncLifetime
                 && t.Namespace == typeof(IGrantService).Namespace
                 && t.Name.StartsWith('I')
                 && t.Name.EndsWith("Service")
-            )
-            .SelectMany(t => t.GetMethods());
+            );
 
     [Fact]
     public void ServiceMethods_HaveACrossAccountCase_ForEveryPublicServiceMethod()
     {
-        var missing = CaseNames()
-            .Select(r => r.Data)
-            .Except(Cases().Keys, StringComparer.Ordinal)
-            .ToList();
-
-        Assert.True(
-            missing.Count == 0,
-            $"Add a cross account case for: {string.Join(", ", missing)}"
+        var coverage = CrossAccountCoverage.Check(
+            Services(),
+            Cases().Keys,
+            new Dictionary<string, string>()
         );
+
+        Assert.True(coverage.IsComplete, coverage.ToString());
     }
 
     [Theory]
