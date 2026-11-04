@@ -1,5 +1,5 @@
 @inherits BillingComponentBase
-<figure class="cbw-chart">
+<figure class="cbw-chart @(Compact ? "cbw-chart-compact" : null)">
     <figcaption class="cbw-chart-head">
         <span class="cbw-chart-caption">
             <span class="cbw-chart-title">@Caption</span>
@@ -67,7 +67,7 @@
         <canvas @ref="_usageCanvas" role="img" aria-label="@ChartLabel"></canvas>
     </div>
 
-    <div hidden="@(!ShowCharts || _model?.Capacity.Count == 0)">
+    <div hidden="@(Compact || !ShowCharts || _model?.Capacity.Count == 0)">
         <div class="cbw-chart-caption cbw-chart-caption-secondary">
             <span class="cbw-chart-title">Live capacity</span>
             <span class="cbw-chart-subtitle text-body-secondary">What each limited grant allows while it is live</span>

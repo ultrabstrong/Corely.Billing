@@ -55,6 +55,9 @@ public partial class UsageChart
     [Parameter]
     public bool ShowGrants { get; set; } = true;
 
+    [Parameter]
+    public bool Compact { get; set; }
+
     private ElementReference _usageCanvas;
     private ElementReference _capacityCanvas;
     private IJSObjectReference? _module;
@@ -352,7 +355,7 @@ public partial class UsageChart
                     }),
                 }
             );
-            if (_model.Capacity.Count > 0)
+            if (!Compact && _model.Capacity.Count > 0)
             {
                 await _module.InvokeVoidAsync(
                     "renderCapacity",

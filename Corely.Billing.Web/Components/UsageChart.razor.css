@@ -113,3 +113,12 @@
         height: 260px;
     }
 }
+
+.cbw-chart-compact .cbw-chart-canvas,
+.cbw-chart-compact .cbw-chart-placeholder {
+    height: 140px;
+}
+
+.cbw-chart-compact .cbw-chart-title {
+    font-size: 0.8rem;
+}
