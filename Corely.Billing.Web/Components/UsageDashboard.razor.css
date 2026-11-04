@@ -36,8 +36,41 @@
         border-radius: 0;
     }
 
+    .cbw-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cbw-filters > .btn-group,
+    .cbw-daterange,
+    .cbw-export {
+        grid-column: 1 / -1;
+    }
+
+    .cbw-filters > .btn-group {
+        display: flex;
+    }
+
+    .cbw-filters > .btn-group > .btn {
+        flex: 1 1 0;
+    }
+
+    .cbw-date {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
     .cbw-date input {
-        width: 8.5rem;
+        width: 100%;
+    }
+
+    .cbw-filters ::deep .cbw-filter,
+    .cbw-filters ::deep .cbw-filter > summary {
+        width: 100%;
+    }
+
+    .cbw-export {
+        margin-left: 0;
     }
 }
 

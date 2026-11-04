@@ -43,3 +43,14 @@ still limited), so the requester had no way to learn it was declined or why.
 
 Take the new version, and add the cancellation notice to `GrantRequestNotificationService` beside the
 existing three, with its email template and tests.
+
+## As built (Corely.Billing 5.0.0, Corely.Billing.Web 6.0.0)
+
+1. The grant list loads every request for the account: pending ones as rows, and the latest 20
+   decided ones (approved, declined, cancelled) as a "Request history" list with outcome, date and
+   reason. How far back history goes is that fixed 20 for now.
+2. Approve, Decline and Cancel open one Bootstrap styled dialog rendered by Blazor, showing what was
+   asked, why and when, with a reason box for decline and cancel. Escape closes it.
+3. Only the requester may cancel; an account owner cancelling someone else's request was left out
+   (the processor refuses it) until it is wanted.
+4. The Usage & Metrics filters and chart controls were laid out for phones in the same release.

@@ -95,4 +95,20 @@ internal class GrantRequestProcessorTelemetryDecorator(
             _telemetry.Increment(BillingMetricNames.GrantRequests.GRANT_REQUEST_DECLINED);
         return result;
     }
+
+    public async Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    )
+    {
+        var result = await _logger.ExecuteWithLoggingAsync(
+            nameof(GrantRequestProcessor),
+            request,
+            () => _inner.CancelGrantRequestAsync(request, ct),
+            logResult: true
+        );
+        if (result.ResultCode == DecideGrantRequestResultCode.Success)
+            _telemetry.Increment(BillingMetricNames.GrantRequests.GRANT_REQUEST_CANCELLED);
+        return result;
+    }
 }

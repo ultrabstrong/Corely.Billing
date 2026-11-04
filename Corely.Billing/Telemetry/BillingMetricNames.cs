@@ -39,6 +39,7 @@ public static class BillingMetricNames
         public const string GRANT_REQUEST_CREATED = "entitlements.grant_request.created";
         public const string GRANT_REQUEST_APPROVED = "entitlements.grant_request.approved";
         public const string GRANT_REQUEST_DECLINED = "entitlements.grant_request.declined";
+        public const string GRANT_REQUEST_CANCELLED = "entitlements.grant_request.cancelled";
         public const string GRANT_REQUEST_QUANTITY = "entitlements.grant_request.quantity";
     }
 

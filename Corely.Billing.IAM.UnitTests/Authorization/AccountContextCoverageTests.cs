@@ -68,6 +68,11 @@ public class AccountContextCoverageTests
             Request(s)
                 .DeclineGrantRequestAsync(new DeclineGrantRequestRequest(Victim, GrantId))
                 .AsResult(),
+        ["IGrantRequestService.CancelGrantRequestAsync"] = s =>
+            Request(s)
+                .CancelGrantRequestAsync(new CancelGrantRequestRequest(Victim, GrantId))
+                .AsResult(),
+
         ["IQuotaService.GetBalanceAsync"] = s =>
             Quota(s).GetBalanceAsync(Victim, Extraction).AsResult(),
         ["IQuotaService.ReserveAsync"] = s =>

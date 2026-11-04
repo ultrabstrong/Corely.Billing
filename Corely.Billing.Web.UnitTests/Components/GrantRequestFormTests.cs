@@ -32,7 +32,10 @@ public class GrantRequestFormTests : BillingWebTestContext
         form.Find("form").Submit();
 
         Assert.Equal(
-            new RequestGrantRequest(AccountId, Extraction, 2_500, "Month end batch"),
+            new RequestGrantRequest(AccountId, Extraction, 2_500, "Month end batch")
+            {
+                RequestedByUserId = SignedInUserId,
+            },
             _sent
         );
         Assert.NotNull(_raised);
@@ -85,7 +88,10 @@ public class GrantRequestFormTests : BillingWebTestContext
         Assert.Empty(form.FindAll("#cbw-request-quantity"));
         form.Find("form").Submit();
 
-        Assert.Equal(new RequestGrantRequest(AccountId, Sftp, null), _sent);
+        Assert.Equal(
+            new RequestGrantRequest(AccountId, Sftp, null) { RequestedByUserId = SignedInUserId },
+            _sent
+        );
     }
 
     [Fact]

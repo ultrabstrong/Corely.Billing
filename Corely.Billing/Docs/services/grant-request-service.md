@@ -11,6 +11,7 @@ An account asks for a grant; someone allowed to decide approves or declines it. 
 | `ListGrantRequestsAsync` | `ListGrantRequestsRequest`, `IReadOnlySet<Guid>? authorizedResourceIds` | `RetrieveListResult<GrantRequest>` |
 | `ApproveGrantRequestAsync` | `ApproveGrantRequestRequest` | `ApproveGrantRequestResult` |
 | `DeclineGrantRequestAsync` | `DeclineGrantRequestRequest` | `DeclineGrantRequestResult` |
+| `CancelGrantRequestAsync` | `CancelGrantRequestRequest` | `CancelGrantRequestResult` |
 
 ## Statuses
 
@@ -78,3 +79,11 @@ Without an order, pending requests list first, then newest `RequestedUtc` first.
 - Every method is scoped by `accountId`; another account's request reads as `NotFoundError`
 - Deleting the grant an approval created leaves the request's history, `GrantId` included
 - Nothing here notifies anyone. A host that emails an admin when a request arrives, or the requester when it is decided, decorates `IGrantRequestService` through `BillingOptions.DecorateServices` and acts on a `Success` result
+
+## Cancelling
+
+The user who asked can withdraw a pending request with `CancelGrantRequestAsync`, giving an optional
+reason. It moves to `Cancelled`, recording the reason, the time and who cancelled it in the same
+fields a decision uses. Anyone else is refused with `UnauthorizedError`, and a request already
+decided answers `AlreadyDecidedError`. With Corely.IAM permissions, cancelling needs Read on
+`grant_request`; the requester check is the processor's.

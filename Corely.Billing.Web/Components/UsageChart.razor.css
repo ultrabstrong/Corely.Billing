@@ -93,6 +93,17 @@
 }
 
 @media (max-width: 575.98px) {
+    .cbw-chart-controls {
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    .cbw-chart-controls .form-select {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+    }
+
     .cbw-chart-canvas,
     .cbw-chart-placeholder {
         height: 220px;

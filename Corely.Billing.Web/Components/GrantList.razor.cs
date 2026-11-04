@@ -7,6 +7,7 @@ using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.Web.Components;
@@ -54,12 +55,15 @@ public partial class GrantList
     private bool _deciding;
     private string? _error;
     private Guid? _confirmingDelete;
-    private Guid? _approving;
-    private Guid? _declining;
-    private string? _declineReason;
+    private List<GrantRequest> _history = [];
+    private Guid? _userId;
+    private (DialogMode Mode, GrantRequest Request)? _dialog;
+    private string? _reason;
     private Guid? _loadedFor;
     private bool _exporting;
     private ExportOutcome? _export;
+
+    private const int HISTORY_SIZE = 20;
 
     private DateTime Now => TimeProvider.GetUtcNow().UtcDateTime;
 
@@ -112,18 +116,23 @@ public partial class GrantList
         }
 
         _grants = result.Data?.Items ?? [];
-        _requests = await PendingRequestsAsync();
+        var requests = await RequestsAsync();
+        _requests = [.. requests.Where(r => r.Status == GrantRequestStatus.Pending)];
+        _history =
+        [
+            .. requests
+                .Where(r => r.Status != GrantRequestStatus.Pending)
+                .OrderByDescending(r => r.DecidedUtc ?? r.RequestedUtc)
+                .Take(HISTORY_SIZE),
+        ];
+        _userId ??= await AccountAccessor.GetUserIdAsync();
         _loading = false;
     }
 
-    private async Task<List<GrantRequest>> PendingRequestsAsync()
+    private async Task<List<GrantRequest>> RequestsAsync()
     {
         var result = await GrantRequestService.ListGrantRequestsAsync(
-            new ListGrantRequestsRequest(
-                [AccountId],
-                Status: GrantRequestStatus.Pending,
-                Take: int.MaxValue
-            )
+            new ListGrantRequestsRequest([AccountId], Take: int.MaxValue)
         );
         return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
@@ -132,54 +141,63 @@ public partial class GrantList
 
     private void CancelDelete() => _confirmingDelete = null;
 
-    private void ConfirmApprove(GrantRequest request)
+    private void Open(DialogMode mode, GrantRequest request)
     {
-        _declining = null;
-        _approving = request.GrantRequestId;
+        _reason = null;
+        _dialog = (mode, request);
     }
 
-    private void ConfirmDecline(GrantRequest request)
+    private void CloseDialog()
     {
-        _approving = null;
-        _declineReason = null;
-        _declining = request.GrantRequestId;
+        if (!_deciding)
+            _dialog = null;
     }
 
-    private void CancelDecision()
+    private void OnDialogKey(KeyboardEventArgs e)
     {
-        _approving = null;
-        _declining = null;
+        if (e.Key == "Escape")
+            CloseDialog();
     }
 
-    private async Task ApproveAsync(GrantRequest request)
+    private async Task ConfirmDialogAsync()
+    {
+        if (_dialog is not { } dialog)
+            return;
+
+        _deciding = true;
+        var userId = await AccountAccessor.GetUserIdAsync();
+        var id = dialog.Request.GrantRequestId;
+        var (code, message) = dialog.Mode switch
+        {
+            DialogMode.Approve => await ApproveAsync(id, userId),
+            DialogMode.Decline => Outcome(
+                await GrantRequestService.DeclineGrantRequestAsync(
+                    new DeclineGrantRequestRequest(AccountId, id, _reason, userId)
+                )
+            ),
+            _ => Outcome(
+                await GrantRequestService.CancelGrantRequestAsync(
+                    new CancelGrantRequestRequest(AccountId, id, _reason, userId)
+                )
+            ),
+        };
+        await DecidedAsync(code, message, dialog.Mode.Verb());
+    }
+
+    private async Task<(DecideGrantRequestResultCode, string)> ApproveAsync(Guid id, Guid? userId)
     {
         var today = Now.Date;
-        _deciding = true;
         var result = await GrantRequestService.ApproveGrantRequestAsync(
-            new ApproveGrantRequestRequest(
-                AccountId,
-                request.GrantRequestId,
-                today,
-                today.AddYears(1),
-                await AccountAccessor.GetUserIdAsync()
-            )
+            new ApproveGrantRequestRequest(AccountId, id, today, today.AddYears(1), userId)
         );
-        await DecidedAsync(result.ResultCode, result.Message, "approve");
+        return (result.ResultCode, result.Message);
     }
 
-    private async Task DeclineAsync(GrantRequest request)
-    {
-        _deciding = true;
-        var result = await GrantRequestService.DeclineGrantRequestAsync(
-            new DeclineGrantRequestRequest(
-                AccountId,
-                request.GrantRequestId,
-                _declineReason,
-                await AccountAccessor.GetUserIdAsync()
-            )
-        );
-        await DecidedAsync(result.ResultCode, result.Message, "decline");
-    }
+    private static (DecideGrantRequestResultCode, string) Outcome(DeclineGrantRequestResult r) =>
+        (r.ResultCode, r.Message);
+
+    private static (DecideGrantRequestResultCode, string) Outcome(CancelGrantRequestResult r) =>
+        (r.ResultCode, r.Message);
 
     private async Task DecidedAsync(
         DecideGrantRequestResultCode code,
@@ -188,7 +206,7 @@ public partial class GrantList
     )
     {
         _deciding = false;
-        CancelDecision();
+        _dialog = null;
         if (
             code
             is DecideGrantRequestResultCode.Success

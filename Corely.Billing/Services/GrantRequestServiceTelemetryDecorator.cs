@@ -70,4 +70,15 @@ internal class GrantRequestServiceTelemetryDecorator(
             () => _inner.DeclineGrantRequestAsync(request, ct),
             logResult: true
         );
+
+    public Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    ) =>
+        _logger.ExecuteWithLoggingAsync(
+            nameof(GrantRequestService),
+            request,
+            () => _inner.CancelGrantRequestAsync(request, ct),
+            logResult: true
+        );
 }

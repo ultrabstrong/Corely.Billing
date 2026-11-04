@@ -31,4 +31,9 @@ public interface IGrantRequestService
         DeclineGrantRequestRequest request,
         CancellationToken ct = default
     );
+
+    Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    );
 }

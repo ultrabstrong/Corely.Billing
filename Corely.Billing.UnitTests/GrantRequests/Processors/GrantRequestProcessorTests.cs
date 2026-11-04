@@ -288,4 +288,61 @@ public class GrantRequestProcessorTests
 
         Assert.Equal(RetrieveResultCode.NotFoundError, result.ResultCode);
     }
+
+    private async Task<Guid> PendingFromAsync(Guid requester)
+    {
+        var result = await _processor.RequestGrantAsync(
+            Ask() with
+            {
+                RequestedByUserId = requester,
+            }
+        );
+        return result.CreatedId;
+    }
+
+    [Fact]
+    public async Task CancelGrantRequestAsync_RecordsTheReason_ForTheRequester()
+    {
+        var requester = Guid.CreateVersion7();
+        var requestId = await PendingFromAsync(requester);
+
+        var result = await _processor.CancelGrantRequestAsync(
+            new(AccountId, requestId, " Found pages elsewhere ", requester)
+        );
+
+        Assert.Equal(DecideGrantRequestResultCode.Success, result.ResultCode);
+        var request = await _requestRepo.GetAsync(e => e.GrantRequestId == requestId);
+        Assert.Equal(GrantRequestStatus.Cancelled, request!.Status);
+        Assert.Equal("Found pages elsewhere", request.DecisionReason);
+        Assert.Equal(requester, request.DecidedByUserId);
+        Assert.Equal(0, await _grantRepo.CountAsync());
+    }
+
+    [Fact]
+    public async Task CancelGrantRequestAsync_ChangesNothing_ForSomeoneElse()
+    {
+        var requestId = await PendingFromAsync(Guid.CreateVersion7());
+
+        var result = await _processor.CancelGrantRequestAsync(
+            new(AccountId, requestId, null, Guid.CreateVersion7())
+        );
+
+        Assert.Equal(DecideGrantRequestResultCode.UnauthorizedError, result.ResultCode);
+        var request = await _requestRepo.GetAsync(e => e.GrantRequestId == requestId);
+        Assert.Equal(GrantRequestStatus.Pending, request!.Status);
+    }
+
+    [Fact]
+    public async Task CancelGrantRequestAsync_ChangesNothing_ForADecidedRequest()
+    {
+        var requester = Guid.CreateVersion7();
+        var requestId = await PendingFromAsync(requester);
+        await _processor.ApproveGrantRequestAsync(Approval(requestId));
+
+        var result = await _processor.CancelGrantRequestAsync(
+            new(AccountId, requestId, null, requester)
+        );
+
+        Assert.Equal(DecideGrantRequestResultCode.AlreadyDecidedError, result.ResultCode);
+    }
 }

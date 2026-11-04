@@ -41,6 +41,7 @@ public abstract class BillingWebTestContext : BunitContext
         Services.AddSingleton(
             Mock.Of<IBillingAccountAccessor>(a =>
                 a.GetAccountIdAsync() == Task.FromResult<Guid?>(AccountId)
+                && a.GetUserIdAsync() == Task.FromResult<Guid?>(SignedInUserId)
             )
         );
         Services.AddSingleton<IGrantActionGate>(ActionGate);
@@ -133,6 +134,8 @@ public abstract class BillingWebTestContext : BunitContext
                     null
                 )
             );
+
+    protected static readonly Guid SignedInUserId = Guid.CreateVersion7();
 
     protected static GrantRequest Request(long quantity, string? note = null, int daysAgo = 2) =>
         new()

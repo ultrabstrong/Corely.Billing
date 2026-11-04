@@ -85,6 +85,12 @@
                     </div>
                     <div class="cbw-grant-actions">
                         @ActionGate.Gate(GrantAction.Decide, request.GrantRequestId, Decision(request))
+                        @if (request.RequestedByUserId is { } requester && requester == _userId)
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-secondary" aria-label="Cancel request" @onclick="() => Open(DialogMode.Cancel, request)">
+                                <i class="bi bi-x-circle" aria-hidden="true"></i><span class="cbw-action-label">Cancel request</span>
+                            </button>
+                        }
                     </div>
                 </li>
             }
@@ -145,32 +151,92 @@
             }
         </ul>
     }
+
+    @if (_history.Count > 0)
+    {
+        <section class="cbw-request-history mt-4" aria-label="Decided grant requests">
+            <h3 class="h6 text-body-secondary mb-2"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Request history</h3>
+            <ul class="list-group">
+                @foreach (var past in _history)
+                {
+                    <li class="list-group-item cbw-history-row" data-grant-request-id="@past.GrantRequestId">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="badge rounded-pill @past.Status.HistoryBadgeClass()">@past.Status</span>
+                            <span class="fw-semibold">@past.Asked(Vocabulary)</span>
+                            <span class="text-body-secondary">@Vocabulary.DisplayName(past.Operation)</span>
+                            @if (past.DecidedUtc is { } decided)
+                            {
+                                <span class="text-body-secondary ms-auto small">@decided.ToString("yyyy-MM-dd")</span>
+                            }
+                        </div>
+                        @if (past.Note is { } asked)
+                        {
+                            <div class="small text-body-secondary mt-1">Asked: @asked</div>
+                        }
+                        @if (past.DecisionReason is { } why)
+                        {
+                            <div class="small mt-1">Reason: @why</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
 </div>
+
+@if (_dialog is { } dialog)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="cbw-dialog-title" @onkeydown="OnDialogKey">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="cbw-dialog-title">@dialog.Mode.Title()</h2>
+                    <button type="button" class="btn-close" aria-label="Close" disabled="@_deciding" @onclick="CloseDialog"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4">Asked for</dt>
+                        <dd class="col-sm-8">@dialog.Request.Asked(Vocabulary), @Vocabulary.DisplayName(dialog.Request.Operation)</dd>
+                        <dt class="col-sm-4">Why</dt>
+                        <dd class="col-sm-8">@(dialog.Request.Note ?? "No note")</dd>
+                        <dt class="col-sm-4">Asked</dt>
+                        <dd class="col-sm-8">@dialog.Request.RequestedText(Now)</dd>
+                    </dl>
+                    @if (dialog.Mode == DialogMode.Approve)
+                    {
+                        <p class="mb-0">Approving creates a grant for a year from today; you can change its window afterwards. The requester is told.</p>
+                    }
+                    else
+                    {
+                        <label class="form-label" for="cbw-dialog-reason">Reason, optional</label>
+                        <textarea id="cbw-dialog-reason" class="form-control" rows="3" maxlength="500" @bind="_reason"></textarea>
+                        <p class="form-text mb-0">@dialog.Mode.Consequence()</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" disabled="@_deciding" @onclick="CloseDialog">Back</button>
+                    <button type="button" class="btn @dialog.Mode.ConfirmClass()" disabled="@_deciding" @onclick="ConfirmDialogAsync">
+                        @if (_deciding)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>
+                        }
+                        @dialog.Mode.ConfirmText()
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private RenderFragment Decision(GrantRequest request) =>
         @<text>
-            @if (_approving == request.GrantRequestId)
-            {
-                <span class="cbw-confirm-text">Approve @request.Asked(Vocabulary) for a year from today?</span>
-                <button type="button" class="btn btn-sm btn-success" disabled="@_deciding" @onclick="() => ApproveAsync(request)">Approve</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deciding" @onclick="CancelDecision">Cancel</button>
-            }
-            else if (_declining == request.GrantRequestId)
-            {
-                <label class="visually-hidden" for="cbw-decline-@request.GrantRequestId">Reason, optional</label>
-                <input id="cbw-decline-@request.GrantRequestId" class="form-control form-control-sm cbw-decline-reason" placeholder="Reason, optional" maxlength="500" @bind="_declineReason" />
-                <button type="button" class="btn btn-sm btn-danger" disabled="@_deciding" @onclick="() => DeclineAsync(request)">Decline</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" disabled="@_deciding" @onclick="CancelDecision">Keep</button>
-            }
-            else
-            {
-                <button type="button" class="btn btn-sm btn-outline-success" aria-label="Approve request" @onclick="() => ConfirmApprove(request)">
-                    <i class="bi bi-check-lg" aria-hidden="true"></i><span class="cbw-action-label">Approve</span>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Decline request" @onclick="() => ConfirmDecline(request)">
-                    <i class="bi bi-x-lg" aria-hidden="true"></i><span class="cbw-action-label">Decline</span>
-                </button>
-            }
+            <button type="button" class="btn btn-sm btn-outline-success" aria-label="Approve request" @onclick="() => Open(DialogMode.Approve, request)">
+                <i class="bi bi-check-lg" aria-hidden="true"></i><span class="cbw-action-label">Approve</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" aria-label="Decline request" @onclick="() => Open(DialogMode.Decline, request)">
+                <i class="bi bi-x-lg" aria-hidden="true"></i><span class="cbw-action-label">Decline</span>
+            </button>
         </text>;
 }

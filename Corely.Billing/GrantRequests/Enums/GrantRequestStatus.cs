@@ -5,4 +5,5 @@ public enum GrantRequestStatus
     Pending,
     Approved,
     Declined,
+    Cancelled,
 }

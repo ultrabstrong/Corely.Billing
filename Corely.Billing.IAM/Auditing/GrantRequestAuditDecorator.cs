@@ -66,6 +66,16 @@ internal sealed class GrantRequestAuditDecorator(
             r => AuditOutcome.Of(r.ResultCode)
         );
 
+    public Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    ) =>
+        auditProvider.RecordAsync(
+            OnGrantRequest(AuthAction.Update, request.AccountId, request.GrantRequestId),
+            () => inner.CancelGrantRequestAsync(request, ct),
+            r => AuditOutcome.Of(r.ResultCode)
+        );
+
     private static AuditCall OnGrantRequest(
         AuthAction action,
         Guid? accountId,

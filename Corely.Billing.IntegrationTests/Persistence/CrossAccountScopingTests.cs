@@ -195,6 +195,12 @@ public sealed class CrossAccountScopingTests : IAsyncLifetime
                         new DeclineGrantRequestRequest(Attacker, _victimRequestId)
                     )
                 ),
+            ["IGrantRequestService.CancelGrantRequestAsync"] = () =>
+                Call<IGrantRequestService>(s =>
+                    s.CancelGrantRequestAsync(
+                        new CancelGrantRequestRequest(Attacker, _victimRequestId)
+                    )
+                ),
             ["IQuotaService.GetBalanceAsync"] = () =>
                 Call<IQuotaService>(s => s.GetBalanceAsync(Attacker, TestUsage.Extraction)),
             ["IQuotaService.ReserveAsync"] = () =>

@@ -37,4 +37,9 @@ internal class GrantRequestService(IGrantRequestProcessor grantRequestProcessor)
         DeclineGrantRequestRequest request,
         CancellationToken ct = default
     ) => _grantRequestProcessor.DeclineGrantRequestAsync(request, ct);
+
+    public Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    ) => _grantRequestProcessor.CancelGrantRequestAsync(request, ct);
 }

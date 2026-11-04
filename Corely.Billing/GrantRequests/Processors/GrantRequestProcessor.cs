@@ -279,6 +279,62 @@ internal class GrantRequestProcessor(
         return new DeclineGrantRequestResult(DecideGrantRequestResultCode.Success, string.Empty);
     }
 
+    public async Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
+        var validation = _validationProvider.ValidateAndLog(request);
+        if (!validation.IsValid)
+        {
+            return new CancelGrantRequestResult(
+                DecideGrantRequestResultCode.ValidationError,
+                validation.Message
+            );
+        }
+
+        var entity = await FindAsync(request.AccountId, request.GrantRequestId, ct);
+        if (Undecidable(entity) is { } refused)
+            return new CancelGrantRequestResult(refused.Code, refused.Message);
+
+        if (entity!.RequestedByUserId != request.CancelledByUserId)
+        {
+            return new CancelGrantRequestResult(
+                DecideGrantRequestResultCode.UnauthorizedError,
+                "Only the person who asked can cancel a grant request"
+            );
+        }
+
+        var reason = string.IsNullOrWhiteSpace(request.Reason) ? null : request.Reason.Trim();
+        var cancelledUtc = _timeProvider.GetUtcNow().UtcDateTime;
+        var claimed = await ClaimAsync(
+            request.AccountId,
+            request.GrantRequestId,
+            set =>
+                set.SetProperty(e => e.Status, GrantRequestStatus.Cancelled)
+                    .SetProperty(e => e.DecisionReason, reason)
+                    .SetProperty(e => e.DecidedUtc, cancelledUtc)
+                    .SetProperty(e => e.DecidedByUserId, request.CancelledByUserId),
+            ct
+        );
+        if (!claimed)
+        {
+            return new CancelGrantRequestResult(
+                DecideGrantRequestResultCode.AlreadyDecidedError,
+                "Grant request was already decided"
+            );
+        }
+
+        _logger.LogInformation(
+            "Grant request {GrantRequestId} cancelled for AccountId {AccountId}",
+            request.GrantRequestId,
+            request.AccountId
+        );
+        return new CancelGrantRequestResult(DecideGrantRequestResultCode.Success, string.Empty);
+    }
+
     private Task<GrantRequestEntity?> FindAsync(
         Guid accountId,
         Guid grantRequestId,

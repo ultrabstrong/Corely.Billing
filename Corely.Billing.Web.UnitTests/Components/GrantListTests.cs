@@ -71,15 +71,25 @@ public class GrantListTests : BillingWebTestContext
     }
 
     [Fact]
-    public void Render_ListsOnlyPendingRequests_ForTheRequestQuery()
+    public void Render_ShowsPendingAsRowsAndDecidedAsHistory_ForTheAccountsRequests()
     {
-        Render();
+        var pending = Request(5_000);
+        var declined = Request(9_000);
+        declined.Status = GrantRequestStatus.Declined;
+        declined.DecidedUtc = Now;
+        declined.DecisionReason = "Use the annual plan";
+        HaveRequests(pending, declined);
 
+        var list = Render();
+
+        Assert.Single(list.FindAll(".cbw-request-row"));
+        var history = Assert.Single(list.FindAll(".cbw-history-row"));
+        Assert.Contains("Declined", history.TextContent);
+        Assert.Contains("Use the annual plan", history.TextContent);
         GrantRequests.Verify(g =>
             g.ListGrantRequestsAsync(
                 It.Is<ListGrantRequestsRequest>(r =>
-                    r.AccountIds.SequenceEqual(new[] { AccountId })
-                    && r.Status == GrantRequestStatus.Pending
+                    r.AccountIds.SequenceEqual(new[] { AccountId }) && r.Status == null
                 ),
                 null,
                 It.IsAny<CancellationToken>()
@@ -138,8 +148,8 @@ public class GrantListTests : BillingWebTestContext
         var list = Render();
 
         list.Find("button[aria-label='Approve request']").Click();
-        Assert.Contains("Approve 5,000 pages for a year from today?", list.Markup);
-        list.Find(".btn-success").Click();
+        Assert.Contains("Approve this request?", list.Find(".modal-title").TextContent);
+        list.Find(".modal-footer .btn-success").Click();
 
         GrantRequests.Verify(
             g =>
@@ -148,7 +158,8 @@ public class GrantListTests : BillingWebTestContext
                         AccountId,
                         request.GrantRequestId,
                         Now.Date,
-                        Now.Date.AddYears(1)
+                        Now.Date.AddYears(1),
+                        SignedInUserId
                     ),
                     It.IsAny<CancellationToken>()
                 ),
@@ -174,8 +185,8 @@ public class GrantListTests : BillingWebTestContext
         var list = Render();
 
         list.Find("button[aria-label='Decline request']").Click();
-        list.Find(".cbw-decline-reason").Change("Use the annual plan");
-        list.Find(".cbw-grant-actions .btn-danger").Click();
+        list.Find("#cbw-dialog-reason").Change("Use the annual plan");
+        list.Find(".modal-footer .btn-danger").Click();
 
         GrantRequests.Verify(
             g =>
@@ -183,7 +194,8 @@ public class GrantListTests : BillingWebTestContext
                     new DeclineGrantRequestRequest(
                         AccountId,
                         request.GrantRequestId,
-                        "Use the annual plan"
+                        "Use the annual plan",
+                        SignedInUserId
                     ),
                     It.IsAny<CancellationToken>()
                 ),
@@ -442,5 +454,54 @@ public class GrantListTests : BillingWebTestContext
                     : item.GetAttribute("data-grant-id")
                 )
         );
+    }
+
+    [Fact]
+    public void Cancel_SendsTheReason_ForTheRequestersOwnRequest()
+    {
+        var request = Request(5_000);
+        request.RequestedByUserId = SignedInUserId;
+        HaveRequests(request);
+        GrantRequests
+            .Setup(g =>
+                g.CancelGrantRequestAsync(
+                    It.IsAny<CancelGrantRequestRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                new CancelGrantRequestResult(DecideGrantRequestResultCode.Success, string.Empty)
+            );
+        var list = Render();
+
+        list.Find("button[aria-label='Cancel request']").Click();
+        list.Find("#cbw-dialog-reason").Change("Found pages elsewhere");
+        list.Find(".modal-footer .btn-danger").Click();
+
+        GrantRequests.Verify(
+            g =>
+                g.CancelGrantRequestAsync(
+                    new CancelGrantRequestRequest(
+                        AccountId,
+                        request.GrantRequestId,
+                        "Found pages elsewhere",
+                        SignedInUserId
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public void Cancel_IsNotOffered_ForSomeoneElsesRequest()
+    {
+        var request = Request(5_000);
+        request.RequestedByUserId = Guid.CreateVersion7();
+        HaveRequests(request);
+
+        var list = Render();
+
+        Assert.Empty(list.FindAll("button[aria-label='Cancel request']"));
     }
 }

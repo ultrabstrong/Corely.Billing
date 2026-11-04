@@ -136,4 +136,26 @@ internal sealed class GrantRequestAuthorizationDecorator(
                 DecideGrantRequestResultCode.UnauthorizedError,
                 $"Unauthorized to decline grant request {request.GrantRequestId}"
             );
+
+    public async Task<CancelGrantRequestResult> CancelGrantRequestAsync(
+        CancelGrantRequestRequest request,
+        CancellationToken ct = default
+    ) =>
+        authorizationProvider.HasAccountContext(request.AccountId)
+        && await authorizationProvider.IsAuthorizedAsync(
+            AuthAction.Read,
+            BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+            request.GrantRequestId
+        )
+            ? await inner.CancelGrantRequestAsync(
+                request with
+                {
+                    CancelledByUserId = ActingUserId(request.CancelledByUserId),
+                },
+                ct
+            )
+            : new CancelGrantRequestResult(
+                DecideGrantRequestResultCode.UnauthorizedError,
+                $"Unauthorized to cancel grant request {request.GrantRequestId}"
+            );
 }
