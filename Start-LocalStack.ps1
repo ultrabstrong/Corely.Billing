@@ -80,8 +80,9 @@ if ($connection -match '\(localdb\)\\([^;]+)') {
 
 Write-Step "Building the migration tool and the $Demo demo"
 foreach ($project in $cliProject, $demoProject) {
-    Invoke-Checked "Building $(Split-Path $project -Leaf)" { dotnet build $project -v q -nologo } | Out-Null
+    Invoke-Checked "Building $(Split-Path $project -Leaf)" { dotnet build $project -m:1 -v q -nologo } | Out-Null
 }
+dotnet build-server shutdown *> $null
 
 function Invoke-BillingDb([string[]]$Arguments) {
     $output = dotnet run --project $cliProject --no-build -- db @Arguments -p MsSql -c $connection 2>&1
