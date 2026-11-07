@@ -30,5 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Corely.Billing\Corely.Billing.csproj" />
+    <ProjectReference Include="..\Corely.Billing.CompiledModel.MsSql\Corely.Billing.CompiledModel.MsSql.csproj" />
+    <ProjectReference Include="..\Corely.Billing.CompiledModel.MySql\Corely.Billing.CompiledModel.MySql.csproj" />
   </ItemGroup>
 </Project>

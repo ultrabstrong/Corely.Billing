@@ -9,6 +9,8 @@ PACKAGES=(
   "Corely.Billing.IAM:Corely.Billing.IAM/Corely.Billing.IAM.csproj"
   "Corely.Billing.Web.IAM:Corely.Billing.Web.IAM/Corely.Billing.Web.IAM.csproj"
   "Corely.Billing.DataAccessMigrations.Cli:Corely.Billing.DataAccessMigrations.Cli/Corely.Billing.DataAccessMigrations.Cli.csproj"
+  "Corely.Billing.CompiledModel.MsSql:Corely.Billing.CompiledModel.MsSql/Corely.Billing.CompiledModel.MsSql.csproj"
+  "Corely.Billing.CompiledModel.MySql:Corely.Billing.CompiledModel.MySql/Corely.Billing.CompiledModel.MySql.csproj"
 )
 CORE="Corely.Billing"
 CLI="Corely.Billing.DataAccessMigrations.Cli"
@@ -48,6 +50,10 @@ csproj_version="$(version_of "$csproj")"
 [ "$csproj_version" = "$version" ] || fail "$csproj is at $csproj_version, not $version"
 
 pack_args="-p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg"
+if [[ "$id" == Corely.Billing.CompiledModel.* ]]; then
+  core_version="$(version_of "$(csproj_of "$CORE")")"
+  [ "$version" = "$core_version" ] || fail "$id $version must equal $CORE $core_version"
+fi
 if [ "$id" = "$CLI" ]; then
   core_version="$(version_of "$(csproj_of "$CORE")")"
   [ "${version%%.*}" = "${core_version%%.*}" ] || fail "$CLI $version must share its major with $CORE $core_version"

@@ -38,6 +38,10 @@ public static class ServiceRegistrationExtensions
                     EFConfigurationKeys.BILLING,
                     (sp, _) => efConfigurationFactory(sp)
                 );
+                serviceCollection.AddKeyedSingleton(
+                    EFConfigurationKeys.BILLING,
+                    new BillingCompiledModel(options.CompiledModel)
+                );
                 serviceCollection.AddDbContext<BillingDbContext>();
                 serviceCollection.RegisterEntityFrameworkReposAndUoW();
             }

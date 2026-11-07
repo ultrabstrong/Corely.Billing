@@ -3,6 +3,7 @@ using Corely.Billing.Grants.Models;
 using Corely.Billing.Telemetry;
 using Corely.Billing.Usage;
 using Corely.DataAccess.EntityFramework.Configurations;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,8 @@ public class BillingOptions
     internal IConfiguration Configuration { get; private set; } = null!;
 
     internal Func<IServiceProvider, IEFConfiguration>? EFConfigurationFactory { get; private set; }
+
+    internal IModel? CompiledModel { get; private set; }
 
     internal Func<IServiceProvider, IBillingTelemetry>? TelemetryFactory { get; private set; }
 
@@ -85,6 +88,13 @@ public class BillingOptions
                 : $"Operation '{misdeclared.Operation}' is {misdeclared.Kind} and names no unit. "
                     + "Every kind but a feature is counted in a unit."
         : null;
+
+    public BillingOptions UseCompiledModel(IModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        CompiledModel = model;
+        return this;
+    }
 
     public BillingOptions UseTelemetry(Func<IServiceProvider, IBillingTelemetry> telemetryFactory)
     {

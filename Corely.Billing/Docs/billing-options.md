@@ -62,8 +62,35 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 | `RegisterUnit` | `value`, `displayName` | Adds a unit to the vocabulary |
 | `UseTelemetry` | `Func<IServiceProvider, IBillingTelemetry>` | Replaces the no-op telemetry |
 | `DecorateServices` | `Action<IServiceCollection>` | Wraps the public services; may be called more than once |
+| `UseCompiledModel` | `IModel` | An EF Core model built ahead of time; normally set through a compiled model package, below |
 
 A duplicate operation or unit overwrites the earlier display name. See the [Usage Vocabulary](usage-vocabulary.md) docs for token rules.
+
+## Compiled Model
+
+Entity Framework builds Billing's model the first time an app uses it, which on a small host can
+take tens of seconds and lands on whichever request comes first. A compiled model package holds that
+model built ahead of time for one database provider:
+
+| Package | Provider | Call |
+|---------|----------|------|
+| `Corely.Billing.CompiledModel.MsSql` | SQL Server | `.UseMsSqlCompiledModel()` |
+| `Corely.Billing.CompiledModel.MySql` | MySQL and MariaDB | `.UseMySqlCompiledModel()` |
+
+```csharp
+var options = BillingOptions.Create(configuration, efConfigFactory)
+    .UseMsSqlCompiledModel();
+```
+
+Reference the package for the provider the app's `IEFConfiguration` uses; a model for another
+provider describes the wrong column types. Without a package nothing changes: the model is built at
+first use, as before.
+
+A compiled model package is released with `Corely.Billing` at the same version, and its call refuses
+to start against any other `Corely.Billing` version. Inside this repository, `AddMigration.ps1` and
+`RemoveMigration.ps1` regenerate both models through `UpdateCompiledModels.ps1`, and
+`CompiledModelTests` fails when either no longer describes the same tables, columns, keys and
+indexes as the model built at runtime.
 
 ## What AddBillingServices Registers
 

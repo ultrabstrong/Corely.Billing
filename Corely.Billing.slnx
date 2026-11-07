@@ -22,6 +22,8 @@
   <Folder Name="/Solution Items/Plans/">
     <File Path="Plans/Feature-Ideas.md" />
   </Folder>
+  <Project Path="Corely.Billing.CompiledModel.MsSql/Corely.Billing.CompiledModel.MsSql.csproj" />
+  <Project Path="Corely.Billing.CompiledModel.MySql/Corely.Billing.CompiledModel.MySql.csproj" />
   <Project Path="Corely.Billing.ConsoleTest/Corely.Billing.ConsoleApp.csproj" />
   <Project Path="Corely.Billing.DataAccessMigrations.Cli/Corely.Billing.DataAccessMigrations.Cli.csproj" />
   <Project Path="Corely.Billing.DataAccessMigrations.Cli.UnitTests/Corely.Billing.DataAccessMigrations.Cli.UnitTests.csproj" />

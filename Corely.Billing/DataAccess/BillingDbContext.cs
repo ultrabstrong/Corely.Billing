@@ -5,6 +5,7 @@ using Corely.Billing.Registrations.Entities;
 using Corely.DataAccess.EntityFramework;
 using Corely.DataAccess.EntityFramework.Configurations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Corely.Billing.DataAccess;
@@ -20,9 +21,24 @@ internal class BillingDbContext : DbContextBase
 
     public BillingDbContext(
         DbContextOptions<DbContextBase> opts,
-        [FromKeyedServices(EFConfigurationKeys.BILLING)] IEFConfiguration efConfiguration
+        [FromKeyedServices(EFConfigurationKeys.BILLING)] IEFConfiguration efConfiguration,
+        [FromKeyedServices(EFConfigurationKeys.BILLING)] BillingCompiledModel compiledModel
     )
-        : base(opts, efConfiguration) { }
+        : base(opts, efConfiguration)
+    {
+        _compiledModel = compiledModel.Model;
+    }
+
+    private readonly IModel? _compiledModel;
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        if (_compiledModel is not null)
+        {
+            optionsBuilder.UseModel(_compiledModel);
+        }
+    }
 
     public DbSet<GrantEntity> Grants => Set<GrantEntity>();
     public DbSet<GrantRequestEntity> GrantRequests => Set<GrantRequestEntity>();

@@ -103,6 +103,7 @@ await quotaService.SettleAsync(new SettleQuotaRequest(accountId, generation, tok
 | `Corely.Billing.Web.FunctionalTests` | In-process smoke tests for the demo hosts |
 | `Corely.Billing.DataAccessMigrations.Cli` | Migration CLI that creates and migrates the billing schema (published as a .NET tool) |
 | `Corely.Billing.DataAccessMigrations.MsSql` / `.MySql` | EF Core migrations per database provider, bundled into the CLI |
+| `Corely.Billing.CompiledModel.MsSql` / `.MySql` | Optional: Billing's EF Core model built ahead of time for one provider, so an app skips building it on first use. Released with `Corely.Billing` at the same version |
 
 ## License
 
