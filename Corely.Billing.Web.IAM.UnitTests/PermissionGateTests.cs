@@ -118,6 +118,7 @@ public class PermissionGateTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddOptions();
         Services.AddBillingWebIam();
+        Services.AddSingleton<IOperationScopes>(new InlineOperationScopes(Services));
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
         Services.AddSingleton(_grants.Object);
         Services.AddSingleton(_grantRequests.Object);

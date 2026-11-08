@@ -21,9 +21,6 @@ public partial class ConsumptionTable
         (ConsumptionEventSortField.Provider, "Provider"),
     ];
 
-    private IConsumptionService ConsumptionService =>
-        ScopedServices.GetRequiredService<IConsumptionService>();
-
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
@@ -56,7 +53,7 @@ public partial class ConsumptionTable
     private bool _exporting;
     private ExportOutcome? _export;
 
-    protected override async Task OnParametersSetSignedInAsync()
+    protected override async Task OnParametersSetAsync()
     {
         var key = $"{AccountId}|{Filter.Signature}|{PageSize}";
         if (_loadedFor == key)
@@ -67,35 +64,37 @@ public partial class ConsumptionTable
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => LoadAsync();
+    public Task RefreshAsync() => InOperationAsync(LoadAsync);
 
     private async Task ExportAsync()
     {
         _exporting = true;
-        _export = await Exporter.DownloadEventsAsync(AccountId, Filter);
+        _export = await RunExportAsync(exporter => exporter.DownloadEventsAsync(AccountId, Filter));
         _exporting = false;
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(IServiceProvider services)
     {
         _loading = true;
         _error = null;
 
-        var result = await ConsumptionService.ListConsumptionEventsAsync(
-            new ListConsumptionEventsRequest(
-                [AccountId],
-                Filter.FromUtc,
-                Filter.ToUtc,
-                Filter.Units,
-                Filter.Operations,
-                Filter.Providers,
-                Filter.GrantIds,
-                _sortBy,
-                _direction,
-                _skip,
-                PageSize
-            )
-        );
+        var result = await services
+            .GetRequiredService<IConsumptionService>()
+            .ListConsumptionEventsAsync(
+                new ListConsumptionEventsRequest(
+                    [AccountId],
+                    Filter.FromUtc,
+                    Filter.ToUtc,
+                    Filter.Units,
+                    Filter.Operations,
+                    Filter.Providers,
+                    Filter.GrantIds,
+                    _sortBy,
+                    _direction,
+                    _skip,
+                    PageSize
+                )
+            );
 
         if (result.ResultCode != RetrieveResultCode.Success)
         {

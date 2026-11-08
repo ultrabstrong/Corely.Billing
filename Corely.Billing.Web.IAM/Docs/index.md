@@ -55,7 +55,7 @@ Decline shows under the same gate as Approve. The service lets a caller with Upd
 
 ## Notes
 
-- Every Billing component owns its DI scope. The accessor signs that scope in through `IBlazorUserContextAccessor` before reading the account, so the decorators from Corely.Billing.IAM see the user; `PermissionView` signs in its own scope the same way.
+- Every Billing component action runs through Corely.IAM.Web's `IOperationScopes`, registered here as `IBillingOperationScopes`: a scope of its own, signed in with the tab's token, so the decorators from Corely.Billing.IAM see the user and every read is fresh. A page left open past its token's life reloads on its next action, as IAM's own pages do.
 - Hiding a control is presentation. The decorators from Corely.Billing.IAM refuse the call whatever the screen shows.
 
 Working example: `Corely.Billing.Demos.WithIAM`.

@@ -12,11 +12,8 @@ namespace Corely.Billing.Web.Components;
 
 public partial class RegistrationList
 {
-    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
-
-    private IQuotaService QuotaService => ScopedServices.GetRequiredService<IQuotaService>();
-
-    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
+    [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -47,28 +44,30 @@ public partial class RegistrationList
 
     private bool OneGrant => GrantId is not null;
 
-    public Task RefreshAsync() => LoadAsync();
+    public Task RefreshAsync() => InOperationAsync(LoadAsync);
 
-    protected override async Task OnParametersSetSignedInAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (_loadedFor == (AccountId, Operation, GrantId))
             return;
 
         _loadedFor = (AccountId, Operation, GrantId);
-        await LoadAsync();
+        await InOperationAsync(LoadAsync);
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(IServiceProvider services)
     {
         _loading = true;
-        var registrations = await QuotaService.ListRegistrationsAsync(
-            new ListRegistrationsRequest(
-                [AccountId],
-                Operation: Operation,
-                GrantId: GrantId,
-                Take: int.MaxValue
-            )
-        );
+        var registrations = await services
+            .GetRequiredService<IQuotaService>()
+            .ListRegistrationsAsync(
+                new ListRegistrationsRequest(
+                    [AccountId],
+                    Operation: Operation,
+                    GrantId: GrantId,
+                    Take: int.MaxValue
+                )
+            );
         _registrations = registrations.Data?.Items ?? [];
         _error =
             registrations.ResultCode == RetrieveResultCode.Success
@@ -78,14 +77,16 @@ public partial class RegistrationList
                     registrations.Message
                 );
 
-        var grants = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest(
-                [AccountId],
-                Kind: GrantKind.Capacity,
-                Operation: Operation,
-                Take: int.MaxValue
-            )
-        );
+        var grants = await services
+            .GetRequiredService<IGrantService>()
+            .ListGrantsAsync(
+                new ListGrantsRequest(
+                    [AccountId],
+                    Kind: GrantKind.Capacity,
+                    Operation: Operation,
+                    Take: int.MaxValue
+                )
+            );
         _grants = (grants.Data?.Items ?? []).ToDictionary(g => g.GrantId);
         _active = [.. _grants.Values.Where(g => g.IsActiveAt(Now))];
 
@@ -121,12 +122,17 @@ public partial class RegistrationList
     private async Task ReleaseAsync(Registration registration)
     {
         _working = true;
-        var result = await QuotaService.ReleaseRegistrationAsync(
-            AccountId,
-            registration.RegistrationId
-        );
+        var result = await InOperationAsync(async services =>
+        {
+            var released = await services
+                .GetRequiredService<IQuotaService>()
+                .ReleaseRegistrationAsync(AccountId, registration.RegistrationId);
+            await LoadAsync(services);
+            return released;
+        });
         _working = false;
-        await LoadAsync();
+        if (result is null)
+            return;
         _error = result.ResultCode switch
         {
             ModifyResultCode.Success => null,
@@ -143,11 +149,19 @@ public partial class RegistrationList
     private async Task MoveAsync(Guid fromGrantId, Guid toGrantId, List<Guid>? registrationIds)
     {
         _working = true;
-        var result = await QuotaService.MoveRegistrationsAsync(
-            new MoveRegistrationsRequest(AccountId, fromGrantId, toGrantId, registrationIds)
-        );
+        var result = await InOperationAsync(async services =>
+        {
+            var moved = await services
+                .GetRequiredService<IQuotaService>()
+                .MoveRegistrationsAsync(
+                    new MoveRegistrationsRequest(AccountId, fromGrantId, toGrantId, registrationIds)
+                );
+            await LoadAsync(services);
+            return moved;
+        });
         _working = false;
-        await LoadAsync();
+        if (result is null)
+            return;
         _error = result.ResultCode switch
         {
             MoveRegistrationsResultCode.Success => null,

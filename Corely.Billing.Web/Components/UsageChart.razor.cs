@@ -20,11 +20,6 @@ public partial class UsageChart
     internal static readonly UsageChartView[] Views = Enum.GetValues<UsageChartView>();
     internal static readonly UsageBreakdown[] Breakdowns = Enum.GetValues<UsageBreakdown>();
 
-    private IConsumptionService ConsumptionService =>
-        ScopedServices.GetRequiredService<IConsumptionService>();
-
-    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
-
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
@@ -108,7 +103,7 @@ public partial class UsageChart
             ? "No limited grant covers this range, so there is no balance to draw."
         : "Nothing was used in this range, and no limited grant covers it.";
 
-    protected override async Task OnParametersSetSignedInAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (_parametersFor != (View, BreakDownBy, ShowGrants))
         {
@@ -126,7 +121,7 @@ public partial class UsageChart
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => LoadAsync();
+    public Task RefreshAsync() => InOperationAsync(LoadAsync);
 
     private async Task ViewChangedAsync(ChangeEventArgs e)
     {
@@ -157,20 +152,21 @@ public partial class UsageChart
         if (_model is null)
             return;
         _exporting = true;
-        _export = await Exporter.DownloadChartAsync(_model);
+        var model = _model;
+        _export = await RunExportAsync(exporter => exporter.DownloadChartAsync(model));
         _exporting = false;
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(IServiceProvider services)
     {
         _loading = true;
         _error = null;
         _export = null;
         _bucket = UsageChartModel.BucketFor(Filter.FromUtc, Filter.ToUtc);
 
-        var grants = ShowGrants ? await GrantsAsync() : [];
+        var grants = ShowGrants ? await GrantsAsync(services) : [];
 
-        var byUnit = await SeriesAsync(Request(ConsumptionDimension.Unit, Filter.Units));
+        var byUnit = await SeriesAsync(services, Request(ConsumptionDimension.Unit, Filter.Units));
         if (byUnit is null)
             return;
 
@@ -185,7 +181,7 @@ public partial class UsageChart
         }
 
         var relevant = UsageChartModel.RelevantGrants(grants, Filter, unit);
-        var series = await SeriesForViewAsync(unit, relevant);
+        var series = await SeriesForViewAsync(services, unit, relevant);
         if (series is null)
             return;
 
@@ -205,25 +201,28 @@ public partial class UsageChart
         );
     }
 
-    private async Task<List<Grant>> GrantsAsync()
+    private async Task<List<Grant>> GrantsAsync(IServiceProvider services)
     {
-        var result = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
-        );
+        var result = await services
+            .GetRequiredService<IGrantService>()
+            .ListGrantsAsync(
+                new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
+            );
         return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
 
     private async Task<IReadOnlyList<ConsumptionSeries>?> SeriesForViewAsync(
+        IServiceProvider services,
         UsageUnit unit,
         List<Grant> relevant
     )
     {
         if (_view.BreaksDown())
-            return await SeriesAsync(Request(_by.ToDimension(), [unit]));
+            return await SeriesAsync(services, Request(_by.ToDimension(), [unit]));
 
         var limited = relevant.Where(g => g.Quantity is not null).ToList();
         if (_view == UsageChartView.Used || (_view == UsageChartView.BurnUp && limited.Count == 0))
-            return await SeriesAsync(Request(null, [unit]));
+            return await SeriesAsync(services, Request(null, [unit]));
         if (limited.Count == 0)
             return [];
 
@@ -234,6 +233,7 @@ public partial class UsageChart
                 ? new[] { limited.Min(g => g.ValidFromUtc), Filter.FromUtc }.Min()
                 : Filter.FromUtc;
         return await SeriesAsync(
+            services,
             new GetConsumptionTimeSeriesRequest(
                 AccountId,
                 from,
@@ -263,10 +263,13 @@ public partial class UsageChart
         );
 
     private async Task<IReadOnlyList<ConsumptionSeries>?> SeriesAsync(
+        IServiceProvider services,
         GetConsumptionTimeSeriesRequest request
     )
     {
-        var result = await ConsumptionService.GetConsumptionTimeSeriesAsync(request);
+        var result = await services
+            .GetRequiredService<IConsumptionService>()
+            .GetConsumptionTimeSeriesAsync(request);
         if (result.ResultCode == RetrieveResultCode.Success)
             return result.Item ?? [];
 

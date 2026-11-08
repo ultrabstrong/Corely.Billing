@@ -6,7 +6,7 @@ host's paths, so a host can put the account in them (`/accounts/<id>/grants`) or
 
 ## A shell
 
-`BillingPageBase` reads the account from `IBillingAccountAccessor` in the page's own scope, so a
+`BillingPageBase` reads the account from `IBillingAccountAccessor` in an operation of its own, so a
 shell does not repeat that code:
 
 ```razor

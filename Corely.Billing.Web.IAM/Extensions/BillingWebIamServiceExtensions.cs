@@ -14,6 +14,9 @@ public static class BillingWebIamServiceExtensions
             services.Replace(
                 ServiceDescriptor.Scoped<IGrantActionGate, PermissionViewGrantActionGate>()
             );
+            services.Replace(
+                ServiceDescriptor.Scoped<IBillingOperationScopes, IamBillingOperationScopes>()
+            );
             return services;
         }
     }

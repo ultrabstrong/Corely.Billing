@@ -14,6 +14,7 @@ public static class BillingWebServiceExtensions
             services.TryAddSingleton(TimeProvider.System);
             services.AddScoped<IBillingAccountAccessor, TAccountAccessor>();
             services.TryAddScoped<IGrantActionGate, OpenGrantActionGate>();
+            services.TryAddScoped<IBillingOperationScopes, BillingOperationScopes>();
             return services;
         }
     }

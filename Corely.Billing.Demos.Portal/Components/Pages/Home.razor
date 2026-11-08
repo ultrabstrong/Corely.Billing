@@ -1,5 +1,5 @@
 @page "/"
-@inherits OwningComponentBase
+@inherits BillingOperationComponentBase
 
 <PageTitle>Billing portal</PageTitle>
 
@@ -26,8 +26,6 @@
 <UsageDashboard @ref="_dashboard" AccountId="DemoUsage.AccountId" DefaultRange="90d" />
 
 @code {
-    private UsageSimulator Simulator => ScopedServices.GetRequiredService<UsageSimulator>();
-
     private UsageDashboard? _dashboard;
     private string? _message;
     private bool _running;
@@ -35,7 +33,7 @@
     private async Task SimulateAsync(Func<UsageSimulator, Task<string>> request)
     {
         _running = true;
-        _message = await request(Simulator);
+        _message = await InOperationAsync(services => request(services.GetRequiredService<UsageSimulator>()));
         _running = false;
         if (_dashboard is not null)
             await _dashboard.RefreshAsync();

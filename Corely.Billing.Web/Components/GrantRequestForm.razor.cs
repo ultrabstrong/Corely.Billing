@@ -10,13 +10,8 @@ namespace Corely.Billing.Web.Components;
 
 public partial class GrantRequestForm
 {
-    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
-
-    private IGrantRequestService GrantRequestService =>
-        ScopedServices.GetRequiredService<IGrantRequestService>();
-
-    private IBillingAccountAccessor AccountAccessor =>
-        ScopedServices.GetRequiredService<IBillingAccountAccessor>();
+    [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -62,16 +57,24 @@ public partial class GrantRequestForm
         }
 
         _sending = true;
-        var result = await GrantRequestService.RequestGrantAsync(
-            new RequestGrantRequest(
-                AccountId,
-                _operation,
-                isFeature ? null : _quantity,
-                _note,
-                await AccountAccessor.GetUserIdAsync()
-            )
+        var result = await InOperationAsync(async services =>
+            await services
+                .GetRequiredService<IGrantRequestService>()
+                .RequestGrantAsync(
+                    new RequestGrantRequest(
+                        AccountId,
+                        _operation,
+                        isFeature ? null : _quantity,
+                        _note,
+                        await services
+                            .GetRequiredService<IBillingAccountAccessor>()
+                            .GetUserIdAsync()
+                    )
+                )
         );
         _sending = false;
+        if (result is null)
+            return;
 
         _error = result.ResultCode switch
         {

@@ -1,5 +1,5 @@
 @page "/team"
-@inherits OwningComponentBase
+@inherits BillingOperationComponentBase
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Team</PageTitle>
@@ -36,8 +36,6 @@
 <RegistrationList @ref="_list" AccountId="DemoUsage.AccountId" Operation="DemoUsage.TeamMembers" />
 
 @code {
-    private IQuotaService Quota => ScopedServices.GetRequiredService<IQuotaService>();
-
     private RegistrationList? _list;
     private GetCapacityResult? _capacity;
     private string? _name;
@@ -45,10 +43,10 @@
     private string? _message;
     private bool _adding;
 
-    protected override Task OnInitializedAsync() => LoadCapacityAsync();
+    protected override Task OnInitializedAsync() => InOperationAsync(LoadCapacityAsync);
 
-    private async Task LoadCapacityAsync() =>
-        _capacity = await Quota.GetCapacityAsync(DemoUsage.AccountId, DemoUsage.TeamMembers);
+    private async Task LoadCapacityAsync(IServiceProvider services) =>
+        _capacity = await services.GetRequiredService<IQuotaService>().GetCapacityAsync(DemoUsage.AccountId, DemoUsage.TeamMembers);
 
     private static string CapacityText(GetCapacityResult capacity) =>
         capacity.Granted is { } granted
@@ -64,10 +62,16 @@
         }
 
         _adding = true;
-        var result = await Quota.RegisterAsync(
-            new RegisterRequest(DemoUsage.AccountId, DemoUsage.TeamMembers, _name.Trim(), _role)
-        );
+        var request = new RegisterRequest(DemoUsage.AccountId, DemoUsage.TeamMembers, _name.Trim(), _role);
+        var result = await InOperationAsync(async services =>
+        {
+            var registered = await services.GetRequiredService<IQuotaService>().RegisterAsync(request);
+            await LoadCapacityAsync(services);
+            return registered;
+        });
         _adding = false;
+        if (result is null)
+            return;
         _message = result.ResultCode switch
         {
             RegisterResultCode.Registered => $"{_name.Trim()} joined the team.",
@@ -82,7 +86,6 @@
             _role = null;
         }
 
-        await LoadCapacityAsync();
         if (_list is not null)
             await _list.RefreshAsync();
     }

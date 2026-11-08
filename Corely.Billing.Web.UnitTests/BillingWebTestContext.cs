@@ -38,6 +38,7 @@ public abstract class BillingWebTestContext : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
         Services.AddOptions();
         Services.AddScoped<UsageExporter>();
+        Services.AddSingleton<IBillingOperationScopes>(new InlineBillingOperationScopes(Services));
         Services.AddSingleton(
             Mock.Of<IBillingAccountAccessor>(a =>
                 a.GetAccountIdAsync() == Task.FromResult<Guid?>(AccountId)

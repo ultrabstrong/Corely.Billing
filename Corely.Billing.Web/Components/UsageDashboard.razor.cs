@@ -23,11 +23,6 @@ public partial class UsageDashboard
         (ALL, "All", null),
     ];
 
-    private IConsumptionService ConsumptionService =>
-        ScopedServices.GetRequiredService<IConsumptionService>();
-
-    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
-
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
 
@@ -67,7 +62,7 @@ public partial class UsageDashboard
 
     private DateTime Today => TimeProvider.GetUtcNow().UtcDateTime.Date;
 
-    protected override async Task OnParametersSetSignedInAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (_loadedFor == AccountId)
             return;
@@ -76,13 +71,13 @@ public partial class UsageDashboard
         _unitOptions = [.. Vocabulary.Units.Select(u => (u.Unit, u.DisplayName))];
         _operationOptions = [.. Vocabulary.Operations.Select(o => (o.Operation, o.DisplayName))];
         _preset = DefaultRange;
-        await LoadReferenceDataAsync();
+        await InOperationAsync(LoadReferenceDataAsync);
         ApplyPreset();
     }
 
     public async Task RefreshAsync()
     {
-        await LoadReferenceDataAsync();
+        await InOperationAsync(LoadReferenceDataAsync);
         ApplyPreset();
         StateHasChanged();
         if (_chart is not null)
@@ -96,21 +91,26 @@ public partial class UsageDashboard
         if (_filter is null)
             return;
         _exporting = true;
-        _export = await Exporter.DownloadAllAsync(
-            AccountId,
+        var (filter, model, caption, showGrants) = (
             _filter,
             _chart?.Model,
             _chart?.Caption,
             _showGrants
         );
+        _export = await RunExportAsync(exporter =>
+            exporter.DownloadAllAsync(AccountId, filter, model, caption, showGrants)
+        );
         _exporting = false;
     }
 
-    private async Task LoadReferenceDataAsync()
+    private async Task LoadReferenceDataAsync(IServiceProvider services)
     {
-        var grants = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
-        );
+        var consumption = services.GetRequiredService<IConsumptionService>();
+        var grants = await services
+            .GetRequiredService<IGrantService>()
+            .ListGrantsAsync(
+                new ListGrantsRequest([AccountId], Kind: GrantKind.Consumable, Take: int.MaxValue)
+            );
         _showGrants = grants.ResultCode != RetrieveResultCode.UnauthorizedError;
         if (!_showGrants)
             _grantIds = new HashSet<Guid>();
@@ -118,10 +118,10 @@ public partial class UsageDashboard
         var grantList = grants.Data?.Items ?? [];
         _grantOptions = [.. grantList.Select(g => (g.GrantId, g.HeadlineAndWindow(Vocabulary)))];
 
-        var providers = await ConsumptionService.ListProvidersAsync(AccountId);
+        var providers = await consumption.ListProvidersAsync(AccountId);
         _providerOptions = [.. (providers.Item ?? []).Select(p => (p, p))];
 
-        var earliest = await ConsumptionService.GetEarliestConsumptionAsync(AccountId);
+        var earliest = await consumption.GetEarliestConsumptionAsync(AccountId);
         _earliest = new[]
         {
             earliest.Item,

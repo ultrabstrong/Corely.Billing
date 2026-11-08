@@ -11,9 +11,8 @@ namespace Corely.Billing.Web.Components;
 
 public partial class GrantEditor
 {
-    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
-
-    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
+    [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -73,9 +72,9 @@ public partial class GrantEditor
         set => _operation = UsageOperation.From(value);
     }
 
-    protected override Task OnParametersSetSignedInAsync() => LoadAsync();
+    protected override Task OnParametersSetAsync() => InOperationAsync(LoadAsync);
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(IServiceProvider services)
     {
         _loading = true;
         _loadError = null;
@@ -94,7 +93,9 @@ public partial class GrantEditor
             return;
         }
 
-        var result = await GrantService.GetGrantAsync(AccountId, GrantId!.Value);
+        var result = await services
+            .GetRequiredService<IGrantService>()
+            .GetGrantAsync(AccountId, GrantId!.Value);
         if (result.ResultCode != RetrieveResultCode.Success || result.Item is null)
         {
             _loadError = result.ResultCode.ErrorMessage(
@@ -131,11 +132,17 @@ public partial class GrantEditor
                 ? Grant.NEVER_EXPIRES_UTC
                 : DateTime.SpecifyKind(_validToUtc, DateTimeKind.Utc);
 
-        var (grantId, error) = IsNew
-            ? await CreateAsync(quantity, fromUtc, toUtc)
-            : await UpdateAsync(quantity, fromUtc, toUtc);
+        var saved = await InOperationAsync<(Guid, string?)?>(async services =>
+        {
+            var grants = services.GetRequiredService<IGrantService>();
+            return IsNew
+                ? await CreateAsync(grants, quantity, fromUtc, toUtc)
+                : await UpdateAsync(grants, quantity, fromUtc, toUtc);
+        });
 
         _saving = false;
+        if (saved is not var (grantId, error))
+            return;
         _error = error;
         if (error is null)
             await OnSaved.InvokeAsync(grantId);
@@ -145,10 +152,16 @@ public partial class GrantEditor
     {
         var grant = _grant!;
         _saving = true;
-        var result = await GrantService.SetGrantDisabledAsync(
-            new SetGrantDisabledRequest(AccountId, grant.GrantId, !grant.Disabled)
+        var result = await InOperationAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .SetGrantDisabledAsync(
+                    new SetGrantDisabledRequest(AccountId, grant.GrantId, !grant.Disabled)
+                )
         );
         _saving = false;
+        if (result is null)
+            return;
 
         _error = result.ResultCode switch
         {
@@ -168,12 +181,13 @@ public partial class GrantEditor
         : null;
 
     private async Task<(Guid, string?)> CreateAsync(
+        IGrantService grants,
         long? quantity,
         DateTime fromUtc,
         DateTime toUtc
     )
     {
-        var result = await GrantService.CreateGrantAsync(
+        var result = await grants.CreateGrantAsync(
             new CreateGrantRequest(AccountId, _operation, Kind, quantity, fromUtc, toUtc)
         );
         return result.ResultCode switch
@@ -188,12 +202,13 @@ public partial class GrantEditor
     }
 
     private async Task<(Guid, string?)> UpdateAsync(
+        IGrantService grants,
         long? quantity,
         DateTime fromUtc,
         DateTime toUtc
     )
     {
-        var result = await GrantService.UpdateGrantAsync(
+        var result = await grants.UpdateGrantAsync(
             new UpdateGrantRequest(
                 AccountId,
                 _grant!.GrantId,

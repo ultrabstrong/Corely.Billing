@@ -10,10 +10,13 @@ using Microsoft.JSInterop;
 
 namespace Corely.Billing.Web.UnitTests.Components;
 
-public class OwningComponentInjectionTests
+public class ComponentInjectionTests
 {
+    // Shared across the tab on purpose, and never reaching the database themselves.
     private static readonly Type[] _sharedAcrossTheTab =
     [
+        typeof(IBillingOperationScopes),
+        typeof(IGrantActionGate),
         typeof(NavigationManager),
         typeof(IJSRuntime),
     ];
@@ -35,9 +38,11 @@ public class OwningComponentInjectionTests
         return services;
     }
 
+    private static IEnumerable<Type> Components(IEnumerable<Type> types) =>
+        types.Where(t => typeof(IComponent).IsAssignableFrom(t));
+
     private static List<string> FindScopedInjections(IEnumerable<Type> types) =>
-        types
-            .Where(t => typeof(OwningComponentBase).IsAssignableFrom(t))
+        Components(types)
             .SelectMany(t =>
                 t.GetProperties(
                         BindingFlags.Instance
@@ -63,27 +68,37 @@ public class OwningComponentInjectionTests
             )
             ?.Lifetime;
 
+    private static Type[] WebComponents() => typeof(BillingComponentBase).Assembly.GetTypes();
+
     private sealed class NoAccountAccessor : IBillingAccountAccessor
     {
         public Task<Guid?> GetAccountIdAsync() => Task.FromResult<Guid?>(null);
     }
 
-    private sealed class ComponentInjectingAScopedService : OwningComponentBase
+    private sealed class ComponentInjectingAScopedService : ComponentBase
     {
         [Inject]
         private IGrantService GrantService { get; set; } = null!;
     }
 
     [Fact]
-    public void OwningComponents_InjectNoScopedServices_ForTheBillingWebComponents()
+    public void Components_InjectNoScopedServices_ForTheBillingWebComponents()
     {
-        var types = typeof(BillingComponentBase).Assembly.GetTypes();
+        var types = WebComponents();
 
-        Assert.Contains(types, t => typeof(OwningComponentBase).IsAssignableFrom(t));
+        Assert.Contains(types, t => typeof(BillingOperationComponentBase).IsAssignableFrom(t));
         Assert.Empty(FindScopedInjections(types));
     }
 
     [Fact]
-    public void FindScopedInjections_ReportsAScopedService_ForAnOwningComponentThatInjectsOne() =>
+    public void Components_OwnNoScopeForTheirLifetime_ForTheBillingWebComponents() =>
+        Assert.Empty(
+            Components(WebComponents())
+                .Where(t => typeof(OwningComponentBase).IsAssignableFrom(t))
+                .Select(t => t.Name)
+        );
+
+    [Fact]
+    public void FindScopedInjections_ReportsAScopedService_ForAnyComponentThatInjectsOne() =>
         Assert.Single(FindScopedInjections([typeof(ComponentInjectingAScopedService)]));
 }

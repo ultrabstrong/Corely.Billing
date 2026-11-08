@@ -14,15 +14,8 @@ namespace Corely.Billing.Web.Components;
 
 public partial class GrantList
 {
-    private IGrantActionGate ActionGate => ScopedServices.GetRequiredService<IGrantActionGate>();
-
-    private IGrantService GrantService => ScopedServices.GetRequiredService<IGrantService>();
-
-    private IGrantRequestService GrantRequestService =>
-        ScopedServices.GetRequiredService<IGrantRequestService>();
-
-    private IBillingAccountAccessor AccountAccessor =>
-        ScopedServices.GetRequiredService<IBillingAccountAccessor>();
+    [Inject]
+    private IGrantActionGate ActionGate { get; set; } = null!;
 
     [Inject]
     private IUsageVocabulary Vocabulary { get; set; } = null!;
@@ -80,7 +73,7 @@ public partial class GrantList
             )
             .Where(group => group.Item2.Count > 0 || group.Item3.Count > 0);
 
-    protected override async Task OnParametersSetSignedInAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (_loadedFor == AccountId)
             return;
@@ -89,23 +82,23 @@ public partial class GrantList
         await RefreshAsync();
     }
 
-    public Task RefreshAsync() => LoadAsync();
+    public Task RefreshAsync() => InOperationAsync(LoadAsync);
 
     private async Task ExportAsync()
     {
         _exporting = true;
-        _export = await Exporter.DownloadGrantsAsync(AccountId);
+        _export = await RunExportAsync(exporter => exporter.DownloadGrantsAsync(AccountId));
         _exporting = false;
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(IServiceProvider services)
     {
         _loading = true;
         _error = null;
 
-        var result = await GrantService.ListGrantsAsync(
-            new ListGrantsRequest([AccountId], Take: int.MaxValue)
-        );
+        var result = await services
+            .GetRequiredService<IGrantService>()
+            .ListGrantsAsync(new ListGrantsRequest([AccountId], Take: int.MaxValue));
         if (result.ResultCode != RetrieveResultCode.Success)
         {
             _error = result.ResultCode.ErrorMessage("view grants", result.Message);
@@ -116,7 +109,7 @@ public partial class GrantList
         }
 
         _grants = result.Data?.Items ?? [];
-        var requests = await RequestsAsync();
+        var requests = await RequestsAsync(services);
         _requests = [.. requests.Where(r => r.Status == GrantRequestStatus.Pending)];
         _history =
         [
@@ -125,15 +118,15 @@ public partial class GrantList
                 .OrderByDescending(r => r.DecidedUtc ?? r.RequestedUtc)
                 .Take(HISTORY_SIZE),
         ];
-        _userId ??= await AccountAccessor.GetUserIdAsync();
+        _userId ??= await services.GetRequiredService<IBillingAccountAccessor>().GetUserIdAsync();
         _loading = false;
     }
 
-    private async Task<List<GrantRequest>> RequestsAsync()
+    private async Task<List<GrantRequest>> RequestsAsync(IServiceProvider services)
     {
-        var result = await GrantRequestService.ListGrantRequestsAsync(
-            new ListGrantRequestsRequest([AccountId], Take: int.MaxValue)
-        );
+        var result = await services
+            .GetRequiredService<IGrantRequestService>()
+            .ListGrantRequestsAsync(new ListGrantRequestsRequest([AccountId], Take: int.MaxValue));
         return result.ResultCode == RetrieveResultCode.Success ? result.Data?.Items ?? [] : [];
     }
 
@@ -159,35 +152,48 @@ public partial class GrantList
             CloseDialog();
     }
 
+    // The decision and the reload after it are one operation.
     private async Task ConfirmDialogAsync()
     {
         if (_dialog is not { } dialog)
             return;
 
         _deciding = true;
-        var userId = await AccountAccessor.GetUserIdAsync();
-        var id = dialog.Request.GrantRequestId;
-        var (code, message) = dialog.Mode switch
+        var decided = await InOperationAsync(async services =>
         {
-            DialogMode.Approve => await ApproveAsync(id, userId),
-            DialogMode.Decline => Outcome(
-                await GrantRequestService.DeclineGrantRequestAsync(
-                    new DeclineGrantRequestRequest(AccountId, id, _reason, userId)
-                )
-            ),
-            _ => Outcome(
-                await GrantRequestService.CancelGrantRequestAsync(
-                    new CancelGrantRequestRequest(AccountId, id, _reason, userId)
-                )
-            ),
-        };
-        await DecidedAsync(code, message, dialog.Mode.Verb());
+            var grantRequests = services.GetRequiredService<IGrantRequestService>();
+            var userId = await services
+                .GetRequiredService<IBillingAccountAccessor>()
+                .GetUserIdAsync();
+            var id = dialog.Request.GrantRequestId;
+            var (code, message) = dialog.Mode switch
+            {
+                DialogMode.Approve => await ApproveAsync(grantRequests, id, userId),
+                DialogMode.Decline => Outcome(
+                    await grantRequests.DeclineGrantRequestAsync(
+                        new DeclineGrantRequestRequest(AccountId, id, _reason, userId)
+                    )
+                ),
+                _ => Outcome(
+                    await grantRequests.CancelGrantRequestAsync(
+                        new CancelGrantRequestRequest(AccountId, id, _reason, userId)
+                    )
+                ),
+            };
+            await DecidedAsync(services, code, message, dialog.Mode.Verb());
+        });
+        if (!decided)
+            _deciding = false;
     }
 
-    private async Task<(DecideGrantRequestResultCode, string)> ApproveAsync(Guid id, Guid? userId)
+    private async Task<(DecideGrantRequestResultCode, string)> ApproveAsync(
+        IGrantRequestService grantRequests,
+        Guid id,
+        Guid? userId
+    )
     {
         var today = Now.Date;
-        var result = await GrantRequestService.ApproveGrantRequestAsync(
+        var result = await grantRequests.ApproveGrantRequestAsync(
             new ApproveGrantRequestRequest(AccountId, id, today, today.AddYears(1), userId)
         );
         return (result.ResultCode, result.Message);
@@ -200,6 +206,7 @@ public partial class GrantList
         (r.ResultCode, r.Message);
 
     private async Task DecidedAsync(
+        IServiceProvider services,
         DecideGrantRequestResultCode code,
         string message,
         string action
@@ -212,16 +219,22 @@ public partial class GrantList
             is DecideGrantRequestResultCode.Success
                 or DecideGrantRequestResultCode.AlreadyDecidedError
         )
-            await LoadAsync();
+            await LoadAsync(services);
         _error = code.ErrorMessage(action, message);
     }
 
     private async Task DeleteAsync(Grant grant)
     {
         _deleting = true;
-        var result = await GrantService.DeleteGrantAsync(grant.AccountId, grant.GrantId);
+        var result = await InOperationAsync(services =>
+            services
+                .GetRequiredService<IGrantService>()
+                .DeleteGrantAsync(grant.AccountId, grant.GrantId)
+        );
         _deleting = false;
         _confirmingDelete = null;
+        if (result is null)
+            return;
 
         switch (result.ResultCode)
         {

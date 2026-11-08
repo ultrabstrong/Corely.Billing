@@ -11,7 +11,12 @@ public sealed class WithIamDemoTests : IDisposable
     private readonly DemoAppFactory<App> _factory = new();
     private readonly HttpClient _client;
 
-    public WithIamDemoTests() => _client = _factory.CreateTestClient();
+    public WithIamDemoTests()
+    {
+        _client = _factory.CreateTestClient();
+        // Since Corely.IAM 7 the sign in page reads which identity providers are on.
+        _factory.CreateIamSchema();
+    }
 
     public void Dispose()
     {

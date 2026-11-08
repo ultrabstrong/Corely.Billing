@@ -1,5 +1,5 @@
 @page "/plan"
-@inherits OwningComponentBase
+@inherits BillingOperationComponentBase
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Plan</PageTitle>
@@ -57,17 +57,17 @@
 @code {
     private const int DEFAULT_RETENTION_DAYS = 30;
 
-    private IQuotaService Quota => ScopedServices.GetRequiredService<IQuotaService>();
-
     private GetAllowanceResult? _retention;
     private HasFeatureResult? _fineTuning;
     private string? _message;
 
-    protected override async Task OnInitializedAsync()
-    {
-        _retention = await Quota.GetAllowanceAsync(DemoUsage.AccountId, DemoUsage.LogRetention);
-        _fineTuning = await Quota.HasFeatureAsync(DemoUsage.AccountId, DemoUsage.FineTuning);
-    }
+    protected override Task OnInitializedAsync() =>
+        InOperationAsync(async services =>
+        {
+            var quota = services.GetRequiredService<IQuotaService>();
+            _retention = await quota.GetAllowanceAsync(DemoUsage.AccountId, DemoUsage.LogRetention);
+            _fineTuning = await quota.HasFeatureAsync(DemoUsage.AccountId, DemoUsage.FineTuning);
+        });
 
     private void StartJob() => _message = "A fine tuning job would start here. Nothing is metered: the feature only gates it.";
 }
