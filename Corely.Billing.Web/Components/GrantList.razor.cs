@@ -152,7 +152,7 @@ public partial class GrantList
             CloseDialog();
     }
 
-    // The decision and the reload after it are one operation.
+    // The reload after the decision reads in an operation of its own, so it sees what the decision wrote.
     private async Task ConfirmDialogAsync()
     {
         if (_dialog is not { } dialog)
@@ -180,7 +180,7 @@ public partial class GrantList
                     )
                 ),
             };
-            await DecidedAsync(services, code, message, dialog.Mode.Verb());
+            await DecidedAsync(code, message, dialog.Mode.Verb());
         });
         if (!decided)
             _deciding = false;
@@ -206,7 +206,6 @@ public partial class GrantList
         (r.ResultCode, r.Message);
 
     private async Task DecidedAsync(
-        IServiceProvider services,
         DecideGrantRequestResultCode code,
         string message,
         string action
@@ -219,7 +218,7 @@ public partial class GrantList
             is DecideGrantRequestResultCode.Success
                 or DecideGrantRequestResultCode.AlreadyDecidedError
         )
-            await LoadAsync(services);
+            await InOperationAsync(LoadAsync);
         _error = code.ErrorMessage(action, message);
     }
 

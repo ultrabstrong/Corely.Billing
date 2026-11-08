@@ -127,7 +127,7 @@ public partial class RegistrationList
             var released = await services
                 .GetRequiredService<IQuotaService>()
                 .ReleaseRegistrationAsync(AccountId, registration.RegistrationId);
-            await LoadAsync(services);
+            await InOperationAsync(LoadAsync);
             return released;
         });
         _working = false;
@@ -156,7 +156,7 @@ public partial class RegistrationList
                 .MoveRegistrationsAsync(
                     new MoveRegistrationsRequest(AccountId, fromGrantId, toGrantId, registrationIds)
                 );
-            await LoadAsync(services);
+            await InOperationAsync(LoadAsync);
             return moved;
         });
         _working = false;

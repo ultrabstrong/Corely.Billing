@@ -66,7 +66,7 @@
         var result = await InOperationAsync(async services =>
         {
             var registered = await services.GetRequiredService<IQuotaService>().RegisterAsync(request);
-            await LoadCapacityAsync(services);
+            await InOperationAsync(LoadCapacityAsync);
             return registered;
         });
         _adding = false;
