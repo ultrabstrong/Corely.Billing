@@ -51,6 +51,20 @@ public static class IAMOptionsExtensions
                     BillingResourceTypes.ALL_ACCOUNTS_TITLE,
                     BillingResourceTypes.ALL_ACCOUNTS_DESCRIPTION,
                     BillingResourceTypes.GROUP
+                )
+                .SetSupportActions(
+                    BillingResourceTypes.GRANT_RESOURCE_TYPE,
+                    AuthAction.Read,
+                    AuthAction.Create
+                )
+                .SetSupportActions(
+                    BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+                    AuthAction.Read,
+                    AuthAction.Update
+                )
+                .SetSupportActions(
+                    BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE,
+                    AuthAction.Read
                 );
     }
 }

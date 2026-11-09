@@ -55,6 +55,19 @@ the host gives Create on `grant` and Update on `grant_request`.
 IAM adds owner defaults for a newly registered type to existing accounts too, so accounts created
 before `grant_request` existed gain Read and Create on it.
 
+## What Platform Support Gets
+
+`RegisterBillingResourceTypes()` also declares each type's support actions, which IAM gives the
+platform account's support group (see Corely.IAM's platform account docs). Support reads everything
+and can provision grants, nothing more:
+
+| Type | Support actions | Why |
+|------|-----------------|-----|
+| `grant` | Read, Create | Add a grant, and approve a request, which creates one |
+| `grant_request` | Read, Update | See requests and approve or decline them |
+| `consumption`, `quota`, `registration` | Read | See usage, balances and capacity, without reserving or spending any |
+| `billing_all_accounts` | Read | Read the lists above across every account, such as every pending request |
+
 ## Permissions
 
 Every method first checks `HasAccountContext` for the account it names. The system context passes both checks, so a pipeline running as the system is unaffected.

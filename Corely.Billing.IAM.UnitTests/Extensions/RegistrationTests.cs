@@ -134,6 +134,37 @@ public class RegistrationTests
         Assert.Equal(ownerActions, registry.Get(resourceType)!.OwnerActions);
     }
 
+    [Theory]
+    [InlineData(
+        BillingResourceTypes.GRANT_RESOURCE_TYPE,
+        new[] { AuthAction.Read, AuthAction.Create }
+    )]
+    [InlineData(
+        BillingResourceTypes.GRANT_REQUEST_RESOURCE_TYPE,
+        new[] { AuthAction.Read, AuthAction.Update }
+    )]
+    [InlineData(BillingResourceTypes.CONSUMPTION_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(BillingResourceTypes.QUOTA_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(BillingResourceTypes.REGISTRATION_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    [InlineData(BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE, new[] { AuthAction.Read })]
+    public void RegisterBillingResourceTypes_LetsSupportReadAndApproveGrants_ForEachType(
+        string resourceType,
+        AuthAction[] supportActions
+    )
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddIAMServices(
+            IAMOptions
+                .Create(Configuration, Mock.Of<ISecurityConfigurationProvider>())
+                .RegisterBillingResourceTypes()
+        );
+
+        var registry = services.BuildServiceProvider().GetRequiredService<IResourceTypeRegistry>();
+
+        Assert.Equal(supportActions, registry.Get(resourceType)!.SupportActions);
+    }
+
     [Fact]
     public void UseCorelyIamPermissions_Throws_ForAHostWithoutIam()
     {
