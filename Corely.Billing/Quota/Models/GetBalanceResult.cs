@@ -5,7 +5,7 @@ namespace Corely.Billing.Quota.Models;
 public record GetBalanceResult(
     QuotaReadResultCode ResultCode,
     string Message,
-    long? Remaining,
+    decimal? Remaining,
     IReadOnlyList<Grant> Grants
 )
 {

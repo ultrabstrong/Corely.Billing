@@ -6,7 +6,7 @@ public record ReserveQuotaRequest(
     Guid AccountId,
     UsageOperation Operation,
     UsageUnit Unit,
-    long Quantity,
+    decimal Quantity,
     string Provider,
     Guid? UserId = null,
     Dictionary<string, string>? Tags = null

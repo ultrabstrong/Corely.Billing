@@ -5,5 +5,5 @@ public sealed record ConsumptionSeries(
     IReadOnlyList<ConsumptionTimeBucketData> Buckets
 )
 {
-    public long Total => Buckets.Sum(b => b.TotalQuantity);
+    public decimal Total => Buckets.Sum(b => b.TotalQuantity);
 }

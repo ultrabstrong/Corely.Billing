@@ -12,7 +12,7 @@ internal sealed class ConsumptionAuthorizationDecorator(
     AccountReadScope accountReadScope
 ) : IConsumptionService
 {
-    public Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
+    public Task<RetrieveSingleResult<decimal>> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     ) =>

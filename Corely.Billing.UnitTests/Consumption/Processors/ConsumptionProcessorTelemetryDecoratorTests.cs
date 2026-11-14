@@ -70,7 +70,7 @@ public class ConsumptionProcessorTelemetryDecoratorTests
     [Fact]
     public async Task SettleAsync_RecordsTheSettledQuantity_ForASuccessfulSettle()
     {
-        var split = new Dictionary<Guid, long>();
+        var split = new Dictionary<Guid, decimal>();
         _inner
             .Setup(p =>
                 p.SettleAsync(AccountId, TestUsage.Extraction, TestUsage.Page, split, default)

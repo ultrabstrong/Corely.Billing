@@ -18,5 +18,10 @@ internal class ConsumptionEventValidator : AbstractValidator<ConsumptionEvent>
         RuleFor(x => x.Unit)
             .Must(vocabulary.Knows)
             .WithMessage(x => $"Unit '{x.Unit}' is not a registered usage unit.");
+        RuleFor(x => x.Quantity)
+            .Must((consumption, quantity) => vocabulary.Allows(consumption.Unit, quantity))
+            .WithMessage(x =>
+                $"Unit '{x.Unit}' does not allow a quantity as precise as {x.Quantity}."
+            );
     }
 }

@@ -40,7 +40,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 12 }
+            new Dictionary<Guid, decimal> { [GrantId] = 12 }
         );
 
         Assert.Equal(ResolveConsumptionResultCode.Success, result.ResultCode);
@@ -109,7 +109,7 @@ public sealed class ConsumptionReservationTests : IDisposable
                 AccountId,
                 TestUsage.Extraction,
                 TestUsage.Page,
-                new Dictionary<Guid, long> { [GrantId] = 40 }
+                new Dictionary<Guid, decimal> { [GrantId] = 40 }
             );
 
         Assert.Equal(41, await BalanceAsync());
@@ -124,14 +124,14 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 7 }
+            new Dictionary<Guid, decimal> { [GrantId] = 7 }
         );
 
         var second = await writer.SettleAsync(
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 7 }
+            new Dictionary<Guid, decimal> { [GrantId] = 7 }
         );
 
         Assert.Equal(ResolveConsumptionResultCode.Success, second.ResultCode);
@@ -147,7 +147,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 3 }
+            new Dictionary<Guid, decimal> { [GrantId] = 3 }
         );
 
         _host.TimeProvider.Advance(_options.ReservationTtl * 10);
@@ -165,7 +165,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 1, [SecondGrantId] = 99 }
+            new Dictionary<Guid, decimal> { [GrantId] = 1, [SecondGrantId] = 99 }
         );
 
         Assert.Equal(1, await BalanceAsync());
@@ -182,7 +182,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 1, [SecondGrantId] = 4 }
+            new Dictionary<Guid, decimal> { [GrantId] = 1, [SecondGrantId] = 4 }
         );
 
         var spillover = await RowAsync(e => e.GrantId == SecondGrantId);
@@ -206,7 +206,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [SecondGrantId] = 3 }
+            new Dictionary<Guid, decimal> { [SecondGrantId] = 3 }
         );
 
         var released = await RowAsync(e => e.GrantId == GrantId);
@@ -226,7 +226,7 @@ public sealed class ConsumptionReservationTests : IDisposable
         var writer = Ledger("job:a/step:b");
         await writer.ReserveAsync(NewEvent(quantity: 1));
 
-        var split = new Dictionary<Guid, long> { [GrantId] = 1, [SecondGrantId] = 9 };
+        var split = new Dictionary<Guid, decimal> { [GrantId] = 1, [SecondGrantId] = 9 };
         await writer.SettleAsync(AccountId, TestUsage.Extraction, TestUsage.Page, split);
         await writer.SettleAsync(AccountId, TestUsage.Extraction, TestUsage.Page, split);
 
@@ -258,7 +258,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 2 }
+            new Dictionary<Guid, decimal> { [GrantId] = 2 }
         );
 
         var outstanding = await writer.ListOutstandingReservationsAsync(
@@ -270,7 +270,7 @@ public sealed class ConsumptionReservationTests : IDisposable
         Assert.Empty(outstanding!);
     }
 
-    private async Task<long> BalanceAsync(Guid? grantId = null)
+    private async Task<decimal> BalanceAsync(Guid? grantId = null)
     {
         var grant = grantId ?? GrantId;
         var totals = await _host.WithScopeAsync(services =>
@@ -331,7 +331,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 5 }
+            new Dictionary<Guid, decimal> { [GrantId] = 5 }
         );
 
         _host.TimeProvider.Advance(_options.ReservationTtl * 10);
@@ -361,7 +361,7 @@ public sealed class ConsumptionReservationTests : IDisposable
             Guid accountId,
             UsageOperation operation,
             UsageUnit unit,
-            IReadOnlyDictionary<Guid, long> quantityByGrant
+            IReadOnlyDictionary<Guid, decimal> quantityByGrant
         ) =>
             host.InOperationAsync(
                 idempotencyScope,

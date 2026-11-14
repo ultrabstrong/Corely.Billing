@@ -60,8 +60,9 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<long>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<string>("TagsJson")
                         .HasColumnType("longtext");
@@ -127,8 +128,9 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<long?>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<Guid?>("RequestedByUserId")
                         .HasColumnType("char(36)");
@@ -181,8 +183,9 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<long?>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<string>("TagsJson")
                         .HasColumnType("longtext");

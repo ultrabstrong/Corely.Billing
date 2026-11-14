@@ -25,6 +25,16 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 
 A feature declares no unit; every other kind must, and the unit must be registered. Several operations can share one unit.
 
+## Decimal Places
+
+Every amount is a `decimal`, stored as `decimal(19,6)`. A unit is counted whole unless it says otherwise: pass its decimal places, up to `UsageUnitDefinition.DECIMALS_MAX_VALUE` (6), when it is registered.
+
+```csharp
+options.RegisterUnit("credit", "credit", decimals: 6);
+```
+
+A reserve, settle, grant or grant request whose quantity is finer than its unit allows returns `ValidationError` and records nothing. Nothing is ever rounded: 1.5 days is refused, and so is 0.0000001 credits.
+
 Keep the tokens in one static class so the host never repeats a string:
 
 ```csharp

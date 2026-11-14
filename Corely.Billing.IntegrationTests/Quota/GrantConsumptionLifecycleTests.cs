@@ -275,6 +275,45 @@ public sealed class GrantConsumptionLifecycleTests : IDisposable
     }
 
     [Fact]
+    public async Task Balance_KeepsEveryMillionth_ForFractionalChargesOnACreditGrant()
+    {
+        var credits = new LedgerDriver(_host, AccountId, TestUsage.Spend, TestUsage.Credit);
+        var grant = await credits.SeedGrantAsync(quantity: 10);
+
+        await credits.ProcessAsync("job:a/step:1", 3.333333m);
+        await credits.ProcessAsync("job:b/step:1", 3.333333m);
+        await credits.ProcessAsync("job:c/step:1", 3.333333m);
+
+        Assert.Equal(9.999999m, await credits.BalanceAsync(grant));
+    }
+
+    [Fact]
+    public async Task Balance_SplitsAFraction_ForCreditWorkThatCrossesAGrantEdge()
+    {
+        var credits = new LedgerDriver(_host, AccountId, TestUsage.Spend, TestUsage.Credit);
+        var expiringSoon = await credits.SeedGrantAsync(quantity: 1.5m, expiresInDays: 2);
+        var laterGrant = await credits.SeedGrantAsync(quantity: 10, expiresInDays: 60);
+
+        await credits.ProcessAsync("job:a/step:1", 2.250001m);
+
+        Assert.Equal(1.5m, await credits.BalanceAsync(expiringSoon));
+        Assert.Equal(0.750001m, await credits.BalanceAsync(laterGrant));
+    }
+
+    [Fact]
+    public async Task SettleAsync_RefusesAndKeepsTheHold_ForAQuantityFinerThanTheUnit()
+    {
+        var credits = new LedgerDriver(_host, AccountId, TestUsage.Spend, TestUsage.Credit);
+        var grant = await credits.SeedGrantAsync(quantity: 10);
+
+        await credits.ReserveAsync("job:a/step:1", quantity: 1);
+        var settled = await credits.SettleAsync("job:a/step:1", 0.0000001m);
+
+        Assert.Equal(SettleQuotaResultCode.ValidationError, settled.ResultCode);
+        Assert.Equal(1, await credits.BalanceAsync(grant));
+    }
+
+    [Fact]
     public async Task Balance_ChargesTwice_ForTwoDistinctJobsOverTheSameWork()
     {
         var grant = await _ledger.SeedGrantAsync(quantity: 100);

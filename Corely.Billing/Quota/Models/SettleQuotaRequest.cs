@@ -6,5 +6,5 @@ public record SettleQuotaRequest(
     Guid AccountId,
     UsageOperation Operation,
     UsageUnit Unit,
-    long ActualQuantity
+    decimal ActualQuantity
 );

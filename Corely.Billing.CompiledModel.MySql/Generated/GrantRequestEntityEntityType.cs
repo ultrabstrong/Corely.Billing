@@ -113,10 +113,12 @@ namespace Corely.Billing.CompiledModel.MySql.Generated
 
             var quantity = runtimeEntityType.AddProperty(
                 "Quantity",
-                typeof(long?),
+                typeof(decimal?),
                 propertyInfo: typeof(GrantRequestEntity).GetProperty("Quantity", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 fieldInfo: typeof(GrantRequestEntity).GetField("<Quantity>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                nullable: true);
+                nullable: true,
+                precision: 19,
+                scale: 6);
 
             var requestedByUserId = runtimeEntityType.AddProperty(
                 "RequestedByUserId",

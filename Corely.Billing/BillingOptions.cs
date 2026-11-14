@@ -23,7 +23,7 @@ public class BillingOptions
 
     internal Dictionary<UsageOperation, UsageOperationDefinition> Operations { get; } = [];
 
-    internal Dictionary<UsageUnit, string> Units { get; } = [];
+    internal Dictionary<UsageUnit, UsageUnitDefinition> Units { get; } = [];
 
     private BillingOptions() { }
 
@@ -65,10 +65,16 @@ public class BillingOptions
         return this;
     }
 
-    public BillingOptions RegisterUnit(string value, string displayName)
+    public BillingOptions RegisterUnit(string value, string displayName, int decimals = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
-        Units[UsageUnit.From(value)] = displayName;
+        ArgumentOutOfRangeException.ThrowIfNegative(decimals);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            decimals,
+            UsageUnitDefinition.DECIMALS_MAX_VALUE
+        );
+        var unit = UsageUnit.From(value);
+        Units[unit] = new UsageUnitDefinition(unit, displayName, decimals);
         return this;
     }
 

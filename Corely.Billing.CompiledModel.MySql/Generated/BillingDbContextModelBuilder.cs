@@ -11,7 +11,7 @@ namespace Corely.Billing.CompiledModel.MySql.Generated
     public partial class BillingDbContextModel
     {
         private BillingDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("60582a5d-dad0-4058-ba54-d7258c4cd18c"), entityTypeCount: 4)
+            : base(skipDetectChanges: false, modelId: new Guid("cfc314e4-0042-4cf2-ac78-4369ec5df2f3"), entityTypeCount: 4)
         {
         }
 

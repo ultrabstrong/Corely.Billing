@@ -38,7 +38,7 @@ internal class ConsumptionReportProcessor(
             || (c.FinalizedUtc == null && c.UtcTimestamp >= liveFromUtc)
         );
 
-    public async Task<long> GetConsumptionTotalAsync(
+    public async Task<decimal> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     )
@@ -60,7 +60,7 @@ internal class ConsumptionReportProcessor(
                     if (!string.IsNullOrWhiteSpace(provider))
                         q = q.Where(e => e.Provider == provider);
 
-                    return WhereCounted(q, liveFromUtc).SumAsync(e => (long?)e.Quantity, token);
+                    return WhereCounted(q, liveFromUtc).SumAsync(e => (decimal?)e.Quantity, token);
                 },
                 ct
             ) ?? 0L;
@@ -84,7 +84,7 @@ internal class ConsumptionReportProcessor(
                     .GroupBy(c => c.GrantId)
                     .Select(g => new GrantTotalConsumptions(
                         g.Key,
-                        g.Sum(c => (long?)c.Quantity) ?? 0L
+                        g.Sum(c => (decimal?)c.Quantity) ?? 0m
                     ))
                     .ToListAsync(token),
             ct
@@ -133,7 +133,7 @@ internal class ConsumptionReportProcessor(
             starts.Add(bucketStart);
         }
 
-        ConsumptionSeries ToSeries(string? key, IEnumerable<(DateTime At, long Quantity)> rows)
+        ConsumptionSeries ToSeries(string? key, IEnumerable<(DateTime At, decimal Quantity)> rows)
         {
             var sums = rows.GroupBy(r => bucket.BucketStart(r.At))
                 .ToDictionary(g => g.Key, g => g.Sum(r => r.Quantity));

@@ -13,7 +13,7 @@ internal static class ConsumptionEventEntityExtensions
         public ConsumptionEventEntity ToSpillover(
             OperationContext operationContext,
             Guid grantId,
-            long quantity,
+            decimal quantity,
             DateTime settledUtc
         ) =>
             new()

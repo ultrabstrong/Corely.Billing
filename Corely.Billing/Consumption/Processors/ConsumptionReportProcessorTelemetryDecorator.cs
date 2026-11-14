@@ -18,7 +18,7 @@ internal class ConsumptionReportProcessorTelemetryDecorator(
         logger.ThrowIfNull(nameof(logger));
     private readonly IBillingTelemetry _telemetry = telemetry.ThrowIfNull(nameof(telemetry));
 
-    public async Task<long> GetConsumptionTotalAsync(
+    public async Task<decimal> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     )
@@ -28,7 +28,7 @@ internal class ConsumptionReportProcessorTelemetryDecorator(
             request,
             () => _inner.GetConsumptionTotalAsync(request, ct)
         );
-        _telemetry.Record(BillingMetricNames.Consumption.CONSUMPTION_TOTAL_QUERIED, total);
+        _telemetry.Record(BillingMetricNames.Consumption.CONSUMPTION_TOTAL_QUERIED, (double)total);
         return total;
     }
 

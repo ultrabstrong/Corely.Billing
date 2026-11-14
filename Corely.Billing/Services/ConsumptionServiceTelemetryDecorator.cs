@@ -16,7 +16,7 @@ internal class ConsumptionServiceTelemetryDecorator(
         nameof(logger)
     );
 
-    public Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
+    public Task<RetrieveSingleResult<decimal>> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     ) =>

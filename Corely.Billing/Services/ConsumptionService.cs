@@ -11,7 +11,7 @@ internal class ConsumptionService(IConsumptionReportProcessor consumptionReportP
     private readonly IConsumptionReportProcessor _consumptionReportProcessor =
         consumptionReportProcessor.ThrowIfNull(nameof(consumptionReportProcessor));
 
-    public async Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
+    public async Task<RetrieveSingleResult<decimal>> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     ) => Found(await _consumptionReportProcessor.GetConsumptionTotalAsync(request, ct));

@@ -6,7 +6,7 @@ Reads the consumption ledger. Settled rows and holds still within their TTL coun
 
 | Method | Parameters | Returns |
 |--------|-----------|---------|
-| `GetConsumptionTotalAsync` | `GetConsumptionTotalRequest` | `RetrieveSingleResult<long>` |
+| `GetConsumptionTotalAsync` | `GetConsumptionTotalRequest` | `RetrieveSingleResult<decimal>` |
 | `GetConsumptionTimeSeriesAsync` | `GetConsumptionTimeSeriesRequest` | `RetrieveSingleResult<List<ConsumptionSeries>>` |
 | `ListConsumptionEventsAsync` | `ListConsumptionEventsRequest` | `RetrieveListResult<ConsumptionEvent>` |
 | `ListProvidersAsync` | `Guid accountId` | `RetrieveSingleResult<List<string>>` |

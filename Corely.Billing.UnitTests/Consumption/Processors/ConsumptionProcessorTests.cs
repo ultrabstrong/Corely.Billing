@@ -231,7 +231,7 @@ public class ConsumptionProcessorTests
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 7 }
+            new Dictionary<Guid, decimal> { [GrantId] = 7 }
         );
 
         Assert.Equal(ResolveConsumptionResultCode.Success, result.ResultCode);
@@ -254,7 +254,7 @@ public class ConsumptionProcessorTests
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [GrantId] = 10, [OtherGrantId] = 4 }
+            new Dictionary<Guid, decimal> { [GrantId] = 10, [OtherGrantId] = 4 }
         );
 
         Assert.Equal(14, result.SettledQuantity);
@@ -276,7 +276,7 @@ public class ConsumptionProcessorTests
             AccountId,
             TestUsage.Extraction,
             TestUsage.Page,
-            new Dictionary<Guid, long> { [OtherGrantId] = 3 }
+            new Dictionary<Guid, decimal> { [OtherGrantId] = 3 }
         );
 
         var held = Assert.Single(await repo.ListAsync(e => e.GrantId == GrantId));
@@ -290,7 +290,7 @@ public class ConsumptionProcessorTests
         var repo = MockRepo();
         var processor = CreateProcessor(repo);
         await processor.ReserveAsync(MakeEvent(10));
-        var split = new Dictionary<Guid, long> { [GrantId] = 10, [OtherGrantId] = 4 };
+        var split = new Dictionary<Guid, decimal> { [GrantId] = 10, [OtherGrantId] = 4 };
         await processor.SettleAsync(AccountId, TestUsage.Extraction, TestUsage.Page, split);
 
         var replay = await processor.SettleAsync(
@@ -344,7 +344,7 @@ public class ConsumptionProcessorTests
                 AccountId,
                 TestUsage.Extraction,
                 TestUsage.Page,
-                new Dictionary<Guid, long> { [GrantId] = 1 }
+                new Dictionary<Guid, decimal> { [GrantId] = 1 }
             );
 
         Assert.Equal(ResolveConsumptionResultCode.NotRecordedError, result.ResultCode);

@@ -49,7 +49,7 @@
             {
                 <li class="cbw-event-row">
                     <span class="cbw-event-when">@item.UtcTimestamp.ToString("MMM d, yyyy HH:mm")</span>
-                    <span class="cbw-event-quantity">@item.Quantity.ToString("N0")<span class="cbw-event-quantity-unit">&nbsp;@Vocabulary.DisplayName(item.Unit)@(item.Quantity == 1 ? "" : "s")</span></span>
+                    <span class="cbw-event-quantity">@UsageText.Number(item.Quantity)<span class="cbw-event-quantity-unit">&nbsp;@Vocabulary.DisplayName(item.Unit)@(item.Quantity == 1 ? "" : "s")</span></span>
                     <span class="cbw-event-unit text-body-secondary">@Vocabulary.DisplayName(item.Unit)</span>
                     <span class="cbw-event-operation">@Vocabulary.DisplayName(item.Operation)</span>
                     <span class="cbw-event-provider text-body-secondary">@item.Provider</span>

@@ -187,7 +187,7 @@ internal class ConsumptionProcessor(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
-        IReadOnlyDictionary<Guid, long> quantityByGrant,
+        IReadOnlyDictionary<Guid, decimal> quantityByGrant,
         CancellationToken ct = default
     )
     {
@@ -258,7 +258,7 @@ internal class ConsumptionProcessor(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
-        IReadOnlyDictionary<Guid, long>? quantityByGrant,
+        IReadOnlyDictionary<Guid, decimal>? quantityByGrant,
         CancellationToken ct
     )
     {
@@ -301,14 +301,14 @@ internal class ConsumptionProcessor(
             }
 
             var now = _timeProvider.GetUtcNow().UtcDateTime;
-            var settled = 0L;
+            var settled = 0m;
             var rowCount = 0;
 
             foreach (var reservation in outstanding)
             {
                 var charge =
                     quantityByGrant?.TryGetValue(reservation.GrantId, out var q) == true
-                        ? (long?)q
+                        ? (decimal?)q
                         : null;
 
                 reservation.Quantity = charge ?? reservation.Quantity;
@@ -368,9 +368,9 @@ internal class ConsumptionProcessor(
         }
     }
 
-    private static IEnumerable<KeyValuePair<Guid, long>> NewlyDrawnGrants(
+    private static IEnumerable<KeyValuePair<Guid, decimal>> NewlyDrawnGrants(
         List<ConsumptionEventEntity> outstanding,
-        IReadOnlyDictionary<Guid, long>? quantityByGrant
+        IReadOnlyDictionary<Guid, decimal>? quantityByGrant
     ) =>
         quantityByGrant is null
             ? []

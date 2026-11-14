@@ -80,7 +80,7 @@ public sealed class GrantListTests : IDisposable
                 [AccountId],
                 Filter: Filter
                     .For<Grant>()
-                    .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(25))
+                    .Where(g => g.Quantity, ComparableFilter<decimal>.GreaterThanOrEqual(25))
             )
         );
 
@@ -96,7 +96,9 @@ public sealed class GrantListTests : IDisposable
         var result = await ListAsync(
             new ListGrantsRequest(
                 [AccountId],
-                Filter: Filter.For<Grant>().Where(g => g.Quantity, ComparableFilter<long>.IsNull())
+                Filter: Filter
+                    .For<Grant>()
+                    .Where(g => g.Quantity, ComparableFilter<decimal>.IsNull())
             )
         );
 
@@ -119,7 +121,10 @@ public sealed class GrantListTests : IDisposable
                         [AccountId],
                         Filter: Filter
                             .For<Grant>()
-                            .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20))
+                            .Where(
+                                g => g.Quantity,
+                                ComparableFilter<decimal>.GreaterThanOrEqual(20)
+                            )
                     ),
                     authorized
                 )

@@ -5,7 +5,7 @@ namespace Corely.Billing.Consumption.Processors;
 
 internal interface IConsumptionReportProcessor
 {
-    Task<long> GetConsumptionTotalAsync(
+    Task<decimal> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     );

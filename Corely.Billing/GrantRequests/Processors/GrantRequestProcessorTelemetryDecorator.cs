@@ -36,7 +36,7 @@ internal class GrantRequestProcessorTelemetryDecorator(
             if (request.Quantity is { } quantity)
                 _telemetry.Record(
                     BillingMetricNames.GrantRequests.GRANT_REQUEST_QUANTITY,
-                    quantity
+                    (double)quantity
                 );
         }
         return result;

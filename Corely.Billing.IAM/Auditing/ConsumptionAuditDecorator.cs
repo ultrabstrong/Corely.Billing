@@ -14,7 +14,7 @@ internal sealed class ConsumptionAuditDecorator(
 {
     private const string SERVICE = nameof(IConsumptionService);
 
-    public Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
+    public Task<RetrieveSingleResult<decimal>> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     ) =>

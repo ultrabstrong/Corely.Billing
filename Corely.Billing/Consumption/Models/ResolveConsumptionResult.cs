@@ -10,6 +10,6 @@ internal enum ResolveConsumptionResultCode
 internal record ResolveConsumptionResult(
     ResolveConsumptionResultCode ResultCode,
     string Message,
-    long SettledQuantity = 0,
+    decimal SettledQuantity = 0,
     int RowCount = 0
 );

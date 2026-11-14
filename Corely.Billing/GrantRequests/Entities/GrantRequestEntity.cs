@@ -16,7 +16,7 @@ internal class GrantRequestEntity : IHasCreatedUtc
     public UsageOperation Operation { get; set; }
     public GrantKind Kind { get; set; }
     public UsageUnit? Unit { get; set; }
-    public long? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public string? Note { get; set; }
     public Guid? RequestedByUserId { get; set; }
     public DateTime RequestedUtc { get; set; }

@@ -14,7 +14,7 @@ internal interface IConsumptionProcessor
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
-        IReadOnlyDictionary<Guid, long> quantityByGrant,
+        IReadOnlyDictionary<Guid, decimal> quantityByGrant,
         CancellationToken ct = default
     );
 

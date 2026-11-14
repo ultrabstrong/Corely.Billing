@@ -21,7 +21,7 @@ internal sealed record QuotaContext(List<Grant> Grants, List<GrantTotalConsumpti
             ],
         };
 
-    public double RemainingRatio(long charged)
+    public double RemainingRatio(decimal charged)
     {
         if (Grants.Any(g => g.Quantity is null))
             return 1;
@@ -31,6 +31,6 @@ internal sealed record QuotaContext(List<Grant> Grants, List<GrantTotalConsumpti
             return 0;
 
         var consumed = Totals.Sum(t => t.TotalConsumedQuantity) + charged;
-        return Math.Clamp((double)(total - consumed) / total, 0, 1);
+        return Math.Clamp((double)((total - consumed) / total), 0, 1);
     }
 }

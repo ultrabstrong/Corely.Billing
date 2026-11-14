@@ -36,7 +36,7 @@ internal class GrantProcessorTelemetryDecorator(
         {
             _telemetry.Increment(BillingMetricNames.Grants.GRANT_SAVED);
             if (request.Quantity is { } quantity)
-                _telemetry.Record(BillingMetricNames.Grants.GRANT_QUANTITY, quantity);
+                _telemetry.Record(BillingMetricNames.Grants.GRANT_QUANTITY, (double)quantity);
             _telemetry.Record(
                 BillingMetricNames.Grants.GRANT_VALIDITY_DAYS,
                 (request.ValidToUtc - request.ValidFromUtc).TotalDays
@@ -60,7 +60,7 @@ internal class GrantProcessorTelemetryDecorator(
         {
             _telemetry.Increment(BillingMetricNames.Grants.GRANT_UPDATED);
             if (request.Quantity is { } quantity)
-                _telemetry.Record(BillingMetricNames.Grants.GRANT_QUANTITY, quantity);
+                _telemetry.Record(BillingMetricNames.Grants.GRANT_QUANTITY, (double)quantity);
         }
         return result;
     }

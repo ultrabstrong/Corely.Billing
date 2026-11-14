@@ -53,7 +53,7 @@ public sealed class WithIamApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("Success", body.GetProperty("resultCode").GetString());
         Assert.InRange(
-            body.GetProperty("data").GetProperty("remaining").GetInt64(),
+            body.GetProperty("data").GetProperty("remaining").GetDecimal(),
             1,
             2_250_000 - 1
         );

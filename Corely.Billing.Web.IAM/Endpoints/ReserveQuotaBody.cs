@@ -7,7 +7,7 @@ namespace Corely.Billing.Web.IAM.Endpoints;
 internal sealed record ReserveQuotaBody(
     Guid OperationId,
     string Unit,
-    long Quantity,
+    decimal Quantity,
     string Provider,
     Dictionary<string, string>? Tags = null
 )

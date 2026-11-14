@@ -239,6 +239,10 @@ internal class QuotaProcessor(
     {
         ArgumentNullException.ThrowIfNull(request, nameof(request));
 
+        var validation = _validationProvider.ValidateAndLog(request);
+        if (!validation.IsValid)
+            return new SettleQuotaResult(SettleQuotaResultCode.ValidationError, validation.Message);
+
         var outstanding = await _consumptionProcessor.ListOutstandingReservationsAsync(
             request.AccountId,
             request.Operation,
@@ -255,7 +259,7 @@ internal class QuotaProcessor(
 
         if (outstanding.Count == 0)
         {
-            return await ApplyAsync(request, new Dictionary<Guid, long>(), overdrawn: false, ct);
+            return await ApplyAsync(request, new Dictionary<Guid, decimal>(), overdrawn: false, ct);
         }
 
         var context = (
@@ -322,7 +326,7 @@ internal class QuotaProcessor(
 
     private async Task<SettleQuotaResult> ApplyAsync(
         SettleQuotaRequest request,
-        IReadOnlyDictionary<Guid, long> quantityByGrant,
+        IReadOnlyDictionary<Guid, decimal> quantityByGrant,
         bool overdrawn,
         CancellationToken ct
     )

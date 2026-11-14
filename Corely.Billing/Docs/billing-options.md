@@ -59,7 +59,7 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 | Method | Parameters | Description |
 |--------|-----------|-------------|
 | `RegisterOperation` | `value`, `displayName`, `kind`, `unit` | Adds an operation, declaring its grant kind and its unit; a feature takes no unit |
-| `RegisterUnit` | `value`, `displayName` | Adds a unit to the vocabulary |
+| `RegisterUnit` | `value`, `displayName`, `decimals` (default 0, at most 6) | Adds a unit to the vocabulary, counted to that many decimal places |
 | `UseTelemetry` | `Func<IServiceProvider, IBillingTelemetry>` | Replaces the no-op telemetry |
 | `DecorateServices` | `Action<IServiceCollection>` | Wraps the public services; may be called more than once |
 | `UseCompiledModel` | `IModel` | An EF Core model built ahead of time; normally set through a compiled model package, below |

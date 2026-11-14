@@ -39,7 +39,7 @@ public partial class GrantEditor
     private Grant? _grant;
 
     private UsageOperation _operation;
-    private long _quantity;
+    private decimal _quantity;
     private bool _unlimited;
     private bool _neverExpires;
     private DateTime _validFromUtc;
@@ -125,7 +125,7 @@ public partial class GrantEditor
             return;
 
         _saving = true;
-        long? quantity = Kind == GrantKind.Feature || _unlimited ? null : _quantity;
+        decimal? quantity = Kind == GrantKind.Feature || _unlimited ? null : _quantity;
         var fromUtc = DateTime.SpecifyKind(_validFromUtc, DateTimeKind.Utc);
         var toUtc =
             CanNeverExpire && _neverExpires
@@ -182,7 +182,7 @@ public partial class GrantEditor
 
     private async Task<(Guid, string?)> CreateAsync(
         IGrantService grants,
-        long? quantity,
+        decimal? quantity,
         DateTime fromUtc,
         DateTime toUtc
     )
@@ -203,7 +203,7 @@ public partial class GrantEditor
 
     private async Task<(Guid, string?)> UpdateAsync(
         IGrantService grants,
-        long? quantity,
+        decimal? quantity,
         DateTime fromUtc,
         DateTime toUtc
     )

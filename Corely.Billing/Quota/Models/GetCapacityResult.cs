@@ -5,10 +5,10 @@ namespace Corely.Billing.Quota.Models;
 public record GetCapacityResult(
     QuotaReadResultCode ResultCode,
     string Message,
-    long? Granted,
-    long InUse,
+    decimal? Granted,
+    decimal InUse,
     IReadOnlyList<Grant> Grants
 )
 {
-    public long? Free => Granted is { } granted ? Math.Max(0, granted - InUse) : null;
+    public decimal? Free => Granted is { } granted ? Math.Max(0, granted - InUse) : null;
 }

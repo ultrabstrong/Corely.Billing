@@ -32,7 +32,12 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
             .HasConversion(operation => operation.Value, value => UsageOperation.From(value))
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
-        builder.Property(e => e.Quantity);
+        builder
+            .Property(e => e.Quantity)
+            .HasPrecision(
+                UsageUnitDefinition.QUANTITY_PRECISION,
+                UsageUnitDefinition.DECIMALS_MAX_VALUE
+            );
         builder.Property(e => e.ValidFromUtc).IsRequired();
         builder.Property(e => e.ValidToUtc);
         builder.Property(e => e.Disabled).IsRequired();

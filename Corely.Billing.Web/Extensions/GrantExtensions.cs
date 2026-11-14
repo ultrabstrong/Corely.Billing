@@ -69,8 +69,9 @@ internal static class GrantExtensions
                 GrantType.Unlimited =>
                     $"Unlimited, {UsageText.Count(grant.Used ?? 0, grant.UnitName(vocabulary))} used",
                 GrantType.Capacity =>
-                    $"{grant.InUse ?? 0:N0} of {UsageText.Count(grant.Quantity!.Value, grant.UnitName(vocabulary))} in use",
-                GrantType.UnlimitedCapacity => $"Unlimited, {grant.InUse ?? 0:N0} in use",
+                    $"{UsageText.Number(grant.InUse ?? 0)} of {UsageText.Count(grant.Quantity!.Value, grant.UnitName(vocabulary))} in use",
+                GrantType.UnlimitedCapacity =>
+                    $"Unlimited, {UsageText.Number(grant.InUse ?? 0)} in use",
                 GrantType.Allowance =>
                     $"+{UsageText.Count(grant.Quantity!.Value, grant.UnitName(vocabulary))}{grant.UntilText()}",
                 GrantType.UnlimitedAllowance =>

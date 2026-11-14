@@ -22,6 +22,11 @@ internal class GrantValidator : AbstractValidator<Grant>
         RuleFor(x => x.Unit)
             .Must(unit => unit is not { } known || vocabulary.Knows(known))
             .WithMessage(x => $"Unit '{x.Unit}' is not a registered usage unit.");
+        RuleFor(x => x.Quantity)
+            .Must((grant, quantity) => vocabulary.Allows(grant.Unit, quantity))
+            .WithMessage(x =>
+                $"Unit '{x.Unit}' does not allow a quantity as precise as {x.Quantity}."
+            );
         RuleFor(x => x.Unit)
             .NotNull()
             .When(x => x.Kind != GrantKind.Feature)

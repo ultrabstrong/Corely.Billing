@@ -15,7 +15,7 @@ public class ConsumptionEvent
     public Guid GrantId { get; set; }
     public UsageOperation Operation { get; set; }
     public UsageUnit Unit { get; set; }
-    public long Quantity { get; set; }
+    public decimal Quantity { get; set; }
     public string Provider { get; set; } = null!;
     public DateTime UtcTimestamp { get; set; }
 

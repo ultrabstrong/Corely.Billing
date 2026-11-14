@@ -244,6 +244,12 @@ public abstract class BillingWebTestContext : BunitContext
         public UsageOperationDefinition? Definition(UsageOperation operation) =>
             Operations.FirstOrDefault(o => o.Operation == operation);
 
+        public UsageUnitDefinition? Definition(UsageUnit unit) =>
+            Units.FirstOrDefault(u => u.Unit == unit);
+
+        public bool Allows(UsageUnit? unit, decimal? quantity) =>
+            quantity is not { } q || unit is not { } u || Definition(u)?.Allows(q) != false;
+
         public string DisplayName(UsageOperation operation) =>
             Definition(operation)?.DisplayName ?? operation.Value;
 

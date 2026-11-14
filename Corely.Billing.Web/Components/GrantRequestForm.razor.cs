@@ -26,7 +26,7 @@ public partial class GrantRequestForm
     public EventCallback OnCancel { get; set; }
 
     private UsageOperation _operation;
-    private long? _quantity;
+    private decimal? _quantity;
     private string? _note;
     private bool _sending;
     private string? _error;

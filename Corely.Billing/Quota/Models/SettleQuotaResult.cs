@@ -4,6 +4,7 @@ public enum SettleQuotaResultCode
 {
     Success,
     UnauthorizedError,
+    ValidationError,
 
     NotRecordedError,
 }
@@ -11,7 +12,7 @@ public enum SettleQuotaResultCode
 public record SettleQuotaResult(
     SettleQuotaResultCode ResultCode,
     string Message,
-    long SettledQuantity = 0,
+    decimal SettledQuantity = 0,
     bool Overdrawn = false,
     double? RemainingRatio = null
 );

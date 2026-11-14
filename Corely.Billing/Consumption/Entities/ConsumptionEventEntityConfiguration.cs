@@ -17,6 +17,12 @@ internal sealed class ConsumptionEventEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.AccountId).IsRequired();
         builder.Property(e => e.CorrelationId).IsRequired();
         builder.Property(e => e.GrantId).IsRequired();
+        builder
+            .Property(e => e.Quantity)
+            .HasPrecision(
+                UsageUnitDefinition.QUANTITY_PRECISION,
+                UsageUnitDefinition.DECIMALS_MAX_VALUE
+            );
 
         builder
             .Property(e => e.Unit)

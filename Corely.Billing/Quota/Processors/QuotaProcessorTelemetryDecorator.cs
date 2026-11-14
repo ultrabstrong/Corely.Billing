@@ -103,7 +103,10 @@ internal class QuotaProcessorTelemetryDecorator(
         );
         if (result.ResultCode == SettleQuotaResultCode.Success)
         {
-            _telemetry.Record(BillingMetricNames.Quota.SETTLED_QUANTITY, result.SettledQuantity);
+            _telemetry.Record(
+                BillingMetricNames.Quota.SETTLED_QUANTITY,
+                (double)result.SettledQuantity
+            );
 
             if (result.Overdrawn)
                 _telemetry.Increment(BillingMetricNames.Quota.GRANT_OVERDRAWN);

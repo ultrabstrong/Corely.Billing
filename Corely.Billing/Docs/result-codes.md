@@ -84,6 +84,7 @@ Returned by both `SettleAsync` and `ReleaseAsync`.
 |------|---------|
 | `Success` | Resolved, or nothing was outstanding |
 | `UnauthorizedError` | Refused by a host decorator |
+| `ValidationError` | The settled quantity is negative or finer than its unit allows; nothing changed and the hold stays until its TTL |
 | `NotRecordedError` | The ledger could not be updated, or no operation scope is open; the hold stays until its TTL |
 
 ### QuotaReadResultCode

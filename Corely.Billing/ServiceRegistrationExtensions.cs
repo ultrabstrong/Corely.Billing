@@ -56,10 +56,7 @@ public static class ServiceRegistrationExtensions
                 AsyncLocalOperationContextAccessor
             >();
             serviceCollection.AddSingleton<IUsageVocabulary>(
-                new UsageVocabulary(
-                    [.. options.Operations.Values],
-                    [.. options.Units.Select(u => new UsageUnitDefinition(u.Key, u.Value))]
-                )
+                new UsageVocabulary([.. options.Operations.Values], [.. options.Units.Values])
             );
 
             if (options.TelemetryFactory != null)

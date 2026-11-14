@@ -13,12 +13,12 @@ namespace Corely.Billing.Web.Components;
 internal sealed record ChartSeries(
     string Key,
     string Label,
-    IReadOnlyList<long?> Data,
+    IReadOnlyList<decimal?> Data,
     bool IsOther = false,
-    IReadOnlyList<long>? Overdrawn = null
+    IReadOnlyList<decimal>? Overdrawn = null
 );
 
-internal sealed record CapacitySeries(string Label, IReadOnlyList<long> Data);
+internal sealed record CapacitySeries(string Label, IReadOnlyList<decimal> Data);
 
 internal sealed record UsageChartModel(
     UsageChartView View,
@@ -45,7 +45,7 @@ internal sealed record UsageChartModel(
 
     // What the chart adds up to: used across the range, or for the running views, where the first
     // line ends.
-    public long Total =>
+    public decimal Total =>
         View is UsageChartView.BurnUp or UsageChartView.Remaining
             ? Series.FirstOrDefault()?.Data.LastOrDefault(v => v is not null) ?? 0
             : Series.Sum(s => s.Data.Sum() ?? 0);
@@ -179,10 +179,10 @@ internal sealed record UsageChartModel(
         return string.Join("\r\n", lines) + "\r\n";
     }
 
-    private static List<long?> Values(ConsumptionSeries? series, List<DateTime> starts)
+    private static List<decimal?> Values(ConsumptionSeries? series, List<DateTime> starts)
     {
         var sums = series?.Buckets.ToDictionary(b => b.BucketStart, b => b.TotalQuantity) ?? [];
-        return [.. starts.Select(s => (long?)sums.GetValueOrDefault(s))];
+        return [.. starts.Select(s => (decimal?)sums.GetValueOrDefault(s))];
     }
 
     // Series arrive ranked by total; past MAX_SERIES they fold into one.
@@ -195,7 +195,9 @@ internal sealed record UsageChartModel(
         var other = Enumerable
             .Range(0, rest[0].Data.Count)
             .Select(i =>
-                rest.Any(s => s.Data[i] is not null) ? rest.Sum(s => s.Data[i] ?? 0) : (long?)null
+                rest.Any(s => s.Data[i] is not null)
+                    ? rest.Sum(s => s.Data[i] ?? 0)
+                    : (decimal?)null
             )
             .ToList();
         return [.. ranked.Take(MAX_SERIES), new ChartSeries(OTHER, otherLabel, other, true)];
@@ -230,7 +232,11 @@ internal sealed record UsageChartModel(
                 return new ChartSeries(
                     key,
                     grantLabel(g),
-                    [.. usedAt.Select((u, i) => live[i] ? Math.Max(0, quantity - u) : (long?)null)],
+                    [
+                        .. usedAt.Select(
+                            (u, i) => live[i] ? Math.Max(0, quantity - u) : (decimal?)null
+                        ),
+                    ],
                     Overdrawn: [.. usedAt.Select((u, i) => live[i] ? Math.Max(0, u - quantity) : 0)]
                 );
             })
@@ -241,7 +247,7 @@ internal sealed record UsageChartModel(
             .Select(i =>
                 perGrant.Any(s => s.Data[i] is not null)
                     ? perGrant.Sum(s => s.Data[i] ?? 0)
-                    : (long?)null
+                    : (decimal?)null
             )
             .ToList();
 
@@ -260,10 +266,10 @@ internal sealed record UsageChartModel(
         TimeBucket bucket
     )
     {
-        long running = 0;
+        decimal running = 0;
         var perPeriod = series.Select(s => Values(s, starts)).ToList();
         var cumulative = starts
-            .Select((_, i) => (long?)(running += perPeriod.Sum(p => p[i] ?? 0)))
+            .Select((_, i) => (decimal?)(running += perPeriod.Sum(p => p[i] ?? 0)))
             .ToList();
         List<ChartSeries> lines = [new ChartSeries(USED_SO_FAR, USED_SO_FAR, cumulative)];
 
@@ -273,7 +279,7 @@ internal sealed record UsageChartModel(
                 new ChartSeries(
                     ALLOWANCE,
                     ALLOWANCE,
-                    [.. LiveQuantity(starts, bucket, limited).Select(q => (long?)q)]
+                    [.. LiveQuantity(starts, bucket, limited).Select(q => (decimal?)q)]
                 )
             );
         }
@@ -297,7 +303,7 @@ internal sealed record UsageChartModel(
         return capacity;
     }
 
-    private static List<long> LiveQuantity(
+    private static List<decimal> LiveQuantity(
         List<DateTime> starts,
         TimeBucket bucket,
         List<Grant> grants

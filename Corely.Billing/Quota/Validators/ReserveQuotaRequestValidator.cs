@@ -13,6 +13,11 @@ internal class ReserveQuotaRequestValidator : AbstractValidator<ReserveQuotaRequ
     {
         RuleFor(x => x.AccountId).NotEmpty();
         RuleFor(x => x.Quantity).GreaterThanOrEqualTo(ConsumptionEvent.QUANTITY_MIN_VALUE);
+        RuleFor(x => x.Quantity)
+            .Must((request, quantity) => vocabulary.Allows(request.Unit, quantity))
+            .WithMessage(x =>
+                $"Unit '{x.Unit}' does not allow a quantity as precise as {x.Quantity}."
+            );
         RuleFor(x => x.Provider).NotEmpty().MaximumLength(ConsumptionEvent.PROVIDER_MAX_LENGTH);
         RuleFor(x => x.Operation)
             .Must(vocabulary.Knows)

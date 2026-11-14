@@ -2,7 +2,7 @@ using Corely.Billing.Grants.Models;
 
 namespace Corely.Billing.Web.Components;
 
-public sealed record GrantBalance(long? Quantity, long Used)
+public sealed record GrantBalance(decimal? Quantity, decimal Used)
 {
     private const double RUNNING_LOW_RATIO = 0.10;
 
@@ -12,16 +12,16 @@ public sealed record GrantBalance(long? Quantity, long Used)
 
     public bool IsOverdrawn => Quantity is { } quantity && Used > quantity;
 
-    public long Remaining => Quantity is { } quantity ? Math.Max(0, quantity - Used) : 0;
+    public decimal Remaining => Quantity is { } quantity ? Math.Max(0, quantity - Used) : 0;
 
-    public long Overdraft => Quantity is { } quantity ? Math.Max(0, Used - quantity) : 0;
+    public decimal Overdraft => Quantity is { } quantity ? Math.Max(0, Used - quantity) : 0;
 
     public double UsedRatio =>
         Quantity switch
         {
             null => 0,
             0 => Used > 0 ? 1 : 0,
-            { } quantity => Math.Clamp((double)Used / quantity, 0, 1),
+            { } quantity => Math.Clamp((double)(Used / quantity), 0, 1),
         };
 
     public bool IsRunningLow =>

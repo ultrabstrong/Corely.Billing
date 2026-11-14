@@ -6,5 +6,9 @@ namespace Corely.Billing.Quota.Processors;
 
 internal interface IGrantSelectionPolicy
 {
-    GrantSplit Split(List<Grant> grants, List<GrantTotalConsumptions> grantTotals, long quantity);
+    GrantSplit Split(
+        List<Grant> grants,
+        List<GrantTotalConsumptions> grantTotals,
+        decimal quantity
+    );
 }

@@ -20,6 +20,14 @@ internal class GrantRequestValidator : AbstractValidator<GrantRequest>
             .Null()
             .When(x => x.Kind == GrantKind.Feature)
             .WithMessage("A feature is asked for with no quantity.");
+        RuleFor(x => x.Quantity)
+            .Must(
+                (request, quantity) =>
+                    vocabulary.Allows(vocabulary.Definition(request.Operation)?.Unit, quantity)
+            )
+            .WithMessage(x =>
+                $"Operation '{x.Operation}' does not allow a quantity as precise as {x.Quantity}."
+            );
         RuleFor(x => x.Note).MaximumLength(GrantRequest.NOTE_MAX_LENGTH);
         RuleFor(x => x.Operation)
             .Must(vocabulary.Knows)

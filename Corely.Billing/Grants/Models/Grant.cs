@@ -22,15 +22,15 @@ public class Grant
     public UsageOperation Operation { get; set; }
     public GrantKind Kind { get; set; }
     public UsageUnit? Unit { get; set; }
-    public long? Quantity { get; set; }
+    public decimal? Quantity { get; set; }
     public DateTime ValidFromUtc { get; set; }
     public DateTime ValidToUtc { get; set; }
     public bool Disabled { get; set; }
     public Dictionary<string, string>? Tags { get; set; }
 
-    public long? Used { get; set; }
-    public long? Remaining { get; set; }
-    public long? InUse { get; set; }
+    public decimal? Used { get; set; }
+    public decimal? Remaining { get; set; }
+    public decimal? InUse { get; set; }
 
     public GrantType GetGrantType() =>
         (Kind, Quantity) switch
@@ -47,7 +47,7 @@ public class Grant
 
     public bool NeverExpires() => ValidToUtc >= Grant.NEVER_EXPIRES_UTC;
 
-    public void WithUse(long used)
+    public void WithUse(decimal used)
     {
         Used = used;
         Remaining = Quantity is { } quantity ? Math.Max(0, quantity - used) : null;

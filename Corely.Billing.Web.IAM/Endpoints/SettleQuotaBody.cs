@@ -4,7 +4,7 @@ using Corely.Billing.Usage;
 
 namespace Corely.Billing.Web.IAM.Endpoints;
 
-internal sealed record SettleQuotaBody(Guid OperationId, string Unit, long ActualQuantity)
+internal sealed record SettleQuotaBody(Guid OperationId, string Unit, decimal ActualQuantity)
 {
     public OperationContext OperationContext =>
         new(OperationId, $"{ReserveQuotaBody.IDEMPOTENCY_SCOPE_PREFIX}{OperationId}");

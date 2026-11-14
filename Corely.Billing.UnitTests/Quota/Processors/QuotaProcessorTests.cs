@@ -42,7 +42,7 @@ public class QuotaProcessorTests
                     It.IsAny<Guid>(),
                     It.IsAny<UsageOperation>(),
                     It.IsAny<UsageUnit>(),
-                    It.IsAny<IReadOnlyDictionary<Guid, long>>(),
+                    It.IsAny<IReadOnlyDictionary<Guid, decimal>>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -51,7 +51,7 @@ public class QuotaProcessorTests
                     Guid _,
                     UsageOperation _,
                     UsageUnit _,
-                    IReadOnlyDictionary<Guid, long> split,
+                    IReadOnlyDictionary<Guid, decimal> split,
                     CancellationToken _
                 ) =>
                     new ResolveConsumptionResult(
@@ -184,7 +184,7 @@ public class QuotaProcessorTests
         Assert.Equal(SettleQuotaResultCode.Success, result.ResultCode);
         Assert.False(result.Overdrawn);
         Assert.Equal(20, result.SettledQuantity);
-        VerifySettled(new Dictionary<Guid, long> { [GrantId1] = 20 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId1] = 20 });
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class QuotaProcessorTests
         var result = await Processor().SettleAsync(Settle(500));
 
         Assert.Equal(SettleQuotaResultCode.Success, result.ResultCode);
-        VerifySettled(new Dictionary<Guid, long> { [GrantId1] = 1, [GrantId2] = 499 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId1] = 1, [GrantId2] = 499 });
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class QuotaProcessorTests
 
         await Processor().SettleAsync(Settle(10));
 
-        VerifySettled(new Dictionary<Guid, long> { [GrantId1] = 10 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId1] = 10 });
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public class QuotaProcessorTests
         var result = await Processor().SettleAsync(Settle(500));
 
         Assert.True(result.Overdrawn);
-        VerifySettled(new Dictionary<Guid, long> { [GrantId1] = 500 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId1] = 500 });
     }
 
     [Fact]
@@ -233,7 +233,7 @@ public class QuotaProcessorTests
         var result = await Processor().SettleAsync(Settle(7));
 
         Assert.True(result.Overdrawn);
-        VerifySettled(new Dictionary<Guid, long> { [GrantId1] = 7 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId1] = 7 });
     }
 
     [Theory]
@@ -271,7 +271,7 @@ public class QuotaProcessorTests
             Assert.False(result.Overdrawn);
             Assert.Equal(1, result.RemainingRatio);
         });
-        VerifySettled(new Dictionary<Guid, long> { [GrantId2] = 500 });
+        VerifySettled(new Dictionary<Guid, decimal> { [GrantId2] = 500 });
     }
 
     [Fact]
@@ -280,7 +280,7 @@ public class QuotaProcessorTests
         var result = await Processor().SettleAsync(Settle(20));
 
         Assert.Equal(SettleQuotaResultCode.Success, result.ResultCode);
-        VerifySettled(new Dictionary<Guid, long>());
+        VerifySettled(new Dictionary<Guid, decimal>());
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public class QuotaProcessorTests
                     It.IsAny<Guid>(),
                     It.IsAny<UsageOperation>(),
                     It.IsAny<UsageUnit>(),
-                    It.IsAny<IReadOnlyDictionary<Guid, long>>(),
+                    It.IsAny<IReadOnlyDictionary<Guid, decimal>>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Never
@@ -325,7 +325,7 @@ public class QuotaProcessorTests
                     It.IsAny<Guid>(),
                     It.IsAny<UsageOperation>(),
                     It.IsAny<UsageUnit>(),
-                    It.IsAny<IReadOnlyDictionary<Guid, long>>(),
+                    It.IsAny<IReadOnlyDictionary<Guid, decimal>>(),
                     It.IsAny<CancellationToken>()
                 )
             )
@@ -557,14 +557,14 @@ public class QuotaProcessorTests
             Times.Never
         );
 
-    private void VerifySettled(IReadOnlyDictionary<Guid, long> expected) =>
+    private void VerifySettled(IReadOnlyDictionary<Guid, decimal> expected) =>
         _consumption.Verify(
             p =>
                 p.SettleAsync(
                     AccountId,
                     TestUsage.Extraction,
                     TestUsage.Page,
-                    It.Is<IReadOnlyDictionary<Guid, long>>(d =>
+                    It.Is<IReadOnlyDictionary<Guid, decimal>>(d =>
                         d.Count == expected.Count
                         && d.All(kv => expected.ContainsKey(kv.Key) && expected[kv.Key] == kv.Value)
                     ),

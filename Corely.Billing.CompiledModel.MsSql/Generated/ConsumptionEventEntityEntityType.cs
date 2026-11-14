@@ -120,10 +120,12 @@ namespace Corely.Billing.CompiledModel.MsSql.Generated
 
             var quantity = runtimeEntityType.AddProperty(
                 "Quantity",
-                typeof(long),
+                typeof(decimal),
                 propertyInfo: typeof(ConsumptionEventEntity).GetProperty("Quantity", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
                 fieldInfo: typeof(ConsumptionEventEntity).GetField("<Quantity>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                sentinel: 0L);
+                precision: 19,
+                scale: 6,
+                sentinel: 0m);
             quantity.AddAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.None);
 
             var tagsJson = runtimeEntityType.AddProperty(

@@ -13,6 +13,7 @@ internal static class TestUsage
     internal static UsageOperation Devices { get; } = UsageOperation.From("devices");
     internal static UsageOperation Retention { get; } = UsageOperation.From("retention");
     internal static UsageOperation Sftp { get; } = UsageOperation.From("sftp");
+    internal static UsageOperation Spend { get; } = UsageOperation.From("spend");
 
     internal static UsageUnit Page { get; } = UsageUnit.From("page");
     internal static UsageUnit Byte { get; } = UsageUnit.From("byte");
@@ -20,6 +21,7 @@ internal static class TestUsage
     internal static UsageUnit User { get; } = UsageUnit.From("user");
     internal static UsageUnit Device { get; } = UsageUnit.From("device");
     internal static UsageUnit Day { get; } = UsageUnit.From("day");
+    internal static UsageUnit Credit { get; } = UsageUnit.From("credit");
 
     extension(BillingOptions options)
     {
@@ -31,12 +33,14 @@ internal static class TestUsage
                 .RegisterUnit(User.Value, "user")
                 .RegisterUnit(Device.Value, "device")
                 .RegisterUnit(Day.Value, "day")
+                .RegisterUnit(Credit.Value, "credit", UsageUnitDefinition.DECIMALS_MAX_VALUE)
                 .RegisterOperation(Extraction.Value, "Extraction", GrantKind.Consumable, Page.Value)
                 .RegisterOperation(NoOp.Value, "No-op", GrantKind.Consumable, Page.Value)
                 .RegisterOperation(Other.Value, "Other", GrantKind.Consumable, Document.Value)
                 .RegisterOperation(Members.Value, "Members", GrantKind.Capacity, User.Value)
                 .RegisterOperation(Devices.Value, "Devices", GrantKind.Capacity, Device.Value)
                 .RegisterOperation(Retention.Value, "Retention", GrantKind.Allowance, Day.Value)
-                .RegisterOperation(Sftp.Value, "SFTP", GrantKind.Feature);
+                .RegisterOperation(Sftp.Value, "SFTP", GrantKind.Feature)
+                .RegisterOperation(Spend.Value, "Spend", GrantKind.Consumable, Credit.Value);
     }
 }

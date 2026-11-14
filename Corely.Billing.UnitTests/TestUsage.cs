@@ -12,12 +12,14 @@ internal static class TestUsage
     internal static UsageOperation Members { get; } = UsageOperation.From("members");
     internal static UsageOperation Retention { get; } = UsageOperation.From("retention");
     internal static UsageOperation Sftp { get; } = UsageOperation.From("sftp");
+    internal static UsageOperation Spend { get; } = UsageOperation.From("spend");
 
     internal static UsageUnit Page { get; } = UsageUnit.From("page");
     internal static UsageUnit Byte { get; } = UsageUnit.From("byte");
     internal static UsageUnit Document { get; } = UsageUnit.From("document");
     internal static UsageUnit User { get; } = UsageUnit.From("user");
     internal static UsageUnit Day { get; } = UsageUnit.From("day");
+    internal static UsageUnit Credit { get; } = UsageUnit.From("credit");
 
     internal static UsageOperation Unregistered { get; } = UsageOperation.From("never_registered");
     internal static UsageUnit UnregisteredUnit { get; } = UsageUnit.From("never_registered");
@@ -30,6 +32,7 @@ internal static class TestUsage
         new(Members, "Members", GrantKind.Capacity, User),
         new(Retention, "Retention", GrantKind.Allowance, Day),
         new(Sftp, "SFTP", GrantKind.Feature, null),
+        new(Spend, "Spend", GrantKind.Consumable, Credit),
     ];
 
     extension(BillingOptions options)
@@ -41,7 +44,8 @@ internal static class TestUsage
                 .RegisterUnit(Byte.Value, "byte")
                 .RegisterUnit(Document.Value, "document")
                 .RegisterUnit(User.Value, "user")
-                .RegisterUnit(Day.Value, "day");
+                .RegisterUnit(Day.Value, "day")
+                .RegisterUnit(Credit.Value, "credit", UsageUnitDefinition.DECIMALS_MAX_VALUE);
             foreach (var operation in Operations)
             {
                 options.RegisterOperation(
@@ -64,6 +68,7 @@ internal static class TestUsage
                 new(Document, "document"),
                 new(User, "user"),
                 new(Day, "day"),
+                new(Credit, "credit", UsageUnitDefinition.DECIMALS_MAX_VALUE),
             ]
         );
 }

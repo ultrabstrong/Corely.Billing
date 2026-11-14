@@ -33,7 +33,12 @@ internal sealed class GrantRequestEntityConfiguration(IDbTypes dbTypes)
             .HasConversion(operation => operation.Value, value => UsageOperation.From(value))
             .HasMaxLength(UsageOperation.MAX_LENGTH)
             .IsRequired();
-        builder.Property(e => e.Quantity);
+        builder
+            .Property(e => e.Quantity)
+            .HasPrecision(
+                UsageUnitDefinition.QUANTITY_PRECISION,
+                UsageUnitDefinition.DECIMALS_MAX_VALUE
+            );
         builder.Property(e => e.Note).HasMaxLength(GrantRequest.NOTE_MAX_LENGTH);
         builder.Property(e => e.RequestedUtc).IsRequired();
         builder

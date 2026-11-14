@@ -63,8 +63,9 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<string>("TagsJson")
                         .HasColumnType("nvarchar(max)");
@@ -130,8 +131,9 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long?>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<Guid?>("RequestedByUserId")
                         .HasColumnType("uniqueidentifier");
@@ -184,8 +186,9 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<long?>("Quantity")
-                        .HasColumnType("bigint");
+                    b.Property<decimal?>("Quantity")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
 
                     b.Property<string>("TagsJson")
                         .HasColumnType("nvarchar(max)");

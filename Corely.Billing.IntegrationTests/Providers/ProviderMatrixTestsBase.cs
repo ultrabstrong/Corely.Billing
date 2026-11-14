@@ -339,7 +339,10 @@ public abstract class ProviderMatrixTestsBase(ProviderTestHost host) : IAsyncLif
                         [AccountId],
                         Filter: Filter
                             .For<Grant>()
-                            .Where(g => g.Quantity, ComparableFilter<long>.GreaterThanOrEqual(20)),
+                            .Where(
+                                g => g.Quantity,
+                                ComparableFilter<decimal>.GreaterThanOrEqual(20)
+                            ),
                         Order: Order.For<Grant>().By(g => g.Quantity, SortDirection.Ascending)
                     )
                 )

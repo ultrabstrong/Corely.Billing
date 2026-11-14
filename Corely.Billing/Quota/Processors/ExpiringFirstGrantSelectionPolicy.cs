@@ -9,7 +9,7 @@ internal sealed class ExpiringFirstGrantSelectionPolicy : IGrantSelectionPolicy
     public GrantSplit Split(
         List<Grant> grants,
         List<GrantTotalConsumptions> grantTotals,
-        long quantity
+        decimal quantity
     )
     {
         ArgumentNullException.ThrowIfNull(grants);

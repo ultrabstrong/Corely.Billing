@@ -11,7 +11,7 @@ internal class ConsumptionEventEntity : IHasCreatedUtc
     public DateTime CreatedUtc { get; set; }
 
     public Guid AccountId { get; set; }
-    public long Quantity { get; set; }
+    public decimal Quantity { get; set; }
     public UsageUnit Unit { get; set; }
     public UsageOperation Operation { get; set; }
     public string Provider { get; set; } = default!;

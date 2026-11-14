@@ -12,6 +12,7 @@ internal static class SettleQuotaResultCodeExtensions
             {
                 SettleQuotaResultCode.Success => StatusCodes.Status200OK,
                 SettleQuotaResultCode.UnauthorizedError => StatusCodes.Status403Forbidden,
+                SettleQuotaResultCode.ValidationError => StatusCodes.Status400BadRequest,
                 SettleQuotaResultCode.NotRecordedError => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status500InternalServerError,
             };

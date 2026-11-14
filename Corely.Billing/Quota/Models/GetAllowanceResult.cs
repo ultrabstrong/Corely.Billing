@@ -5,6 +5,6 @@ namespace Corely.Billing.Quota.Models;
 public record GetAllowanceResult(
     QuotaReadResultCode ResultCode,
     string Message,
-    long? Total,
+    decimal? Total,
     IReadOnlyList<Grant> Grants
 );

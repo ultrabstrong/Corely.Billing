@@ -7,7 +7,7 @@ public record CreateGrantRequest(
     Guid AccountId,
     UsageOperation Operation,
     GrantKind Kind,
-    long? Quantity,
+    decimal? Quantity,
     DateTime ValidFromUtc,
     DateTime ValidToUtc,
     UsageUnit? Unit = null,

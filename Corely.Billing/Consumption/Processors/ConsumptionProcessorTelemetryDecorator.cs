@@ -35,7 +35,7 @@ internal class ConsumptionProcessorTelemetryDecorator(
             _telemetry.Increment(BillingMetricNames.Consumption.RESERVATION_TAKEN);
             _telemetry.Record(
                 BillingMetricNames.Consumption.RESERVATION_QUANTITY,
-                consumptionEvent.Quantity
+                (double)consumptionEvent.Quantity
             );
         }
         return result;
@@ -45,7 +45,7 @@ internal class ConsumptionProcessorTelemetryDecorator(
         Guid accountId,
         UsageOperation operation,
         UsageUnit unit,
-        IReadOnlyDictionary<Guid, long> quantityByGrant,
+        IReadOnlyDictionary<Guid, decimal> quantityByGrant,
         CancellationToken ct = default
     )
     {
@@ -60,7 +60,7 @@ internal class ConsumptionProcessorTelemetryDecorator(
             _telemetry.Increment(BillingMetricNames.Consumption.RESERVATION_SETTLED);
             _telemetry.Record(
                 BillingMetricNames.Consumption.CONSUMPTION_QUANTITY,
-                result.SettledQuantity
+                (double)result.SettledQuantity
             );
         }
         return result;

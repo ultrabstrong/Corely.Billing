@@ -5,7 +5,7 @@ namespace Corely.Billing.Services;
 
 public interface IConsumptionService
 {
-    Task<RetrieveSingleResult<long>> GetConsumptionTotalAsync(
+    Task<RetrieveSingleResult<decimal>> GetConsumptionTotalAsync(
         GetConsumptionTotalRequest request,
         CancellationToken ct = default
     );

@@ -1,5 +1,6 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Usage;
 using Microsoft.Extensions.Configuration;
 
 namespace Corely.Billing.UnitTests;
@@ -43,8 +44,20 @@ public class BillingOptionsTests
     {
         var options = Options().RegisterUnit("page", "page").RegisterUnit("page", "pages");
 
-        Assert.Equal("pages", Assert.Single(options.Units).Value);
+        Assert.Equal("pages", Assert.Single(options.Units).Value.DisplayName);
     }
+
+    [Fact]
+    public void RegisterUnit_CountsWholeUnits_ForNoDecimals() =>
+        Assert.Equal(0, Assert.Single(Options().RegisterUnit("page", "page").Units).Value.Decimals);
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(UsageUnitDefinition.DECIMALS_MAX_VALUE + 1)]
+    public void RegisterUnit_Throws_ForDecimalsTheLedgerCannotHold(int decimals) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Options().RegisterUnit("credits", "credits", decimals)
+        );
 
     [Theory]
     [InlineData("Upper")]
