@@ -1,5 +1,8 @@
 # Grant prices
 
+Released: Corely.Billing 7.0.0, compiled models and corely-billing-db 7.0.0, Corely.Billing.IAM 8.0.0,
+Corely.Billing.Web 9.0.0, Corely.Billing.Web.IAM 11.0.0.
+
 Every amount Corely.Billing shows is a count: 20,000 credits, 1,162 pages. Nothing says what it is
 worth, so a host that sells by the unit has to bolt money on beside every component, and the
 request form and grant editor, where an amount is chosen, have nowhere to put it. DocsToData's
@@ -103,3 +106,20 @@ breaks. Released in the usual order, one tag at a time.
 2. **Integration:** the migration; a grant's value and a balance's money read through SQL; a price
    change leaves an existing grant's value alone (the invariant an invoice would state).
 3. **Coverage:** `IUsagePriceService` in the authorization and audit coverage tests.
+
+## As built
+
+- **Where a price comes from is the host's call, not a runtime check.** Corely.Billing cannot see
+  whether Corely.IAM has a platform account, so a host with a platform owner calls
+  `UsePlatformPrices()`. Configured prices on such a host fail startup rather than log a warning,
+  since nothing depends on them yet.
+- **No option to turn money off.** A host that sets no price shows none, which is the same thing.
+- **Money formats itself.** `Money.ToString()` writes every digit with at least cents, so a host's
+  emails and the components read the same text; there is no Billing.Web extension for it.
+- **Balance and usage readings are members, not query fields.** `Grant.Value()`, `Grant.Price()`
+  and `GetBalanceResult.RemainingValue()`; the consumption table values each event at its grant's
+  price. The charts stay in counts.
+- **The dialog.** Corely.IAM.Web gives every `.modal-dialog` a 15vh top margin; with
+  `modal-dialog-centered` that pushed the screen tall dialog down. The dialog dropped the centering
+  and now sits where every other modal in a host using Corely.IAM.Web sits.
+- **`PriceSettings` has `OnChanged`,** so a host page can show the new price elsewhere.
