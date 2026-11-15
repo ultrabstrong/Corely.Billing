@@ -27,12 +27,14 @@ public static class BillingOptionsExtensions
                 services.Decorate<IConsumptionService, ConsumptionAuthorizationDecorator>();
                 services.Decorate<IQuotaService, QuotaAuthorizationDecorator>();
                 services.Decorate<IUsagePriceService, UsagePriceAuthorizationDecorator>();
+                services.Decorate<IAccountDataService, AccountDataAuthorizationDecorator>();
 
                 services.Decorate<IGrantService, GrantAuditDecorator>();
                 services.Decorate<IGrantRequestService, GrantRequestAuditDecorator>();
                 services.Decorate<IConsumptionService, ConsumptionAuditDecorator>();
                 services.Decorate<IQuotaService, QuotaAuditDecorator>();
                 services.Decorate<IUsagePriceService, UsagePriceAuditDecorator>();
+                services.Decorate<IAccountDataService, AccountDataAuditDecorator>();
             });
     }
 }

@@ -21,6 +21,15 @@ Complete reference of all result code enums across Corely.Billing. `Unauthorized
 | `UnauthorizedError` | Refused by a host decorator |
 | `ValidationError` | Input validation failed |
 
+## Account Data Result Codes
+
+### DeleteAccountDataResultCode
+
+| Code | Meaning |
+|------|---------|
+| `Success` | Every row of the account deleted, or none was left |
+| `UnauthorizedError` | Refused by a host decorator |
+
 ## Grant Result Codes
 
 ### CreateGrantResultCode

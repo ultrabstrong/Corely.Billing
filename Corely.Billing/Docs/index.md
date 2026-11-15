@@ -50,6 +50,8 @@ Blue is what the host configures, green is the public API, amber is internal, gr
     - [Grant Request Service](services/grant-request-service.md)
     - [Quota Service](services/quota-service.md)
     - [Consumption Service](services/consumption-service.md)
+    - [Usage Price Service](services/usage-price-service.md)
+    - [Account Data Service](services/account-data-service.md)
 - [Authorization](authorization.md)
 - [Telemetry](telemetry.md)
 - [Architecture](architecture.md)

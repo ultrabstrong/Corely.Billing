@@ -233,6 +233,12 @@ need its own service, naming or layout is a question for the owner, asked before
   account's id with every permission granted and checks the call is refused. A new service method
   fails both until it has a case.
 
+- **Everything an account stores is deleted with the account.** A new table, or a new column holding
+  an account id, is not finished until `IAccountDataService.DeleteAccountDataAsync` deletes it,
+  eagerly, with a test proving it. Relying on expiry or a scheduled cleanup does not count.
+  `AccountDataDeletionTests` lists every entity in the model and fails on one that is neither
+  deleted nor exempt with a reason.
+
 - **No vocabulary.** Operations and units are tokens a host registers on `BillingOptions`. Nothing in this repository may name a consumer's operation or unit outside a test.
 - **No identity library.** Authorization is a host concern, applied through `DecorateServices`. Referencing Corely.IAM from here would force every consumer of billing to take identity with it. `Corely.Billing.Web` holds to this too. Only the opt-in `Corely.Billing.IAM` and `Corely.Billing.Web.IAM` reference IAM, and they follow Corely.IAM's own patterns exactly: where IAM does something for roles, they do the same for grants.
 - **Each web component action runs in a scope of its own.** `BillingComponentBase` and `BillingPageBase` inherit `BillingOperationComponentBase`, and every load, refresh and button runs through `InOperationAsync`, resolving services from the provider it is handed. `IBillingOperationScopes` creates the scope, signs it in through `IBillingAccountAccessor` (or, with Corely.Billing.Web.IAM, through Corely.IAM.Web's `IOperationScopes`) and disposes it when the action ends, so no read returns what the circuit loaded earlier. Never `[Inject]` a scoped service into a component or keep one in a field: either outlives the action. `ComponentInjectionTests` fails when a component injects one.

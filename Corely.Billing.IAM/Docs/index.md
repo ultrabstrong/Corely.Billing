@@ -91,6 +91,7 @@ Every method first checks `HasAccountContext` for the account it names. The syst
 | `ReserveAsync`, `SettleAsync`, `ReleaseAsync` | Execute on `quota` |
 | `RegisterAsync`, `ReleaseRegistrationAsync`, `MoveRegistrationsAsync` | Execute on `registration` |
 | `ListRegistrationsAsync` | Read on `registration`; across accounts, below |
+| `DeleteAccountDataAsync` | The system context only, for the host's own account deletion; no permission grants it |
 
 A request's `RequestedByUserId` and a decision's `DecidedByUserId` are replaced with the signed-in user's id, whatever the caller passed, so nobody can record a request or decision as someone else's. Only the system context keeps the id it was given, so a host's background work can act for a named user.
 
