@@ -1,6 +1,6 @@
 # Services
 
-Four public services form the API surface of Corely.Billing. All are registered as scoped and wrapped with telemetry decorators.
+Five public services form the API surface of Corely.Billing. All are registered as scoped and wrapped with telemetry decorators.
 
 ## Service Overview
 
@@ -10,6 +10,7 @@ Four public services form the API surface of Corely.Billing. All are registered 
 | `IGrantRequestService` | Ask for a grant, approve or decline the request | 5 |
 | `IQuotaService` | A read per grant kind, reserve and settle, register and release against capacity | 11 |
 | `IConsumptionService` | Totals, time series, event listing, ledger health | 6 |
+| `IUsagePriceService` | The price per unit new consumable grants are sold at | 4 |
 
 Writes to the ledger and to registrations go through `IQuotaService` only. That is what keeps every consumption row tied to a reservation against a grant, and every registration within its grant's capacity.
 
@@ -49,3 +50,4 @@ See the [Result Codes](../result-codes.md) docs for every code.
 - [Grant Request Service](grant-request-service.md)
 - [Quota Service](quota-service.md)
 - [Consumption Service](consumption-service.md)
+- [Usage Price Service](usage-price-service.md)

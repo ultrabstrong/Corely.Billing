@@ -1,8 +1,10 @@
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
+using Corely.Billing.Web.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,6 +32,8 @@ public partial class GrantRequestForm
     private string? _note;
     private bool _sending;
     private string? _error;
+    private IReadOnlyDictionary<UsageOperation, Money?> _prices =
+        new Dictionary<UsageOperation, Money?>();
 
     private string OperationValue
     {
@@ -42,9 +46,14 @@ public partial class GrantRequestForm
     private string UnitPlural =>
         Definition?.Unit is { } unit ? $"{Vocabulary.DisplayName(unit)}s" : string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _operation = Vocabulary.Operations[0].Operation;
+        await InOperationAsync(async services =>
+            _prices = (
+                await services.GetRequiredService<IUsagePriceService>().ListPricesAsync()
+            ).ByOperation()
+        );
     }
 
     private async Task SendAsync()

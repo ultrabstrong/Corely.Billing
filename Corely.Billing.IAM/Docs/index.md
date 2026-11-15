@@ -30,6 +30,7 @@ A host with Blazor adds [Corely.Billing.Web.IAM](../../Corely.Billing.Web.IAM/Do
 | `BillingResourceTypes.QUOTA_RESOURCE_TYPE` | `quota` |
 | `BillingResourceTypes.REGISTRATION_RESOURCE_TYPE` | `registration` |
 | `BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE` | `billing_all_accounts` |
+| `BillingResourceTypes.USAGE_PRICE_RESOURCE_TYPE` | `usage_price` |
 
 Registered, they appear in the IAM.Web permission form's resource type list.
 
@@ -44,6 +45,7 @@ owner holds them:
 | `grant_request` | Read, Create | Owners ask for more and see what they asked. Deciding (Update) is held by no owner |
 | `consumption` | Read | Owners see their usage |
 | `quota` | Read | Owners see what they have. Reserving and settling writes consumption, so it is the platform's: a user who runs work runs the work, and the host meters it as a result |
+| `usage_price` | None | A price is platform wide. Setting (Update) and clearing (Delete) it needs the permission in the platform account, or system context; anyone reads it |
 | `registration` | Read, Execute | Owners add and remove people from their capacity freely |
 | `billing_all_accounts` | None | Only a platform role reads across accounts |
 

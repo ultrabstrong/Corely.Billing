@@ -197,6 +197,14 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<decimal?>("UnitPriceAmount")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
+
+                    b.Property<string>("UnitPriceCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
                     b.Property<DateTime>("ValidFromUtc")
                         .HasColumnType("datetime2");
 
@@ -208,6 +216,34 @@ namespace Corely.Billing.DataAccessMigrations.MsSql.Migrations
                     b.HasIndex("AccountId", "Operation");
 
                     b.ToTable("Grants", (string)null);
+                });
+
+            modelBuilder.Entity("Corely.Billing.Prices.Entities.UsagePriceEntity", b =>
+                {
+                    b.Property<string>("Operation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("DATETIME2")
+                        .HasDefaultValueSql("(SYSUTCDATETIME())");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<DateTime?>("ModifiedUtc")
+                        .HasColumnType("DATETIME2");
+
+                    b.HasKey("Operation");
+
+                    b.ToTable("UsagePrices", (string)null);
                 });
 
             modelBuilder.Entity("Corely.Billing.Registrations.Entities.RegistrationEntity", b =>

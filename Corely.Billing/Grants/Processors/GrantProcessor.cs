@@ -5,6 +5,7 @@ using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Mappers;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Processors;
 using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Serialization;
 using Corely.Billing.Usage;
@@ -19,6 +20,7 @@ internal class GrantProcessor(
     IRepo<GrantEntity> grantRepo,
     IConsumptionReportProcessor consumptionReportProcessor,
     IRegistrationProcessor registrationProcessor,
+    IUsagePriceProcessor priceProcessor,
     IUsageVocabulary vocabulary,
     IValidationProvider validationProvider,
     ILogger<GrantProcessor> logger
@@ -29,6 +31,9 @@ internal class GrantProcessor(
         consumptionReportProcessor.ThrowIfNull(nameof(consumptionReportProcessor));
     private readonly IRegistrationProcessor _registrationProcessor =
         registrationProcessor.ThrowIfNull(nameof(registrationProcessor));
+    private readonly IUsagePriceProcessor _priceProcessor = priceProcessor.ThrowIfNull(
+        nameof(priceProcessor)
+    );
     private readonly IUsageVocabulary _vocabulary = vocabulary.ThrowIfNull(nameof(vocabulary));
     private readonly IValidationProvider _validationProvider = validationProvider.ThrowIfNull(
         nameof(validationProvider)
@@ -59,7 +64,11 @@ internal class GrantProcessor(
             );
         }
 
-        var grant = request.ToGrant(definition?.Unit);
+        var currentPrice =
+            request.Kind == GrantKind.Consumable && request.UnitPrice is null
+                ? await _priceProcessor.GetPriceAsync(request.Operation, ct)
+                : null;
+        var grant = request.ToGrant(definition?.Unit, currentPrice);
         var validation = _validationProvider.ValidateAndLog(grant);
         if (!validation.IsValid)
         {
@@ -110,6 +119,8 @@ internal class GrantProcessor(
         entity.ValidFromUtc = grant.ValidFromUtc;
         entity.ValidToUtc = grant.ValidToUtc;
         entity.TagsJson = TagSerializer.Serialize(grant.Tags);
+        entity.UnitPriceAmount = grant.UnitPrice?.Amount;
+        entity.UnitPriceCurrency = grant.UnitPrice?.Currency;
 
         await _grantRepo.UpdateAsync(entity, ct);
         return new ModifyResult(ModifyResultCode.Success, string.Empty);

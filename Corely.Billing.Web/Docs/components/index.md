@@ -11,6 +11,7 @@ Every component takes the account as `AccountId` and calls the Billing services 
 | [UsageChart](usage-chart.md) | Used per period, and each grant's live capacity |
 | [ConsumptionTable](consumption-table.md) | Usage events, sorted and paged |
 | [UsageDashboard](usage-dashboard.md) | Range, filters, chart and table together |
+| [PriceSettings](price-settings.md) | Each consumable operation's price per unit, for the platform owner |
 
 ## Results
 

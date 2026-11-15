@@ -22,7 +22,7 @@ namespace Corely.Billing.CompiledModel.MsSql.Generated
                 "Corely.Billing.Grants.Entities.GrantEntity",
                 typeof(GrantEntity),
                 baseEntityType,
-                propertyCount: 11,
+                propertyCount: 13,
                 unnamedIndexCount: 1,
                 keyCount: 1);
 
@@ -115,6 +115,25 @@ namespace Corely.Billing.CompiledModel.MsSql.Generated
                 string (UsageUnit? unit) => (unit == null ? null : unit.Value.Value),
                 UsageUnit? (string value) => (value == null ? null : ((UsageUnit? )(UsageUnit.From(value))))));
             unit.AddAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.None);
+
+            var unitPriceAmount = runtimeEntityType.AddProperty(
+                "UnitPriceAmount",
+                typeof(decimal?),
+                propertyInfo: typeof(GrantEntity).GetProperty("UnitPriceAmount", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(GrantEntity).GetField("<UnitPriceAmount>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                nullable: true,
+                precision: 19,
+                scale: 6);
+            unitPriceAmount.AddAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.None);
+
+            var unitPriceCurrency = runtimeEntityType.AddProperty(
+                "UnitPriceCurrency",
+                typeof(string),
+                propertyInfo: typeof(GrantEntity).GetProperty("UnitPriceCurrency", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(GrantEntity).GetField("<UnitPriceCurrency>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                nullable: true,
+                maxLength: 3);
+            unitPriceCurrency.AddAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.None);
 
             var validFromUtc = runtimeEntityType.AddProperty(
                 "ValidFromUtc",

@@ -1,3 +1,5 @@
+using Corely.Billing.Prices.Models;
+
 namespace Corely.Billing.Grants.Models;
 
 public record UpdateGrantRequest(
@@ -6,5 +8,6 @@ public record UpdateGrantRequest(
     decimal? Quantity,
     DateTime ValidFromUtc,
     DateTime ValidToUtc,
-    Dictionary<string, string>? Tags = null
+    Dictionary<string, string>? Tags = null,
+    Money? UnitPrice = null
 );

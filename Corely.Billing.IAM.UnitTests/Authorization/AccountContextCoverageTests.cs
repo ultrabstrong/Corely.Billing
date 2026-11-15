@@ -126,11 +126,14 @@ public class AccountContextCoverageTests
             Consumption(s).CountAbandonedReservationsAsync(Victim).AsResult(),
     };
 
+    private static readonly Type[] PlatformWide = [typeof(IUsagePriceService)];
+
     public static TheoryData<string> CaseNames() =>
         [
             .. AuditDecoratorCoverageTests
                 .ServiceInterfaces()
                 .Select(r => r.Data)
+                .Except(PlatformWide)
                 .SelectMany(t => t.GetMethods())
                 .Select(m => $"{m.DeclaringType!.Name}.{m.Name}")
                 .Order(StringComparer.Ordinal),

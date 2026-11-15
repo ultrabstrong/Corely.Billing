@@ -47,6 +47,12 @@ public static class IAMOptionsExtensions
                     AuthAction.Execute
                 )
                 .RegisterResourceType(
+                    BillingResourceTypes.USAGE_PRICE_RESOURCE_TYPE,
+                    BillingResourceTypes.USAGE_PRICE_TITLE,
+                    BillingResourceTypes.USAGE_PRICE_DESCRIPTION,
+                    BillingResourceTypes.GROUP
+                )
+                .RegisterResourceType(
                     BillingResourceTypes.ALL_ACCOUNTS_RESOURCE_TYPE,
                     BillingResourceTypes.ALL_ACCOUNTS_TITLE,
                     BillingResourceTypes.ALL_ACCOUNTS_DESCRIPTION,

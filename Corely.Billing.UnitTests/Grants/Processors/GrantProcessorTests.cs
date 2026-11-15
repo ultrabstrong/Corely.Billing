@@ -5,6 +5,8 @@ using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
+using Corely.Billing.Prices.Processors;
 using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Usage;
 using Corely.Billing.Validators;
@@ -22,6 +24,7 @@ public class GrantProcessorTests
     private readonly IRepo<GrantEntity> _grantRepo;
     private readonly Mock<IConsumptionReportProcessor> _consumptionReport = new();
     private readonly Mock<IRegistrationProcessor> _registrations = new();
+    private readonly Mock<IUsagePriceProcessor> _prices = new();
     private readonly GrantProcessor _grantProcessor;
 
     public GrantProcessorTests()
@@ -48,6 +51,7 @@ public class GrantProcessorTests
             _grantRepo,
             _consumptionReport.Object,
             _registrations.Object,
+            _prices.Object,
             TestUsage.Vocabulary,
             _serviceFactory.GetRequiredService<IValidationProvider>(),
             _serviceFactory.GetRequiredService<ILogger<GrantProcessor>>()
@@ -101,6 +105,70 @@ public class GrantProcessorTests
         Assert.Equal(100, entity.Quantity);
         Assert.Equal(GrantKind.Consumable, entity.Kind);
         Assert.Equal(TestUsage.Page, entity.Unit);
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_TakesTheCurrentPrice_ForAConsumableGrant()
+    {
+        _prices
+            .Setup(p => p.GetPriceAsync(TestUsage.Extraction, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Money.Usd(0.001m));
+
+        var result = await _grantProcessor.CreateGrantAsync(CreateRequest());
+
+        var entity = await _grantRepo.GetAsync(e => e.GrantId == result.CreatedId);
+        Assert.Equal(0.001m, entity!.UnitPriceAmount);
+        Assert.Equal(Money.USD, entity.UnitPriceCurrency);
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_KeepsTheNamedPrice_ForARequestNamingOne()
+    {
+        _prices
+            .Setup(p => p.GetPriceAsync(TestUsage.Extraction, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Money.Usd(0.001m));
+
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest() with
+            {
+                UnitPrice = Money.Usd(0.0008m),
+            }
+        );
+
+        var entity = await _grantRepo.GetAsync(e => e.GrantId == result.CreatedId);
+        Assert.Equal(0.0008m, entity!.UnitPriceAmount);
+    }
+
+    [Fact]
+    public async Task CreateGrantAsync_RefusesAndWritesNothing_ForAPriceOnACapacityGrant()
+    {
+        var result = await _grantProcessor.CreateGrantAsync(
+            CreateRequest(operation: TestUsage.Members, kind: GrantKind.Capacity) with
+            {
+                UnitPrice = Money.Usd(5),
+            }
+        );
+
+        Assert.Equal(CreateGrantResultCode.ValidationError, result.ResultCode);
+        Assert.Empty(await _grantRepo.ListAsync(_ => true));
+    }
+
+    [Fact]
+    public async Task UpdateGrantAsync_KeepsThePrice_ForARequestNamingNone()
+    {
+        var grantId = await CreateGrantAsync();
+        var entity = await _grantRepo.GetAsync(e => e.GrantId == grantId);
+        entity!.UnitPriceAmount = 0.001m;
+        entity.UnitPriceCurrency = Money.USD;
+        await _grantRepo.UpdateAsync(entity);
+
+        await _grantProcessor.UpdateGrantAsync(
+            new UpdateGrantRequest(AccountId, grantId, 200, Now.AddDays(-1), Now.AddDays(60))
+        );
+
+        var updated = await _grantRepo.GetAsync(e => e.GrantId == grantId);
+        Assert.Equal(200, updated!.Quantity);
+        Assert.Equal(0.001m, updated.UnitPriceAmount);
     }
 
     [Fact]

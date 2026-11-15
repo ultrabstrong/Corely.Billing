@@ -1,5 +1,7 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Enums;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Telemetry;
 using Corely.Billing.Usage;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -24,6 +26,8 @@ public class BillingOptions
     internal Dictionary<UsageOperation, UsageOperationDefinition> Operations { get; } = [];
 
     internal Dictionary<UsageUnit, UsageUnitDefinition> Units { get; } = [];
+
+    internal PriceSource PriceSource { get; private set; } = PriceSource.Configuration;
 
     private BillingOptions() { }
 
@@ -94,6 +98,37 @@ public class BillingOptions
                 : $"Operation '{misdeclared.Operation}' is {misdeclared.Kind} and names no unit. "
                     + "Every kind but a feature is counted in a unit."
         : null;
+
+    public BillingOptions UsePlatformPrices()
+    {
+        PriceSource = PriceSource.Platform;
+        return this;
+    }
+
+    internal string? PriceProblem(IReadOnlyDictionary<string, ConfiguredPrice> configured)
+    {
+        if (configured.Count == 0)
+            return null;
+        if (PriceSource == PriceSource.Platform)
+            return $"{PriceOptions.NAME}:Prices is set, but this host's prices are platform "
+                + "settings (UsePlatformPrices), so configuration would be ignored. Remove it.";
+
+        foreach (var (operation, price) in configured)
+        {
+            if (
+                !Operations.TryGetValue(UsageOperation.From(operation), out var definition)
+                || definition.Kind != GrantKind.Consumable
+            )
+            {
+                return $"{PriceOptions.NAME}:Prices names '{operation}', which is not a "
+                    + "registered consumable operation. Only a consumable operation has a price "
+                    + "per unit.";
+            }
+            if (price.ToMoney().Problem() is { } problem)
+                return $"{PriceOptions.NAME}:Prices:{operation}: {problem}";
+        }
+        return null;
+    }
 
     public BillingOptions UseCompiledModel(IModel model)
     {

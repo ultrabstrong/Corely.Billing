@@ -1,0 +1,52 @@
+@inherits BillingComponentBase
+<div class="cbw-prices">
+    @if (_message is { } message)
+    {
+        <div class="alert @(_failed ? "alert-danger" : "alert-success") py-2" role="status">@message</div>
+    }
+    @if (_loading)
+    {
+        <div class="text-body-secondary" role="status">Loading prices…</div>
+    }
+    else
+    {
+        <ul class="list-unstyled mb-0">
+            @foreach (var definition in Consumables)
+            {
+                var current = _prices.GetValueOrDefault(definition.Operation);
+                <li class="cbw-price-row mb-3" data-price-operation="@definition.Operation.Value">
+                    <label for="cbw-price-@definition.Operation.Value" class="form-label">@definition.DisplayName, price per @UnitName(definition)</label>
+                    @if (Editable && Source == PriceSource.Platform)
+                    {
+                        <div class="d-flex flex-wrap gap-2 align-items-start">
+                            <div class="input-group cbw-price-input">
+                                <span class="input-group-text">@Money.USD</span>
+                                <input id="cbw-price-@definition.Operation.Value" type="number" min="0" step="any" class="form-control"
+                                       value="@Entered(definition.Operation)" @onchange="e => Enter(definition.Operation, e.Value)" disabled="@_saving" />
+                            </div>
+                            <button type="button" class="btn btn-primary" disabled="@_saving" @onclick="() => SaveAsync(definition.Operation)">Save</button>
+                            @if (current is not null)
+                            {
+                                <button type="button" class="btn btn-outline-danger" disabled="@_saving" @onclick="() => ClearAsync(definition.Operation)">Clear</button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="cbw-price-@definition.Operation.Value">@(current?.ToString() ?? "Not priced")</div>
+                    }
+                </li>
+            }
+        </ul>
+        <p class="form-text mb-0">
+            @if (Source == PriceSource.Platform)
+            {
+                @:A price applies to grants created after it is set; a grant keeps the price it was created at. With no price, amounts show no money.
+            }
+            else
+            {
+                @:Prices come from configuration (@PriceOptions.NAME), so they are changed there. A grant keeps the price it was created at.
+            }
+        </p>
+    }
+</div>

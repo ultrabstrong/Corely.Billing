@@ -19,4 +19,6 @@ internal class GrantEntity : IHasCreatedUtc
     public DateTime ValidToUtc { get; set; }
     public bool Disabled { get; set; }
     public string? TagsJson { get; set; }
+    public decimal? UnitPriceAmount { get; set; }
+    public string? UnitPriceCurrency { get; set; }
 }

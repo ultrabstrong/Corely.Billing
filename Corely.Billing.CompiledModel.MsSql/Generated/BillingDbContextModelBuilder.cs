@@ -11,7 +11,7 @@ namespace Corely.Billing.CompiledModel.MsSql.Generated
     public partial class BillingDbContextModel
     {
         private BillingDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("6639b3f7-a4c6-43f2-b2c0-f9655cb6a71d"), entityTypeCount: 4)
+            : base(skipDetectChanges: false, modelId: new Guid("6f2e7b5e-f172-4a03-9c03-3b4a9c45cfa7"), entityTypeCount: 5)
         {
         }
 
@@ -20,11 +20,13 @@ namespace Corely.Billing.CompiledModel.MsSql.Generated
             var consumptionEventEntity = ConsumptionEventEntityEntityType.Create(this);
             var grantRequestEntity = GrantRequestEntityEntityType.Create(this);
             var grantEntity = GrantEntityEntityType.Create(this);
+            var usagePriceEntity = UsagePriceEntityEntityType.Create(this);
             var registrationEntity = RegistrationEntityEntityType.Create(this);
 
             ConsumptionEventEntityEntityType.CreateAnnotations(consumptionEventEntity);
             GrantRequestEntityEntityType.CreateAnnotations(grantRequestEntity);
             GrantEntityEntityType.CreateAnnotations(grantEntity);
+            UsagePriceEntityEntityType.CreateAnnotations(usagePriceEntity);
             RegistrationEntityEntityType.CreateAnnotations(registrationEntity);
 
             AddAnnotation("ProductVersion", "10.0.13");

@@ -194,6 +194,14 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<decimal?>("UnitPriceAmount")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
+
+                    b.Property<string>("UnitPriceCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)");
+
                     b.Property<DateTime>("ValidFromUtc")
                         .HasColumnType("datetime(6)");
 
@@ -205,6 +213,34 @@ namespace Corely.Billing.DataAccessMigrations.MySql.Migrations
                     b.HasIndex("AccountId", "Operation");
 
                     b.ToTable("Grants", (string)null);
+                });
+
+            modelBuilder.Entity("Corely.Billing.Prices.Entities.UsagePriceEntity", b =>
+                {
+                    b.Property<string>("Operation")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(19, 6)
+                        .HasColumnType("decimal(19,6)");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TIMESTAMP")
+                        .HasDefaultValueSql("(UTC_TIMESTAMP)");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<DateTime?>("ModifiedUtc")
+                        .HasColumnType("TIMESTAMP");
+
+                    b.HasKey("Operation");
+
+                    b.ToTable("UsagePrices", (string)null);
                 });
 
             modelBuilder.Entity("Corely.Billing.Registrations.Entities.RegistrationEntity", b =>

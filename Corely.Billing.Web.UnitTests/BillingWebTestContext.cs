@@ -4,6 +4,7 @@ using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Components;
@@ -31,6 +32,7 @@ public abstract class BillingWebTestContext : BunitContext
     protected Mock<IGrantRequestService> GrantRequests { get; } = new();
     protected Mock<IConsumptionService> Consumption { get; } = new();
     protected Mock<IQuotaService> Quota { get; } = new();
+    protected Mock<IUsagePriceService> Prices { get; } = new();
     protected RecordingGrantActionGate ActionGate { get; } = new();
 
     protected BillingWebTestContext()
@@ -50,11 +52,13 @@ public abstract class BillingWebTestContext : BunitContext
         Services.AddSingleton(GrantRequests.Object);
         Services.AddSingleton(Consumption.Object);
         Services.AddSingleton(Quota.Object);
+        Services.AddSingleton(Prices.Object);
         Services.AddSingleton<IUsageVocabulary>(new TestVocabulary());
         Services.AddSingleton<TimeProvider>(new FakeTimeProvider(Now));
 
         HaveGrants();
         HaveRequests();
+        HavePrices();
         HaveSeries();
         Consumption
             .Setup(c =>
@@ -88,6 +92,9 @@ public abstract class BillingWebTestContext : BunitContext
                     new PagedResult<Grant>([.. grants], grants.Length, 1, false)
                 )
             );
+
+    protected void HavePrices(params UsagePrice[] prices) =>
+        Prices.Setup(p => p.ListPricesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(prices);
 
     protected void DenyGrants() =>
         Grants

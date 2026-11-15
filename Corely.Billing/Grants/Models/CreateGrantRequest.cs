@@ -1,4 +1,5 @@
 using Corely.Billing.Grants.Enums;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Grants.Models;
@@ -11,5 +12,6 @@ public record CreateGrantRequest(
     DateTime ValidFromUtc,
     DateTime ValidToUtc,
     UsageUnit? Unit = null,
-    Dictionary<string, string>? Tags = null
+    Dictionary<string, string>? Tags = null,
+    Money? UnitPrice = null
 );

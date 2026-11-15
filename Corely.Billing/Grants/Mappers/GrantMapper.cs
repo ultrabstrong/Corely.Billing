@@ -1,5 +1,6 @@
 using Corely.Billing.Grants.Entities;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Serialization;
 using Corely.Billing.Usage;
 
@@ -9,7 +10,7 @@ internal static class GrantMapper
 {
     extension(CreateGrantRequest request)
     {
-        public Grant ToGrant(UsageUnit? declaredUnit) =>
+        public Grant ToGrant(UsageUnit? declaredUnit, Money? currentPrice) =>
             new()
             {
                 GrantId = Guid.CreateVersion7(),
@@ -21,6 +22,7 @@ internal static class GrantMapper
                 ValidFromUtc = request.ValidFromUtc,
                 ValidToUtc = request.ValidToUtc,
                 Tags = request.Tags,
+                UnitPrice = request.UnitPrice ?? currentPrice,
             };
     }
 
@@ -39,6 +41,8 @@ internal static class GrantMapper
                 ValidToUtc = grant.ValidToUtc,
                 Disabled = grant.Disabled,
                 TagsJson = TagSerializer.Serialize(grant.Tags),
+                UnitPriceAmount = grant.UnitPrice?.Amount,
+                UnitPriceCurrency = grant.UnitPrice?.Currency,
             };
     }
 
@@ -57,7 +61,13 @@ internal static class GrantMapper
                 ValidToUtc = entity.ValidToUtc,
                 Disabled = entity.Disabled,
                 Tags = TagSerializer.Deserialize(entity.TagsJson),
+                UnitPrice = entity.UnitPrice(),
             };
+
+        public Money? UnitPrice() =>
+            entity is { UnitPriceAmount: { } amount, UnitPriceCurrency: { } currency }
+                ? new Money(amount, currency)
+                : null;
     }
 
     extension(UpdateGrantRequest request)
@@ -75,6 +85,7 @@ internal static class GrantMapper
                 ValidToUtc = request.ValidToUtc,
                 Disabled = entity.Disabled,
                 Tags = request.Tags,
+                UnitPrice = request.UnitPrice ?? entity.UnitPrice(),
             };
     }
 }

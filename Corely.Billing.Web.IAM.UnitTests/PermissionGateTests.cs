@@ -123,6 +123,9 @@ public class PermissionGateTests : BunitContext
         Services.AddSingleton(_grants.Object);
         Services.AddSingleton(_grantRequests.Object);
         Services.AddSingleton(consumption.Object);
+        var prices = new Mock<IUsagePriceService>();
+        prices.Setup(p => p.ListPricesAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        Services.AddSingleton(prices.Object);
         Services.AddSingleton(vocabulary.Object);
         Services.AddSingleton(_authorization.Object);
         Services.AddSingleton(userContextProvider.Object);

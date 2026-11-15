@@ -1,6 +1,8 @@
 using Corely.Billing.Consumption.Enums;
 using Corely.Billing.Consumption.Models;
+using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
@@ -43,6 +45,7 @@ public partial class ConsumptionTable
     public bool ShowGrants { get; set; } = true;
 
     private List<ConsumptionEvent> _items = [];
+    private Dictionary<Guid, Money?> _grantPrices = [];
     private int _totalCount;
     private int _skip;
     private ConsumptionEventSortField _sortBy = ConsumptionEventSortField.UtcTimestamp;
@@ -106,6 +109,13 @@ public partial class ConsumptionTable
         {
             _items = result.Data?.Items ?? [];
             _totalCount = result.Data?.TotalCount ?? 0;
+            var grants = await services
+                .GetRequiredService<IGrantService>()
+                .ListGrantsAsync(new ListGrantsRequest([AccountId], Take: int.MaxValue));
+            _grantPrices = (grants.Data?.Items ?? []).ToDictionary(
+                g => g.GrantId,
+                g => g.UnitPrice
+            );
         }
 
         _loading = false;

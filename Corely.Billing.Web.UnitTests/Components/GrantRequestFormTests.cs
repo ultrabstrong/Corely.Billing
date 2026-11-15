@@ -1,4 +1,5 @@
 using Corely.Billing.GrantRequests.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Web.Components;
 
 namespace Corely.Billing.Web.UnitTests.Components;
@@ -23,10 +24,31 @@ public class GrantRequestFormTests : BillingWebTestContext
         );
 
     [Fact]
+    public void Render_ShowsWhatTheQuantityIsWorth_ForAPricedOperation()
+    {
+        HavePrices(new UsagePrice(Extraction, Money.Usd(0.001m)));
+        var form = Render();
+
+        form.Find("#cbw-request-quantity").Input("2000000");
+
+        Assert.Equal("= $2,000.00, at $0.001 each", form.Find("[data-price]").TextContent.Trim());
+    }
+
+    [Fact]
+    public void Render_ShowsNoMoney_ForAnUnpricedOperation()
+    {
+        var form = Render();
+
+        form.Find("#cbw-request-quantity").Input("2000000");
+
+        Assert.Empty(form.FindAll("[data-price]"));
+    }
+
+    [Fact]
     public void Send_RequestsWhatWasEntered_ForAFilledForm()
     {
         var form = Render();
-        form.Find("#cbw-request-quantity").Change("2500");
+        form.Find("#cbw-request-quantity").Input("2500");
         form.Find("#cbw-request-note").Change("Month end batch");
 
         form.Find("form").Submit();
@@ -57,7 +79,7 @@ public class GrantRequestFormTests : BillingWebTestContext
     {
         _code = RequestGrantResultCode.AlreadyPendingError;
         var form = Render();
-        form.Find("#cbw-request-quantity").Change("10");
+        form.Find("#cbw-request-quantity").Input("10");
 
         form.Find("form").Submit();
 

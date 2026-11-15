@@ -1,4 +1,5 @@
 using Corely.Billing.Grants.Enums;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Usage;
 
 namespace Corely.Billing.Grants.Models;
@@ -27,6 +28,7 @@ public class Grant
     public DateTime ValidToUtc { get; set; }
     public bool Disabled { get; set; }
     public Dictionary<string, string>? Tags { get; set; }
+    public Money? UnitPrice { get; set; }
 
     public decimal? Used { get; set; }
     public decimal? Remaining { get; set; }
@@ -44,6 +46,10 @@ public class Grant
             (GrantKind.Feature, _) => GrantType.Feature,
             _ => throw new InvalidOperationException($"Grant kind {Kind} has no grant type."),
         };
+
+    public Money? Value() => Quantity is { } quantity ? UnitPrice?.Times(quantity) : null;
+
+    public Money? Price(decimal quantity) => UnitPrice?.Times(quantity);
 
     public bool NeverExpires() => ValidToUtc >= Grant.NEVER_EXPIRES_UTC;
 

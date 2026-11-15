@@ -22,7 +22,7 @@ namespace Corely.Billing.CompiledModel.MySql.Generated
                 "Corely.Billing.Grants.Entities.GrantEntity",
                 typeof(GrantEntity),
                 baseEntityType,
-                propertyCount: 11,
+                propertyCount: 13,
                 unnamedIndexCount: 1,
                 keyCount: 1);
 
@@ -106,6 +106,23 @@ namespace Corely.Billing.CompiledModel.MySql.Generated
             unit.SetValueConverter(new ValueConverter<UsageUnit?, string>(
                 string (UsageUnit? unit) => (unit == null ? null : unit.Value.Value),
                 UsageUnit? (string value) => (value == null ? null : ((UsageUnit? )(UsageUnit.From(value))))));
+
+            var unitPriceAmount = runtimeEntityType.AddProperty(
+                "UnitPriceAmount",
+                typeof(decimal?),
+                propertyInfo: typeof(GrantEntity).GetProperty("UnitPriceAmount", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(GrantEntity).GetField("<UnitPriceAmount>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                nullable: true,
+                precision: 19,
+                scale: 6);
+
+            var unitPriceCurrency = runtimeEntityType.AddProperty(
+                "UnitPriceCurrency",
+                typeof(string),
+                propertyInfo: typeof(GrantEntity).GetProperty("UnitPriceCurrency", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                fieldInfo: typeof(GrantEntity).GetField("<UnitPriceCurrency>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
+                nullable: true,
+                maxLength: 3);
 
             var validFromUtc = runtimeEntityType.AddProperty(
                 "ValidFromUtc",

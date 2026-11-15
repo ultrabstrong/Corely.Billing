@@ -1,6 +1,7 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Web.Components;
 
 namespace Corely.Billing.Web.UnitTests.Components;
@@ -25,6 +26,29 @@ public class GrantEditorTests : BillingWebTestContext
         Render<GrantEditor>(p => p.Add(c => c.AccountId, AccountId).Add(c => c.GrantId, grantId));
 
     [Fact]
+    public void Save_CreatesAtTheEnteredPrice_ForAPricedOperation()
+    {
+        HavePrices(new UsagePrice(Extraction, Money.Usd(0.001m)));
+        var editor = Render();
+        editor.Find("#cbw-quantity").Input("1000");
+
+        editor.Find("#cbw-unit-price").Input("0.0008");
+        editor.Find("form").Submit();
+
+        Assert.Equal(Money.Usd(0.0008m), _created!.UnitPrice);
+    }
+
+    [Fact]
+    public void Render_StartsFromTheCurrentPrice_ForANewGrant()
+    {
+        HavePrices(new UsagePrice(Extraction, Money.Usd(0.001m)));
+
+        var editor = Render();
+
+        Assert.Equal("0.001", editor.Find("#cbw-unit-price").GetAttribute("value"));
+    }
+
+    [Fact]
     public void Save_RefusesWithoutCallingTheService_ForAWindowThatEndsBeforeItStarts()
     {
         var editor = Render();
@@ -43,7 +67,7 @@ public class GrantEditorTests : BillingWebTestContext
     public void Save_CreatesAGrantWithNoQuantity_ForUnlimited()
     {
         var editor = Render();
-        editor.Find("#cbw-quantity").Change("500");
+        editor.Find("#cbw-quantity").Input("500");
         editor.Find("#cbw-unlimited").Change(true);
 
         editor.Find("form").Submit();
@@ -201,7 +225,7 @@ public class GrantEditorTests : BillingWebTestContext
     {
         var editor = Render();
         editor.Find("#cbw-operation").Change(Retention.Value);
-        editor.Find("#cbw-quantity").Change("60");
+        editor.Find("#cbw-quantity").Input("60");
 
         Assert.Equal("Amount added", editor.Find("label[for=cbw-quantity]").TextContent);
         Assert.Empty(editor.FindAll("#cbw-never-expires"));
@@ -215,7 +239,7 @@ public class GrantEditorTests : BillingWebTestContext
     public void Save_CreatesAGrantThatNeverExpires_ForTheNeverExpiresSwitch()
     {
         var editor = Render();
-        editor.Find("#cbw-quantity").Change("500");
+        editor.Find("#cbw-quantity").Input("500");
         editor.Find("#cbw-never-expires").Change(true);
 
         Assert.Empty(editor.FindAll("#cbw-to"));

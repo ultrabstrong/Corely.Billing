@@ -18,7 +18,7 @@ public sealed class BillingTestHost : IBillingTestHost, IDisposable
     public FakeTimeProvider TimeProvider { get; } =
         new(new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero));
 
-    public BillingTestHost()
+    public BillingTestHost(bool platformPrices = false)
     {
         _connection.Open();
 
@@ -37,6 +37,7 @@ public sealed class BillingTestHost : IBillingTestHost, IDisposable
                     _ => new SqliteEFConfiguration(_connection)
                 )
                 .RegisterTestUsage()
+                .UsingPlatformPrices(platformPrices)
         );
 
         _serviceProvider = services.BuildServiceProvider();

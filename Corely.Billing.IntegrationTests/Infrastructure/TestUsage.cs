@@ -25,6 +25,9 @@ internal static class TestUsage
 
     extension(BillingOptions options)
     {
+        internal BillingOptions UsingPlatformPrices(bool platformPrices) =>
+            platformPrices ? options.UsePlatformPrices() : options;
+
         internal BillingOptions RegisterTestUsage() =>
             options
                 .RegisterUnit(Page.Value, "page")

@@ -309,8 +309,25 @@ public sealed class CrossAccountScopingTests : IAsyncLifetime
                 Call<IConsumptionService>(s => s.CountAbandonedReservationsAsync(Attacker)),
         };
 
+    private const string PLATFORM_WIDE =
+        "Prices are platform wide: no account owns one, so there is no other account to reach.";
+
+    private static readonly Dictionary<string, string> Exemptions = new()
+    {
+        ["IUsagePriceService.get_Source"] = PLATFORM_WIDE,
+        ["IUsagePriceService.GetPriceAsync"] = PLATFORM_WIDE,
+        ["IUsagePriceService.ListPricesAsync"] = PLATFORM_WIDE,
+        ["IUsagePriceService.SetPriceAsync"] = PLATFORM_WIDE,
+        ["IUsagePriceService.ClearPriceAsync"] = PLATFORM_WIDE,
+    };
+
     public static TheoryData<string> CaseNames() =>
-        [.. CrossAccountCoverage.MethodsOf(Services()).Order(StringComparer.Ordinal)];
+        [
+            .. CrossAccountCoverage
+                .MethodsOf(Services())
+                .Where(name => !Exemptions.ContainsKey(name))
+                .Order(StringComparer.Ordinal),
+        ];
 
     private static IEnumerable<Type> Services() =>
         typeof(IGrantService)
@@ -325,11 +342,7 @@ public sealed class CrossAccountScopingTests : IAsyncLifetime
     [Fact]
     public void ServiceMethods_HaveACrossAccountCase_ForEveryPublicServiceMethod()
     {
-        var coverage = CrossAccountCoverage.Check(
-            Services(),
-            Cases().Keys,
-            new Dictionary<string, string>()
-        );
+        var coverage = CrossAccountCoverage.Check(Services(), Cases().Keys, Exemptions);
 
         Assert.True(coverage.IsComplete, coverage.ToString());
     }

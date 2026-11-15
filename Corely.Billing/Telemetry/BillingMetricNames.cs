@@ -43,6 +43,12 @@ public static class BillingMetricNames
         public const string GRANT_REQUEST_QUANTITY = "entitlements.grant_request.quantity";
     }
 
+    public static class Prices
+    {
+        public const string PRICE_SET = "pricing.price.set";
+        public const string PRICE_CLEARED = "pricing.price.cleared";
+    }
+
     public static class Consumption
     {
         public const string CONSUMPTION_QUANTITY = "metering.consumption.quantity";

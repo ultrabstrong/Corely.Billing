@@ -1,6 +1,7 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
@@ -44,6 +45,14 @@ public partial class GrantEditor
     private bool _neverExpires;
     private DateTime _validFromUtc;
     private DateTime _validToUtc;
+    private decimal? _unitPriceAmount;
+    private string _currency = Money.USD;
+    private Money? _currentPrice;
+    private IReadOnlyDictionary<UsageOperation, Money?> _prices =
+        new Dictionary<UsageOperation, Money?>();
+
+    private Money? UnitPrice =>
+        _unitPriceAmount is { } amount ? new Money(amount, _currency) : null;
 
     private bool IsNew => GrantId is null;
 
@@ -61,6 +70,9 @@ public partial class GrantEditor
             _ => "Quantity",
         };
 
+    private string UnitSingular =>
+        (_grant?.Unit ?? Definition?.Unit) is { } unit ? Vocabulary.DisplayName(unit) : "unit";
+
     private string UnitPlural =>
         (_grant?.Unit ?? Definition?.Unit) is { } unit
             ? $"{Vocabulary.DisplayName(unit)}s"
@@ -69,7 +81,18 @@ public partial class GrantEditor
     private string OperationValue
     {
         get => _operation.Value;
-        set => _operation = UsageOperation.From(value);
+        set
+        {
+            _operation = UsageOperation.From(value);
+            PriceFrom(_prices.GetValueOrDefault(_operation));
+        }
+    }
+
+    private void PriceFrom(Money? price)
+    {
+        _currentPrice = price;
+        _unitPriceAmount = price?.Amount;
+        _currency = price?.Currency ?? Money.USD;
     }
 
     protected override Task OnParametersSetAsync() => InOperationAsync(LoadAsync);
@@ -79,6 +102,9 @@ public partial class GrantEditor
         _loading = true;
         _loadError = null;
         _error = null;
+        _prices = (
+            await services.GetRequiredService<IUsagePriceService>().ListPricesAsync()
+        ).ByOperation();
 
         if (IsNew)
         {
@@ -89,6 +115,7 @@ public partial class GrantEditor
             _neverExpires = false;
             _validFromUtc = today;
             _validToUtc = today.AddYears(1);
+            PriceFrom(_prices.GetValueOrDefault(_operation));
             _loading = false;
             return;
         }
@@ -115,6 +142,8 @@ public partial class GrantEditor
         _validFromUtc = _grant.ValidFromUtc;
         _neverExpires = _grant.NeverExpires();
         _validToUtc = _neverExpires ? _validFromUtc.AddYears(1) : _grant.ValidToUtc;
+        PriceFrom(_grant.UnitPrice);
+        _currentPrice = _prices.GetValueOrDefault(_operation);
         _loading = false;
     }
 
@@ -176,6 +205,7 @@ public partial class GrantEditor
 
     private string? Validate() =>
         Kind != GrantKind.Feature && !_unlimited && _quantity < 0 ? "Quantity must be zero or more."
+        : UnitPrice?.Problem() is { } priceProblem ? priceProblem
         : !(CanNeverExpire && _neverExpires) && _validToUtc <= _validFromUtc
             ? "Valid to must be after valid from."
         : null;
@@ -188,7 +218,15 @@ public partial class GrantEditor
     )
     {
         var result = await grants.CreateGrantAsync(
-            new CreateGrantRequest(AccountId, _operation, Kind, quantity, fromUtc, toUtc)
+            new CreateGrantRequest(
+                AccountId,
+                _operation,
+                Kind,
+                quantity,
+                fromUtc,
+                toUtc,
+                UnitPrice: Kind == GrantKind.Consumable ? UnitPrice : null
+            )
         );
         return result.ResultCode switch
         {
@@ -215,7 +253,8 @@ public partial class GrantEditor
                 quantity,
                 fromUtc,
                 toUtc,
-                _grant.Tags
+                _grant.Tags,
+                Kind == GrantKind.Consumable ? UnitPrice : null
             )
         );
         return result.ResultCode switch

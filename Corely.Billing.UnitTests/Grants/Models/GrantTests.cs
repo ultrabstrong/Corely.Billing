@@ -1,10 +1,22 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Models;
 
 namespace Corely.Billing.UnitTests.Grants.Models;
 
 public class GrantTests
 {
+    [Fact]
+    public void Value_IsTheQuantityAtItsPrice_ForAPricedGrant() =>
+        Assert.Equal(
+            Money.Usd(2000),
+            new Grant { Quantity = 2_000_000, UnitPrice = Money.Usd(0.001m) }.Value()
+        );
+
+    [Fact]
+    public void Value_IsNull_ForAnUnpricedGrant() =>
+        Assert.Null(new Grant { Quantity = 2_000_000 }.Value());
+
     [Theory]
     [InlineData(GrantKind.Consumable, null, GrantType.Unlimited)]
     [InlineData(GrantKind.Consumable, 500L, GrantType.Balance)]

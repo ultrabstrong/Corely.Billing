@@ -66,6 +66,10 @@
                     <div class="cbw-grant-name">
                         <span class="cbw-grant-allowance">@request.Asked(Vocabulary)</span>
                         <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(request.Operation)</span>
+                        @if (request.Worth(_prices.GetValueOrDefault(request.Operation)) is { } worth)
+                        {
+                            <span class="cbw-grant-value text-body-secondary" data-request-value>@worth.ToString() at today's price</span>
+                        }
                     </div>
                     <div class="cbw-grant-balance cbw-request-note">
                         @if (request.Note is { } note)
@@ -101,6 +105,10 @@
                     <div class="cbw-grant-name">
                         <span class="cbw-grant-allowance">@grant.Headline(Vocabulary)</span>
                         <span class="cbw-grant-operation text-body-secondary">@Vocabulary.DisplayName(grant.Operation)</span>
+                        @if (grant.Value() is { } value)
+                        {
+                            <span class="cbw-grant-value text-body-secondary" data-grant-value>@value.ToString() at @grant.UnitPrice!.Value.ToString() each</span>
+                        }
                     </div>
                     <div class="cbw-grant-balance">
                         @if (grant.GetGrantType() == GrantType.Balance)
@@ -197,7 +205,12 @@
                 <div class="modal-body">
                     <dl class="row mb-3">
                         <dt class="col-sm-4">Asked for</dt>
-                        <dd class="col-sm-8">@dialog.Request.Asked(Vocabulary), @Vocabulary.DisplayName(dialog.Request.Operation)</dd>
+                        <dd class="col-sm-8">@dialog.Request.AskedFor(Vocabulary)</dd>
+                        @if (dialog.Request.Worth(_prices.GetValueOrDefault(dialog.Request.Operation)) is { } worth)
+                        {
+                            <dt class="col-sm-4">Worth</dt>
+                            <dd class="col-sm-8">@worth.ToString() at today's price</dd>
+                        }
                         <dt class="col-sm-4">Why</dt>
                         <dd class="col-sm-8">@(dialog.Request.Note ?? "No note")</dd>
                         <dt class="col-sm-4">Asked</dt>

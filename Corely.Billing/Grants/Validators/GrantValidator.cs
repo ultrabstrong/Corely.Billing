@@ -31,6 +31,15 @@ internal class GrantValidator : AbstractValidator<Grant>
             .NotNull()
             .When(x => x.Kind != GrantKind.Feature)
             .WithMessage(x => $"A {x.Kind} grant is counted in a unit.");
+        RuleFor(x => x.UnitPrice)
+            .Null()
+            .When(x => x.Kind != GrantKind.Consumable)
+            .WithMessage(x =>
+                $"A {x.Kind} grant has no price per unit; only a consumable grant does."
+            );
+        RuleFor(x => x.UnitPrice)
+            .Must(price => price is not { } known || known.Problem() is null)
+            .WithMessage(x => x.UnitPrice?.Problem() ?? string.Empty);
         When(
             x => x.Kind == GrantKind.Feature,
             () =>

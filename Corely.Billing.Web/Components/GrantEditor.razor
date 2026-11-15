@@ -64,13 +64,29 @@
                     <div class="mb-3">
                         <label for="cbw-quantity" class="form-label">@QuantityLabel</label>
                         <div class="input-group">
-                            <input id="cbw-quantity" type="number" min="0" step="any" class="form-control" @bind="_quantity" disabled="@_unlimited" />
+                            <input id="cbw-quantity" type="number" min="0" step="any" class="form-control" @bind="_quantity" @bind:event="oninput" disabled="@_unlimited" />
                             <span class="input-group-text" data-unit>@UnitPlural</span>
                         </div>
+                        @if (!_unlimited)
+                        {
+                            <PriceHint UnitPrice="UnitPrice" Quantity="_quantity" />
+                        }
                         <div class="form-check mt-2">
                             <input id="cbw-unlimited" type="checkbox" class="form-check-input" @bind="_unlimited" />
                             <label for="cbw-unlimited" class="form-check-label">Unlimited</label>
                         </div>
+                    </div>
+                }
+
+                @if (Kind == GrantKind.Consumable && (_unitPriceAmount is not null || _currentPrice is not null))
+                {
+                    <div class="mb-3">
+                        <label for="cbw-unit-price" class="form-label">Price per @UnitSingular</label>
+                        <div class="input-group">
+                            <input id="cbw-unit-price" type="number" min="0" step="any" class="form-control" @bind="_unitPriceAmount" @bind:event="oninput" />
+                            <span class="input-group-text" data-currency>@_currency</span>
+                        </div>
+                        <div class="form-text">@(IsNew ? "What this grant is sold at. It keeps this price whatever the price is later." : "This grant's own price. Changing it changes this grant's value only.")</div>
                     </div>
                 }
 

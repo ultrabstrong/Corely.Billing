@@ -51,7 +51,7 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `configuration` | `IConfiguration` | Yes | App configuration for options binding (`ReservationOptions`) |
+| `configuration` | `IConfiguration` | Yes | App configuration for options binding (`ReservationOptions`, `PriceOptions`) |
 | `efConfigurationFactory` | `Func<IServiceProvider, IEFConfiguration>` | No | Database provider factory; omit for the mock path |
 
 ## Fluent Methods
@@ -61,6 +61,7 @@ var options = BillingOptions.Create(configuration, efConfigFactory)
 | `RegisterOperation` | `value`, `displayName`, `kind`, `unit` | Adds an operation, declaring its grant kind and its unit; a feature takes no unit |
 | `RegisterUnit` | `value`, `displayName`, `decimals` (default 0, at most 6) | Adds a unit to the vocabulary, counted to that many decimal places |
 | `UseTelemetry` | `Func<IServiceProvider, IBillingTelemetry>` | Replaces the no-op telemetry |
+| `UsePlatformPrices` | | Prices come from the `UsagePrices` table the platform owner edits, not configuration; see [IUsagePriceService](services/usage-price-service.md) |
 | `DecorateServices` | `Action<IServiceCollection>` | Wraps the public services; may be called more than once |
 | `UseCompiledModel` | `IModel` | An EF Core model built ahead of time; normally set through a compiled model package, below |
 
@@ -99,6 +100,7 @@ indexes as the model built at runtime.
 | `IGrantService` | Scoped | Create, read, update, delete and list grants |
 | `IQuotaService` | Scoped | A read per grant kind, reserve and settle, register and release |
 | `IConsumptionService` | Scoped | Ledger reporting |
+| `IUsagePriceService` | Scoped | The price per unit new consumable grants are sold at |
 | `IUsageVocabulary` | Singleton | The registered operations and units |
 | `IOperationContextAccessor` | Singleton | The ambient unit of work (kept if already registered) |
 | `IBillingTelemetry` | Singleton | Metrics sink |

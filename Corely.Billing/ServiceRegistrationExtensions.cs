@@ -4,6 +4,8 @@ using Corely.Billing.DataAccess;
 using Corely.Billing.GrantRequests.Processors;
 using Corely.Billing.Grants.Processors;
 using Corely.Billing.Operations;
+using Corely.Billing.Prices.Models;
+using Corely.Billing.Prices.Processors;
 using Corely.Billing.Quota.Processors;
 using Corely.Billing.Registrations.Processors;
 using Corely.Billing.Services;
@@ -30,6 +32,15 @@ public static class ServiceRegistrationExtensions
 
             if (options.DeclarationProblem() is { } problem)
                 throw new InvalidOperationException(problem);
+
+            var priceSection = options.Configuration.GetSection(PriceOptions.NAME);
+            if (
+                options.PriceProblem(priceSection.Get<PriceOptions>()?.Prices ?? []) is
+                { } priceProblem
+            )
+            {
+                throw new InvalidOperationException(priceProblem);
+            }
 
             if (options.EFConfigurationFactory != null)
             {
@@ -67,6 +78,8 @@ public static class ServiceRegistrationExtensions
             serviceCollection.Configure<ReservationOptions>(
                 options.Configuration.GetSection(ReservationOptions.NAME)
             );
+            serviceCollection.Configure<PriceOptions>(priceSection);
+            serviceCollection.AddSingleton(new PriceSourceSelection(options.PriceSource));
 
             serviceCollection.AddValidatorsFromAssemblyContaining<FluentValidationProvider>(
                 includeInternalTypes: true
@@ -84,6 +97,12 @@ public static class ServiceRegistrationExtensions
             serviceCollection.Decorate<
                 IRegistrationProcessor,
                 RegistrationProcessorTelemetryDecorator
+            >();
+
+            serviceCollection.AddScoped<IUsagePriceProcessor, UsagePriceProcessor>();
+            serviceCollection.Decorate<
+                IUsagePriceProcessor,
+                UsagePriceProcessorTelemetryDecorator
             >();
 
             serviceCollection.AddScoped<IGrantProcessor, GrantProcessor>();
@@ -114,6 +133,7 @@ public static class ServiceRegistrationExtensions
             serviceCollection.AddScoped<IGrantRequestService, GrantRequestService>();
             serviceCollection.AddScoped<IConsumptionService, ConsumptionService>();
             serviceCollection.AddScoped<IQuotaService, QuotaService>();
+            serviceCollection.AddScoped<IUsagePriceService, UsagePriceService>();
 
             options.ServiceDecorators?.Invoke(serviceCollection);
 
@@ -124,6 +144,7 @@ public static class ServiceRegistrationExtensions
             >();
             serviceCollection.Decorate<IConsumptionService, ConsumptionServiceTelemetryDecorator>();
             serviceCollection.Decorate<IQuotaService, QuotaServiceTelemetryDecorator>();
+            serviceCollection.Decorate<IUsagePriceService, UsagePriceServiceTelemetryDecorator>();
 
             return serviceCollection;
         }

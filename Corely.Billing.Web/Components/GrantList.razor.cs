@@ -3,6 +3,7 @@ using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Services;
 using Corely.Billing.Usage;
 using Corely.Billing.Web.Extensions;
@@ -49,6 +50,8 @@ public partial class GrantList
     private string? _error;
     private Guid? _confirmingDelete;
     private List<GrantRequest> _history = [];
+    private IReadOnlyDictionary<UsageOperation, Money?> _prices =
+        new Dictionary<UsageOperation, Money?>();
     private Guid? _userId;
     private (DialogMode Mode, GrantRequest Request)? _dialog;
     private string? _reason;
@@ -109,6 +112,9 @@ public partial class GrantList
         }
 
         _grants = result.Data?.Items ?? [];
+        _prices = (
+            await services.GetRequiredService<IUsagePriceService>().ListPricesAsync()
+        ).ByOperation();
         var requests = await RequestsAsync(services);
         _requests = [.. requests.Where(r => r.Status == GrantRequestStatus.Pending)];
         _history =

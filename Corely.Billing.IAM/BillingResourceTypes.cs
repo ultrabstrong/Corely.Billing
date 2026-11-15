@@ -8,6 +8,7 @@ public static class BillingResourceTypes
     public const string QUOTA_RESOURCE_TYPE = "quota";
     public const string REGISTRATION_RESOURCE_TYPE = "registration";
     public const string ALL_ACCOUNTS_RESOURCE_TYPE = "billing_all_accounts";
+    public const string USAGE_PRICE_RESOURCE_TYPE = "usage_price";
 
     public const string GROUP = "Billing";
 
@@ -23,6 +24,9 @@ public static class BillingResourceTypes
         "Reading balances, allowances, features and capacity, and reserving and settling usage";
     public const string REGISTRATION_TITLE = "Registrations";
     public const string REGISTRATION_DESCRIPTION = "Taking, releasing and moving units of capacity";
+    public const string USAGE_PRICE_TITLE = "Prices";
+    public const string USAGE_PRICE_DESCRIPTION =
+        "Setting the price per unit new grants are sold at, for a role in the platform account";
     public const string ALL_ACCOUNTS_TITLE = "All accounts";
     public const string ALL_ACCOUNTS_DESCRIPTION =
         "Billing reads across every account, for a role in the platform account";

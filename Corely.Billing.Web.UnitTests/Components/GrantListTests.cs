@@ -3,6 +3,7 @@ using Corely.Billing.GrantRequests.Enums;
 using Corely.Billing.GrantRequests.Models;
 using Corely.Billing.Grants.Models;
 using Corely.Billing.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Web.Components;
 
 namespace Corely.Billing.Web.UnitTests.Components;
@@ -19,6 +20,33 @@ public class GrantListTests : BillingWebTestContext
                 .Add(c => c.RequestGrantHref, REQUEST_GRANT_HREF)
                 .Add(c => c.GrantHref, id => $"/host/grants/{id}")
         );
+
+    [Fact]
+    public void Render_ShowsTheGrantsValueAtItsOwnPrice_ForAPricedGrant()
+    {
+        var grant = Grant(20_000);
+        grant.UnitPrice = Money.Usd(0.001m);
+        HaveGrants(grant);
+        HavePrices(new UsagePrice(Extraction, Money.Usd(0.005m)));
+
+        var value = Render().Find("[data-grant-value]").TextContent;
+
+        Assert.Equal("$20.00 at $0.001 each", value);
+    }
+
+    [Fact]
+    public void Approve_NamesWhatWasAskedForOnceWithItsWorth_ForAPricedRequest()
+    {
+        HaveRequests(Request(20_000));
+        HavePrices(new UsagePrice(Extraction, Money.Usd(0.001m)));
+        var list = Render();
+
+        list.Find("button[aria-label='Approve request']").Click();
+
+        var details = list.Find(".modal-body dl").TextContent;
+        Assert.Contains("20,000 pages, Document extraction", details);
+        Assert.Contains("$20.00 at today's price", details);
+    }
 
     [Fact]
     public void Render_OffersTheFirstGrant_ForAnEmptyAccountAllowedToCreate()

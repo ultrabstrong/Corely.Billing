@@ -23,7 +23,7 @@ public class GrantMapperTests
             Tags: new() { ["plan"] = "standard" }
         );
 
-        var grant = request.ToGrant(TestUsage.Page);
+        var grant = request.ToGrant(TestUsage.Page, null);
 
         Assert.NotEqual(Guid.Empty, grant.GrantId);
         Assert.Equal(request.AccountId, grant.AccountId);

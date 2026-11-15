@@ -1,5 +1,6 @@
 using Corely.Billing.Grants.Enums;
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Usage;
 using Microsoft.Extensions.Configuration;
 
@@ -94,6 +95,59 @@ public class BillingOptionsTests
                 .RegisterOperation("retain", "Retain", GrantKind.Allowance, "day")
                 .RegisterOperation("sftp", "SFTP", GrantKind.Feature)
                 .DeclarationProblem()
+        );
+
+    private static BillingOptions Priced() =>
+        Options()
+            .RegisterUnit("credit", "credit", 6)
+            .RegisterUnit("user", "user")
+            .RegisterOperation("credits", "Credits", GrantKind.Consumable, "credit")
+            .RegisterOperation("members", "Members", GrantKind.Capacity, "user");
+
+    [Fact]
+    public void PriceProblem_IsNull_ForAPricedConsumableOperation() =>
+        Assert.Null(
+            Priced()
+                .PriceProblem(
+                    new Dictionary<string, ConfiguredPrice>
+                    {
+                        ["credits"] = new() { Amount = 0.001m },
+                    }
+                )
+        );
+
+    [Theory]
+    [InlineData("members", 5, "consumable")]
+    [InlineData("unknown", 5, "consumable")]
+    [InlineData("credits", -1, "negative")]
+    public void PriceProblem_NamesIt_ForAnUnpriceableEntry(
+        string operation,
+        decimal amount,
+        string named
+    ) =>
+        Assert.Contains(
+            named,
+            Priced()
+                .PriceProblem(
+                    new Dictionary<string, ConfiguredPrice>
+                    {
+                        [operation] = new() { Amount = amount },
+                    }
+                )
+        );
+
+    [Fact]
+    public void PriceProblem_ReportsIt_ForConfiguredPricesOnAPlatformPricedHost() =>
+        Assert.Contains(
+            "UsePlatformPrices",
+            Priced()
+                .UsePlatformPrices()
+                .PriceProblem(
+                    new Dictionary<string, ConfiguredPrice>
+                    {
+                        ["credits"] = new() { Amount = 0.001m },
+                    }
+                )
         );
 
     [Fact]

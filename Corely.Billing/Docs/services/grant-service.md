@@ -108,6 +108,13 @@ A disabled grant gives out nothing new: quota does not reserve against it, regis
 | A unit for every kind but a feature; no quantity and no unit for a feature | `ValidationError` |
 | Kind and unit match the operation's declaration | `DeclarationMismatchError` |
 
+## Price
+
+A consumable grant carries `UnitPrice`, the price per unit it was sold at. `CreateGrantRequest` takes
+the operation's current price unless it names one; `UpdateGrantRequest` keeps the grant's own price
+unless it names a new one. A capacity, allowance or feature grant has no price, and naming one is a
+`ValidationError`. See [IUsagePriceService](usage-price-service.md).
+
 ## Notes
 
 - Every method is scoped by `accountId`; another account's grant reads as `NotFoundError`

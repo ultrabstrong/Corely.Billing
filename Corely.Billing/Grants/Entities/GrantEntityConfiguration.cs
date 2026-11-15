@@ -1,4 +1,5 @@
 using Corely.Billing.Grants.Models;
+using Corely.Billing.Prices.Models;
 using Corely.Billing.Usage;
 using Corely.DataAccess;
 using Corely.DataAccess.EntityFramework.Configurations;
@@ -41,6 +42,10 @@ internal sealed class GrantEntityConfiguration(IDbTypes dbTypes)
         builder.Property(e => e.ValidFromUtc).IsRequired();
         builder.Property(e => e.ValidToUtc);
         builder.Property(e => e.Disabled).IsRequired();
+        builder
+            .Property(e => e.UnitPriceAmount)
+            .HasPrecision(Money.AMOUNT_PRECISION, Money.AMOUNT_DECIMALS);
+        builder.Property(e => e.UnitPriceCurrency).HasMaxLength(Money.CURRENCY_LENGTH);
 
         builder.HasIndex(e => new { e.AccountId, e.Operation });
     }

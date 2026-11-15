@@ -1,0 +1,12 @@
+@if (UnitPrice is { } price && Quantity is > 0 and { } quantity)
+{
+    <div class="form-text" data-price>= @price.Times(quantity).ToString(), at @price.ToString() each</div>
+}
+
+@code {
+    [Parameter]
+    public Money? UnitPrice { get; set; }
+
+    [Parameter]
+    public decimal? Quantity { get; set; }
+}
