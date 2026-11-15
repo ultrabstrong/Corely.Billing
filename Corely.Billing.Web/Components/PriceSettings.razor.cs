@@ -50,7 +50,9 @@ public partial class PriceSettings
     private string? Entered(UsageOperation operation) =>
         _entered.TryGetValue(operation, out var text)
             ? text
-            : _prices.GetValueOrDefault(operation)?.Amount.ToString(CultureInfo.InvariantCulture);
+            : _prices
+                .GetValueOrDefault(operation)
+                ?.Amount.ToString("0.############################", CultureInfo.InvariantCulture);
 
     private void Enter(UsageOperation operation, object? value) =>
         _entered[operation] = value?.ToString();
